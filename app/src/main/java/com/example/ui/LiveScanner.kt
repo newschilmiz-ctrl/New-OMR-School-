@@ -245,7 +245,7 @@ var isProcessing by remember { mutableStateOf(false) }
                                             val croppedBitmap = Bitmap.createBitmap(rotatedBitmap, imgX1, imgY1, cropW, cropH)
                                             
                                             // Scale to standard A4 size expected by the scanner
-                                            val a4Bitmap = Bitmap.createScaledBitmap(croppedBitmap, 800, 1131, true)
+                                            val a4Bitmap = Bitmap.createScaledBitmap(croppedBitmap, 1000, 1414, true)
 
                                             // Process Image directly
                                             val result = OmrScanner.scan(a4Bitmap, numQuestions, numOptions, "Standard")

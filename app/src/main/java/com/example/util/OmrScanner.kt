@@ -36,13 +36,14 @@ object OmrScanner {
         val gray = Mat()
         Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGBA2GRAY)
         
+        // Exact A4 dimensions matching OmrGenerator (1000 x 1414)
         val w = 1000.0
-        val h = 1000.0
+        val h = 1414.0
         
-        // ML Kit already provides a cropped document. We just need to warp/resize it to our 1000x1000 canvas.
         val warped = Mat()
         val warpedGray = Mat()
         
+        // Step 1: Detect paper contour or resize to standard A4
         val corners = findDocumentCorners(gray)
         if (corners != null && corners.size == 4) {
             val srcMat = MatOfPoint2f(*corners.toTypedArray())
@@ -52,52 +53,70 @@ object OmrScanner {
             val pTransform = Imgproc.getPerspectiveTransform(srcMat, dstMat)
             Imgproc.warpPerspective(mat, warped, pTransform, Size(w, h))
             Imgproc.warpPerspective(gray, warpedGray, pTransform, Size(w, h))
+            srcMat.release()
+            dstMat.release()
+            pTransform.release()
         } else {
             Imgproc.resize(mat, warped, Size(w, h))
             Imgproc.resize(gray, warpedGray, Size(w, h))
         }
 
-        val warpedBlurred = Mat()
+        var warpedBlurred = Mat()
         Imgproc.GaussianBlur(warpedGray, warpedBlurred, Size(5.0, 5.0), 0.0)
         
-        val warpedThresh = Mat()
+        var warpedThresh = Mat()
         Imgproc.adaptiveThreshold(warpedBlurred, warpedThresh, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 31, 15.0)
 
-        val warpedAnnotated = warped.clone()
-        val colorRed = Scalar(255.0, 0.0, 0.0, 255.0)
-        val colorGreen = Scalar(0.0, 255.0, 0.0, 255.0)
-        val colorBlue = Scalar(0.0, 0.0, 255.0, 255.0)
-        val colorYellow = Scalar(255.0, 255.0, 0.0, 255.0)
+        // Step 2: Fine-calibration using the 4 solid black corner registration markers (40x40 squares at centers 50,50 / 950,50 / 50,1364 / 950,1364)
+        val regCorners = findRegistrationMarkers(warpedThresh)
+        var finalWarped = warped
+        var finalThresh = warpedThresh
+        if (regCorners != null && regCorners.size == 4) {
+            val srcMat = MatOfPoint2f(*regCorners.toTypedArray())
+            val dstMat = MatOfPoint2f(
+                Point(50.0, 50.0), Point(950.0, 50.0), Point(950.0, 1364.0), Point(50.0, 1364.0)
+            )
+            val fineTransform = Imgproc.getPerspectiveTransform(srcMat, dstMat)
+            val warpedFine = Mat()
+            val threshFine = Mat()
+            Imgproc.warpPerspective(warped, warpedFine, fineTransform, Size(w, h))
+            Imgproc.warpPerspective(warpedThresh, threshFine, fineTransform, Size(w, h))
+            
+            finalWarped = warpedFine
+            finalThresh = threshFine
+            
+            srcMat.release()
+            dstMat.release()
+            fineTransform.release()
+        }
 
-        // 1. Timing Marks Detection
-        val (leftMarks, rightMarks) = detectTimingMarks(warpedThresh)
-        
-        // Fallback for timing marks if they fail
-        val topY = if (leftMarks.isNotEmpty()) leftMarks.first().y else 50.0
-        val bottomY = if (leftMarks.isNotEmpty()) leftMarks.last().y else 950.0
-        val numRows = Math.max(1, leftMarks.size - 1)
-        val rowStep = (bottomY - topY) / 19.0 // As requested: (bottomY - topY) / 19.0
+        val warpedAnnotated = finalWarped.clone()
+        val colorRed = Scalar(239.0, 68.0, 68.0, 255.0)
+        val colorGreen = Scalar(34.0, 197.0, 94.0, 255.0)
+        val colorBlue = Scalar(59.0, 130.0, 246.0, 255.0)
+        val colorYellow = Scalar(234.0, 179.0, 8.0, 255.0)
 
-        // 2. Bubble Detection Upgrade
+        // Find bubble contours for micro-snapping (within 10px radius)
         val bubbleCenters = mutableListOf<Point>()
         val contours = ArrayList<MatOfPoint>()
         val hierarchy = Mat()
-        Imgproc.findContours(warpedThresh.clone(), contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
+        Imgproc.findContours(finalThresh.clone(), contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
         
         for (contour in contours) {
             val area = Imgproc.contourArea(contour)
-            if (area > 80 && area < 1200) {
+            if (area > 80 && area < 1500) {
                 val contour2f = MatOfPoint2f(*contour.toArray())
                 val perimeter = Imgproc.arcLength(contour2f, true)
                 if (perimeter > 0) {
                     val circularity = 4 * Math.PI * area / (perimeter * perimeter)
-                    if (circularity > 0.65) {
+                    if (circularity > 0.55) {
                         val rect = Imgproc.boundingRect(contour)
                         val cx = rect.x + rect.width / 2.0
                         val cy = rect.y + rect.height / 2.0
                         bubbleCenters.add(Point(cx, cy))
                     }
                 }
+                contour2f.release()
             }
         }
 
@@ -114,27 +133,31 @@ object OmrScanner {
             return bestPt
         }
 
-        // SET detection
-        val setStartX = 120.0
-        val setStartY = 50.0
-        val setSpacingY = 94.736
+        // ==========================================
+        // EXACT SET DETECTION (Matches OmrGenerator)
+        // boxLeft = 110, boxTop = 510
+        // setGridStartX = 215.0, setGridStartY = 590.0, rowHeight = 60.0
+        // ==========================================
+        val setStartX = 215.0
+        val setStartY = 590.0
+        val setSpacingY = 60.0
         val setSets = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
         var bestSetRow = -1
         var maxSetDarkness = 0.0
         var secondMaxSetDarkness = 0.0
-        val bubbleRadius = 14.0
+        val setBubbleRadius = 13.0
 
         for (i in setSets.indices) {
-            var cx = setStartX
-            var cy = setStartY + i * setSpacingY
+            val rawCx = setStartX
+            val rawCy = setStartY + i * setSpacingY
             
-            // Snap to nearest detected bubble
-            val snapped = snapToNearest(cx, cy, bubbleCenters, 35.0)
-            cx = snapped.x
-            cy = snapped.y
+            // Micro-snap within 10px
+            val snapped = snapToNearest(rawCx, rawCy, bubbleCenters, 10.0)
+            val cx = snapped.x
+            val cy = snapped.y
 
-            val fillPercentage = getFillPercentage(warpedThresh, cx, cy, bubbleRadius)
-            Imgproc.circle(warpedAnnotated, Point(cx, cy), bubbleRadius.toInt(), colorBlue, 2)
+            val fillPercentage = getFillPercentage(finalThresh, cx, cy, setBubbleRadius)
+            Imgproc.circle(warpedAnnotated, Point(cx, cy), setBubbleRadius.toInt(), colorBlue, 2)
 
             if (fillPercentage > maxSetDarkness) {
                 secondMaxSetDarkness = maxSetDarkness
@@ -145,31 +168,37 @@ object OmrScanner {
             }
         }
 
-        // 6. Multiple Mark Detection Improve
-        val fillThreshold = 0.25
-        val marginThreshold = 0.20
+        val fillThreshold = 0.28
+        val marginThreshold = 0.15
 
-        val paperSet = if (maxSetDarkness > fillThreshold) {
-            if (secondMaxSetDarkness > maxSetDarkness * 0.75 || (maxSetDarkness - secondMaxSetDarkness) < marginThreshold) {
+        val paperSet = if (maxSetDarkness > fillThreshold && bestSetRow >= 0) {
+            if (secondMaxSetDarkness > maxSetDarkness * 0.75 && (maxSetDarkness - secondMaxSetDarkness) < marginThreshold) {
                 "MULTIPLE"
             } else {
-                var cx = setStartX
-                var cy = setStartY + bestSetRow * setSpacingY
-                val snapped = snapToNearest(cx, cy, bubbleCenters, 35.0)
-                Imgproc.circle(warpedAnnotated, snapped, bubbleRadius.toInt(), colorGreen, -1)
+                val rawCx = setStartX
+                val rawCy = setStartY + bestSetRow * setSpacingY
+                val snapped = snapToNearest(rawCx, rawCy, bubbleCenters, 10.0)
+                Imgproc.circle(warpedAnnotated, snapped, setBubbleRadius.toInt(), colorGreen, -1)
                 setSets[bestSetRow]
             }
         } else {
             "BLANK"
         }
 
-        // 4. Auto Column Detection
-        val answerLeft = 280.0
-        val answerRight = 900.0
-        val numCols = 5
-        // (answerRight - answerLeft) / 4.0 gives 5 valid column centers
-        val colWidth = if (numCols > 1) (answerRight - answerLeft) / (numCols - 1) else 0.0
-        val ansSpacingX = 30.0
+        // ==========================================
+        // EXACT QUESTION BUBBLE GRID (Matches OmrGenerator)
+        // splitX = 270.0, colWidth = 130.0
+        // headerBottom = 580.0, qRowHeight = 39.0
+        // bubblesStartX = colStartX + 46.0
+        // cy = 580.0 + row * 39.0 + 19.5 = 599.5 + row * 39.0
+        // optSpacing = 21.0, bubbleRadius = 10.0
+        // ==========================================
+        val splitX = 270.0
+        val colWidth = 130.0
+        val headerBottom = 580.0
+        val qRowHeight = 39.0
+        val optSpacing = 21.0
+        val qBubbleRadius = 10.0
         val questionsPerColumn = 20
 
         val answers = mutableListOf<Int>()
@@ -179,15 +208,8 @@ object OmrScanner {
             val col = q / questionsPerColumn
             val row = q % questionsPerColumn
             
-            // Column center based on request
-            val qStartX = answerLeft + col * colWidth - (ansSpacingX * 1.5) // Adjust left to start at 'A'
-
-            // 3. Dynamic Grid Generation (Timing Marks)
-            val qStartY = if (leftMarks.isNotEmpty()) {
-                topY + row * rowStep
-            } else {
-                50.0 + row * 47.368 // Fallback
-            }
+            val bubblesStartX = splitX + col * colWidth + 46.0
+            val qCenterY = headerBottom + row * qRowHeight + (qRowHeight / 2.0) // 599.5 + row * 39.0
 
             var maxDarkness = 0.0
             var secondMaxDarkness = 0.0
@@ -196,18 +218,18 @@ object OmrScanner {
             val currentOptionCoords = mutableListOf<Pair<Float, Float>>()
 
             for (opt in 0 until numOptions) {
-                var cx = qStartX + opt * ansSpacingX
-                var cy = qStartY
+                val rawCx = bubblesStartX + opt * optSpacing
+                val rawCy = qCenterY
                 
-                // Snap to nearest detected bubble
-                val snapped = snapToNearest(cx, cy, bubbleCenters, 20.0)
-                cx = snapped.x
-                cy = snapped.y
+                // Micro-snap within 9px
+                val snapped = snapToNearest(rawCx, rawCy, bubbleCenters, 9.0)
+                val cx = snapped.x
+                val cy = snapped.y
 
                 currentOptionCoords.add(Pair(cx.toFloat(), cy.toFloat()))
 
-                val fillPercentage = getFillPercentage(warpedThresh, cx, cy, bubbleRadius)
-                Imgproc.circle(warpedAnnotated, Point(cx, cy), bubbleRadius.toInt(), colorBlue, 2)
+                val fillPercentage = getFillPercentage(finalThresh, cx, cy, qBubbleRadius)
+                Imgproc.circle(warpedAnnotated, Point(cx, cy), qBubbleRadius.toInt(), colorBlue, 2)
 
                 if (fillPercentage > maxDarkness) {
                     secondMaxDarkness = maxDarkness
@@ -221,24 +243,24 @@ object OmrScanner {
             allOptionCoords.add(currentOptionCoords)
             var studentAns = -1
 
-            if (maxDarkness > fillThreshold) {
-                if (secondMaxDarkness > maxDarkness * 0.75 || (maxDarkness - secondMaxDarkness) < marginThreshold) {
-                    studentAns = -2
+            if (maxDarkness > fillThreshold && bestOpt >= 0) {
+                if (secondMaxDarkness > maxDarkness * 0.75 && (maxDarkness - secondMaxDarkness) < marginThreshold) {
+                    studentAns = -2 // Multiple marked
                 } else {
                     studentAns = bestOpt
                 }
             }
 
             if (studentAns >= 0) {
-                var cx = qStartX + studentAns * ansSpacingX
-                var cy = qStartY
-                val snapped = snapToNearest(cx, cy, bubbleCenters, 20.0)
-                Imgproc.circle(warpedAnnotated, snapped, bubbleRadius.toInt(), colorRed, -1)
+                val rawCx = bubblesStartX + studentAns * optSpacing
+                val rawCy = qCenterY
+                val snapped = snapToNearest(rawCx, rawCy, bubbleCenters, 9.0)
+                Imgproc.circle(warpedAnnotated, snapped, qBubbleRadius.toInt(), colorGreen, -1)
             } else if (studentAns == -2) {
-                var cx = qStartX + bestOpt * ansSpacingX
-                var cy = qStartY
-                val snapped = snapToNearest(cx, cy, bubbleCenters, 20.0)
-                Imgproc.circle(warpedAnnotated, snapped, bubbleRadius.toInt(), colorYellow, 2)
+                val rawCx = bubblesStartX + bestOpt * optSpacing
+                val rawCy = qCenterY
+                val snapped = snapToNearest(rawCx, rawCy, bubbleCenters, 9.0)
+                Imgproc.circle(warpedAnnotated, snapped, qBubbleRadius.toInt(), colorYellow, -1)
             }
 
             answers.add(studentAns)
@@ -247,7 +269,7 @@ object OmrScanner {
         val finalBitmap = Bitmap.createBitmap(w.toInt(), h.toInt(), Bitmap.Config.ARGB_8888)
         Utils.matToBitmap(warpedAnnotated, finalBitmap)
 
-        // 7. QR Student ID
+        // Read QR code for candidate identity
         var studentId = "UNKNOWN"
         try {
             val qr = readQr(bitmap) ?: readQr(finalBitmap)
@@ -265,10 +287,71 @@ object OmrScanner {
         warpedGray.release()
         warpedBlurred.release()
         warpedThresh.release()
+        if (finalWarped != warped) finalWarped.release()
+        if (finalThresh != warpedThresh) finalThresh.release()
         warpedAnnotated.release()
         hierarchy.release()
 
         return ScanResult(studentId, paperSet, answers, finalBitmap, allOptionCoords)
+    }
+
+    private fun findRegistrationMarkers(thresh: Mat): List<Point>? {
+        val width = thresh.width()
+        val height = thresh.height()
+        
+        // Define 4 search regions around the expected positions of 40x40 black calibration boxes
+        // Expected centers: TL(50,50), TR(950,50), BL(50,1364), BR(950,1364)
+        val rois = listOf(
+            Rect(10, 10, 160, 160),                         // Top-Left
+            Rect(width - 170, 10, 160, 160),                // Top-Right
+            Rect(width - 170, height - 170, 160, 160),      // Bottom-Right
+            Rect(10, height - 170, 160, 160)                // Bottom-Left
+        )
+        
+        val centers = mutableListOf<Point>()
+        
+        for (roiRect in rois) {
+            if (roiRect.x < 0 || roiRect.y < 0 || roiRect.x + roiRect.width > width || roiRect.y + roiRect.height > height) {
+                return null
+            }
+            val subRoi = thresh.submat(roiRect)
+            val contours = ArrayList<MatOfPoint>()
+            val hierarchy = Mat()
+            Imgproc.findContours(subRoi, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+            
+            var bestCenter: Point? = null
+            var bestAreaDiff = Double.MAX_VALUE
+            val targetArea = 1600.0 // 40x40 square
+            
+            for (c in contours) {
+                val area = Imgproc.contourArea(c)
+                if (area in 400.0..4000.0) {
+                    val rect = Imgproc.boundingRect(c)
+                    val ratio = rect.width.toDouble() / rect.height
+                    if (ratio in 0.6..1.6) {
+                        val diff = Math.abs(area - targetArea)
+                        if (diff < bestAreaDiff) {
+                            bestAreaDiff = diff
+                            bestCenter = Point(
+                                roiRect.x + rect.x + rect.width / 2.0,
+                                roiRect.y + rect.y + rect.height / 2.0
+                            )
+                        }
+                    }
+                }
+            }
+            
+            subRoi.release()
+            hierarchy.release()
+            
+            if (bestCenter != null) {
+                centers.add(bestCenter)
+            } else {
+                return null // Not all 4 markers could be confidently identified
+            }
+        }
+        
+        return if (centers.size == 4) centers else null
     }
 
     private fun detectTimingMarks(thresh: Mat): Pair<List<Point>, List<Point>> {
