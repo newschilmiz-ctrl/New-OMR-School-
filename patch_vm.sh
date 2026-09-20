@@ -1,0 +1,1 @@
+perl -0777 -pi -e 's/(class OmrViewModel[^{]*\{)/$1\n    val attendanceMap = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Boolean>>(emptyMap())/g' app/src/main/java/com/example/ui/OmrViewModel.kt

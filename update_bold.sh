@@ -1,0 +1,1 @@
+perl -0777 -pi -e 's/(val textPaint = android\.graphics\.Paint\(\)\.apply \{[^}]+)(textAlign = android\.graphics\.Paint\.Align\.CENTER)(\n\s*\})/$1$2\n                typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)$3/g' app/src/main/java/com/example/ui/ExamDashboardScreen.kt

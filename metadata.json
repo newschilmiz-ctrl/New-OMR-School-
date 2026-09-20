@@ -1,0 +1,6 @@
+{
+  "name": "OMR Scanner",
+  "description": "Generate, scan, and grade OMR sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

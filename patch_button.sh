@@ -1,0 +1,1 @@
+perl -0777 -pi -e 's/Text\(if \(isGenerating\) "Generating\.\.\." else "Download Question Papers"\)/Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.padding(end = 8.dp))\n            Text(if (isGenerating) "Generating..." else "Download Question Papers")/g' app/src/main/java/com/example/ui/ExamDashboardScreen.kt

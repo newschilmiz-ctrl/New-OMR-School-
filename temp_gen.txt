@@ -1,0 +1,549 @@
+     1	package com.example.util
+     2	
+     3	import android.graphics.Bitmap
+     4	import android.graphics.Canvas
+     5	import android.graphics.Color
+     6	import android.graphics.DashPathEffect
+     7	import android.graphics.Paint
+     8	import android.graphics.RectF
+     9	import android.graphics.Typeface
+    10	import android.graphics.BitmapFactory
+    11	import com.example.data.Student
+    12	import com.google.zxing.BarcodeFormat
+    13	import com.google.zxing.MultiFormatWriter
+    14	
+    15	object OmrGenerator {
+    16	
+    17	    const val SHEET_WIDTH = 1000
+    18	    const val SHEET_HEIGHT = 1414
+    19	    
+    20	    private fun createBarcodeBitmap(contents: String, format: BarcodeFormat, width: Int, height: Int): Bitmap? {
+    21	        if (contents.isEmpty()) return null
+    22	        return try {
+    23	            val writer = MultiFormatWriter()
+    24	            val matrix = writer.encode(contents, format, width, height)
+    25	            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    26	            for (x in 0 until width) {
+    27	                for (y in 0 until height) {
+    28	                    bmp.setPixel(x, y, if (matrix.get(x, y)) Color.BLACK else Color.WHITE)
+    29	                }
+    30	            }
+    31	            bmp
+    32	        } catch (e: Exception) {
+    33	            e.printStackTrace()
+    34	            null
+    35	        }
+    36	    }
+    37	
+    38	    fun drawOmrToCanvas(context: android.content.Context, canvas: Canvas, numQuestions: Int, numOptions: Int, student: Student? = null, title: String = "बिहार विद्यालय परीक्षा , समिति", logoPath: String = "", logoOpacity: Float = 0.2f, logoSize: Float = 100f, logoPosition: String = "Left") {
+    39	        canvas.drawColor(Color.WHITE)
+    40	        
+    41	        // Draw Vertical Text on the left
+    42	        canvas.save()
+    43	        canvas.translate(95f, SHEET_HEIGHT - 100f)
+    44	        canvas.rotate(-90f)
+    45	        val verticalTextPaint = Paint().apply {
+    46	            isAntiAlias = true
+    47	            color = Color.BLACK
+    48	            textSize = 24f
+    49	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    50	        }
+    51	        canvas.drawText("EXAMINATION OMR SHEET MADE BY SUMIT KUMAR", 0f, 0f, verticalTextPaint)
+    52	        canvas.restore()
+    53	
+    54	        // Draw watermark / logo if present
+    55	        if (logoPath.isNotEmpty()) {
+    56	            var logoBmp: Bitmap? = null
+    57	            if (logoPath.startsWith("content://")) {
+    58	                try {
+    59	                    val uri = android.net.Uri.parse(logoPath)
+    60	                    val inputStream = context.contentResolver.openInputStream(uri)
+    61	                    logoBmp = BitmapFactory.decodeStream(inputStream)
+    62	                    inputStream?.close()
+    63	                } catch (e: Exception) {
+    64	                    e.printStackTrace()
+    65	                }
+    66	            } else if (logoPath.startsWith("http")) {
+    67	                try {
+    68	                    val url = java.net.URL(logoPath)
+    69	                    val connection = url.openConnection() as java.net.HttpURLConnection
+    70	                    connection.doInput = true
+    71	                    connection.connect()
+    72	                    logoBmp = BitmapFactory.decodeStream(connection.inputStream)
+    73	                } catch (e: Exception) {
+    74	                    e.printStackTrace()
+    75	                }
+    76	            } else {
+    77	                logoBmp = BitmapFactory.decodeFile(logoPath)
+    78	            }
+    79	            if (logoBmp != null) {
+    80	                val alphaInt = (logoOpacity * 255).toInt().coerceIn(0, 255)
+    81	                val alphaPaint = Paint().apply { alpha = alphaInt }
+    82	                
+    83	                // Calculate position for top header
+    84	                val maxLogoSize = logoSize
+    85	                val scale = Math.min(maxLogoSize / logoBmp.width, maxLogoSize / logoBmp.height)
+    86	                val w = logoBmp.width * scale
+    87	                val h = logoBmp.height * scale
+    88	                
+    89	                val topMargin = 20f
+    90	                val marginX = 80f
+    91	                
+    92	                val left = when (logoPosition) {
+    93	                    "Left" -> marginX
+    94	                    "Right" -> SHEET_WIDTH - marginX - w
+    95	                    "Center" -> (SHEET_WIDTH - w) / 2f
+    96	                    else -> marginX
+    97	                }
+    98	                
+    99	                val top = topMargin
+   100	                
+   101	                canvas.drawBitmap(logoBmp, null, RectF(left, top, left + w, top + h), alphaPaint)
+   102	            }
+   103	        }
+   104	
+   105	        val blackFill = Paint().apply {
+   106	            isAntiAlias = true
+   107	            color = Color.BLACK
+   108	            style = Paint.Style.FILL
+   109	        }
+   110	
+   111	        val blackStroke = Paint().apply {
+   112	            isAntiAlias = true
+   113	            color = Color.BLACK
+   114	            style = Paint.Style.STROKE
+   115	            strokeWidth = 3f
+   116	        }
+   117	        
+   118	        val thinStroke = Paint().apply {
+   119	            isAntiAlias = true
+   120	            color = Color.BLACK
+   121	            style = Paint.Style.STROKE
+   122	            strokeWidth = 1.5f
+   123	        }
+   124	
+   125	        val titlePaint = Paint().apply {
+   126	            isAntiAlias = true
+   127	            color = Color.BLACK
+   128	            textSize = 36f
+   129	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+   130	            textAlign = Paint.Align.CENTER
+   131	        }
+   132	        
+   133	        val sectionTitlePaint = Paint().apply {
+   134	            isAntiAlias = true
+   135	            color = Color.WHITE
+   136	            textSize = 20f
+   137	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+   138	            textAlign = Paint.Align.CENTER
+   139	        }
+   140	
+   141	        val textPaint = Paint().apply {
+   142	            isAntiAlias = true
+   143	            color = Color.BLACK
+   144	            textSize = 20f
+   145	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+   146	        }
+   147	        
+   148	        val smallTextPaint = Paint().apply {
+   149	            isAntiAlias = true
+   150	            color = Color.BLACK
+   151	            textSize = 16f
+   152	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+   153	            textAlign = Paint.Align.CENTER
+   154	        }
+   155	        
+   156	        val lightGrayFill = Paint().apply {
+   157	            isAntiAlias = true
+   158	            color = Color.parseColor("#E8E8E8")
+   159	            style = Paint.Style.FILL
+   160	        }
+   161	        
+   162	        val headerGrayFill = Paint().apply {
+   163	            isAntiAlias = true
+   164	            color = Color.parseColor("#C0C0C0")
+   165	            style = Paint.Style.FILL
+   166	        }
+   167	        
+   168	        val headerTextPaint = Paint().apply {
+   169	            isAntiAlias = true
+   170	            color = Color.BLACK
+   171	            textSize = 15f
+   172	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+   173	            textAlign = Paint.Align.CENTER
+   174	        }
+   175	        
+   176	        val leftAlignedSmallText = Paint().apply {
+   177	            isAntiAlias = true
+   178	            color = Color.BLACK
+   179	            textSize = 15f
+   180	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+   181	            textAlign = Paint.Align.LEFT
+   182	        }
+   183	
+   184	        val bubbleTextPaint = Paint().apply {
+   185	            isAntiAlias = true
+   186	            color = Color.BLACK
+   187	            textSize = 14f
+   188	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+   189	            textAlign = Paint.Align.CENTER
+   190	        }
+   191	
+   192	        // Draw 4 Corner Registration Squares for Scanner Calibration
+   193	        val cornerSize = 40f
+   194	        val edgeMarginX = 30f
+   195	        val edgeMarginY = 30f
+   196	        
+   197	        // Top Left
+   198	        canvas.drawRect(edgeMarginX, edgeMarginY, edgeMarginX + cornerSize, edgeMarginY + cornerSize, blackFill)
+   199	        // Top Right
+   200	        canvas.drawRect(SHEET_WIDTH - edgeMarginX - cornerSize, edgeMarginY, SHEET_WIDTH - edgeMarginX, edgeMarginY + cornerSize, blackFill)
+   201	        // Bottom Left
+   202	        canvas.drawRect(edgeMarginX, SHEET_HEIGHT - edgeMarginY - cornerSize, edgeMarginX + cornerSize, SHEET_HEIGHT - edgeMarginY, blackFill)
+   203	        // Bottom Right
+   204	        canvas.drawRect(SHEET_WIDTH - edgeMarginX - cornerSize, SHEET_HEIGHT - edgeMarginY - cornerSize, SHEET_WIDTH - edgeMarginX, SHEET_HEIGHT - edgeMarginY, blackFill)
+   205	
+   206	        // Draw timing marks along left and right edges
+   207	        val timingMarkW = 25f
+   208	        val timingMarkH = 8f
+   209	        val leftX = edgeMarginX + (cornerSize - timingMarkW) / 2f
+   210	        val rightX = SHEET_WIDTH - edgeMarginX - cornerSize + (cornerSize - timingMarkW) / 2f
+   211	        
+   212	        val startY = edgeMarginY + cornerSize + 30f
+   213	        val endY = SHEET_HEIGHT - edgeMarginY - cornerSize - 30f
+   214	        
+   215	        val numTimingMarks = 48
+   216	        val timingStepY = (endY - startY) / (numTimingMarks - 1)
+   217	        
+   218	        for (i in 0 until numTimingMarks) {
+   219	            val cy = startY + i * timingStepY
+   220	            canvas.drawRect(leftX, cy - timingMarkH / 2f, leftX + timingMarkW, cy + timingMarkH / 2f, blackFill)
+   221	            canvas.drawRect(rightX, cy - timingMarkH / 2f, rightX + timingMarkW, cy + timingMarkH / 2f, blackFill)
+   222	        }
+   223	
+   224	        // --- TOP SECTION ---
+   225	        canvas.drawText(title, SHEET_WIDTH / 2f, 60f, titlePaint)
+   226	
+   227	        val startX = 110f
+   228	        val col2X = 400f
+   229	        val col3X = 750f
+   230	        
+   231	        // OMR Serial - Removed as per user request
+   232	        
+   233	        // Fields (Left Column)
+   234	        val textYStart = 220f
+   235	        val lineSpacing = 40f
+   236	        
+   237	        canvas.drawText("1. परीक्षार्थी का नाम:- ${student?.name ?: "<<NAME>>"}", startX, textYStart, leftAlignedSmallText)
+   238	        canvas.drawText("2. रोल नं:- ${student?.rollNo ?: "<<Roll>>"}", startX, textYStart + lineSpacing, leftAlignedSmallText)
+   239	        canvas.drawText("3. विषय कोड:- 320", startX, textYStart + 2 * lineSpacing, leftAlignedSmallText)
+   240	        canvas.drawText("4. विषय:- ${student?.subjects ?: "HISTORY"}", startX, textYStart + 3 * lineSpacing, leftAlignedSmallText)
+   241	
+   242	        // Barcode placeholder (Middle Column)
+   243	        val barcodeY = 110f
+   244	        val barcodeW = 200f
+   245	        val barcodeH = 60f
+   246	        val rollNoText = student?.rollNo ?: "8596312"
+   247	        val barcodeBmp = createBarcodeBitmap(rollNoText, BarcodeFormat.PDF_417, barcodeW.toInt(), barcodeH.toInt())
+   248	        // Draw scan-type corner borders around the 2D barcode area
+   249	        val scanPadding = 5f
+   250	        val bX = col2X - scanPadding
+   251	        val bY = barcodeY - scanPadding
+   252	        val bW = barcodeW + 2 * scanPadding
+   253	        val bH = barcodeH + 2 * scanPadding
+   254	        val cLen = 15f
+   255	        
+   256	        // top left
+   257	        canvas.drawLine(bX, bY, bX + cLen, bY, thinStroke)
+   258	        canvas.drawLine(bX, bY, bX, bY + cLen, thinStroke)
+   259	        // top right
+   260	        canvas.drawLine(bX + bW - cLen, bY, bX + bW, bY, thinStroke)
+   261	        canvas.drawLine(bX + bW, bY, bX + bW, bY + cLen, thinStroke)
+   262	        // bottom left
+   263	        canvas.drawLine(bX, bY + bH, bX + cLen, bY + bH, thinStroke)
+   264	        canvas.drawLine(bX, bY + bH - cLen, bX, bY + bH, thinStroke)
+   265	        // bottom right
+   266	        canvas.drawLine(bX + bW - cLen, bY + bH, bX + bW, bY + bH, thinStroke)
+   267	        canvas.drawLine(bX + bW, bY + bH - cLen, bX + bW, bY + bH, thinStroke)
+   268	        
+   269	        if (barcodeBmp != null) {
+   270	            canvas.drawBitmap(barcodeBmp, col2X, barcodeY, null)
+   271	        } else {
+   272	            // top left
+   273	            canvas.drawLine(col2X, barcodeY, col2X + 15f, barcodeY, thinStroke) 
+   274	            canvas.drawLine(col2X, barcodeY, col2X, barcodeY + 15f, thinStroke) 
+   275	            // top right
+   276	            canvas.drawLine(col2X + barcodeW - 15f, barcodeY, col2X + barcodeW, barcodeY, thinStroke) 
+   277	            canvas.drawLine(col2X + barcodeW, barcodeY, col2X + barcodeW, barcodeY + 15f, thinStroke) 
+   278	            // bottom left
+   279	            canvas.drawLine(col2X, barcodeY + barcodeH, col2X + 15f, barcodeY + barcodeH, thinStroke) 
+   280	            canvas.drawLine(col2X, barcodeY + barcodeH - 15f, col2X, barcodeY + barcodeH, thinStroke) 
+   281	            // bottom right
+   282	            canvas.drawLine(col2X + barcodeW - 15f, barcodeY + barcodeH, col2X + barcodeW, barcodeY + barcodeH, thinStroke) 
+   283	            canvas.drawLine(col2X + barcodeW, barcodeY + barcodeH - 15f, col2X + barcodeW, barcodeY + barcodeH, thinStroke) 
+   284	            
+   285	            canvas.drawText("<<barcode", col2X + barcodeW / 2f, barcodeY + 28f, smallTextPaint)
+   286	            canvas.drawText(">>", col2X + barcodeW / 2f, barcodeY + 52f, smallTextPaint)
+   287	        }
+   288	
+   289	        // Fields (Middle Column)
+   290	        canvas.drawText("5. पंजीयन सं:- ${student?.registrationNo ?: "<<Reg>>"}", col2X, textYStart, leftAlignedSmallText)
+   291	        canvas.drawText("6. पाली:- FIRST", col2X, textYStart + lineSpacing, leftAlignedSmallText)
+   292	        val todayStr = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+   293	        canvas.drawText("7. परीक्षा की तिथि:- $todayStr", col2X, textYStart + 2 * lineSpacing, leftAlignedSmallText)
+   294	
+   295	        // Photo placeholder (Right Column)
+   296	        val photoX = col3X
+   297	        val photoY = 110f
+   298	        val photoW = 110f
+   299	        val photoH = 140f
+   300	        val photoRect = RectF(photoX, photoY, photoX + photoW, photoY + photoH)
+   301	        canvas.drawRect(photoRect, thinStroke)
+   302	        if (student?.imagePath != null && student.imagePath.isNotEmpty()) {
+   303	            var bmp: Bitmap? = null
+   304	            if (student.imagePath.startsWith("http")) {
+   305	                try {
+   306	                    val url = java.net.URL(student.imagePath)
+   307	                    val connection = url.openConnection() as java.net.HttpURLConnection
+   308	                    connection.doInput = true
+   309	                    connection.connect()
+   310	                    val input = connection.inputStream
+   311	                    bmp = BitmapFactory.decodeStream(input)
+   312	                } catch (e: Exception) {
+   313	                    e.printStackTrace()
+   314	                }
+   315	            } else {
+   316	                bmp = BitmapFactory.decodeFile(student.imagePath)
+   317	            }
+   318	            if (bmp != null) {
+   319	                canvas.drawBitmap(bmp, null, photoRect, null)
+   320	            } else {
+   321	                canvas.drawText("<<photo>>", photoRect.centerX(), photoRect.centerY(), smallTextPaint)
+   322	            }
+   323	        } else {
+   324	            canvas.drawText("<<photo>>", photoRect.centerX(), photoRect.centerY(), smallTextPaint)
+   325	        }
+   326	
+   327	        val vBarW = 50f
+   328	        val vBarH = 140f
+   329	        
+   330	        val sideBarcodeW = 120
+   331	        val sideBarcodeH = 30
+   332	        val sideBarcodeBmp = createBarcodeBitmap(rollNoText, BarcodeFormat.CODE_128, sideBarcodeW, sideBarcodeH)
+   333	
+   334	        // Vertical Barcodes Left of Photo
+   335	        val leftVBarcodeX = photoX - 70f
+   336	        // top left
+   337	        canvas.drawLine(leftVBarcodeX, photoY, leftVBarcodeX + 15f, photoY, thinStroke) 
+   338	        canvas.drawLine(leftVBarcodeX, photoY, leftVBarcodeX, photoY + 15f, thinStroke) 
+   339	        // top right
+   340	        canvas.drawLine(leftVBarcodeX + vBarW - 15f, photoY, leftVBarcodeX + vBarW, photoY, thinStroke) 
+   341	        canvas.drawLine(leftVBarcodeX + vBarW, photoY, leftVBarcodeX + vBarW, photoY + 15f, thinStroke) 
+   342	        // bottom left
+   343	        canvas.drawLine(leftVBarcodeX, photoY + vBarH, leftVBarcodeX + 15f, photoY + vBarH, thinStroke) 
+   344	        canvas.drawLine(leftVBarcodeX, photoY + vBarH - 15f, leftVBarcodeX, photoY + vBarH, thinStroke) 
+   345	        // bottom right
+   346	        canvas.drawLine(leftVBarcodeX + vBarW - 15f, photoY + vBarH, leftVBarcodeX + vBarW, photoY + vBarH, thinStroke) 
+   347	        canvas.drawLine(leftVBarcodeX + vBarW, photoY + vBarH - 15f, leftVBarcodeX + vBarW, photoY + vBarH, thinStroke) 
+   348	        
+   349	        if (sideBarcodeBmp != null) {
+   350	            canvas.save()
+   351	            canvas.translate(leftVBarcodeX + 10f, photoY + (vBarH / 2f) + (sideBarcodeW / 2f))
+   352	            canvas.rotate(-90f)
+   353	            canvas.drawBitmap(sideBarcodeBmp, 0f, 0f, null)
+   354	            canvas.restore()
+   355	        } else {
+   356	            canvas.save()
+   357	            canvas.translate(leftVBarcodeX + 15f, photoY + vBarH / 2f)
+   358	            canvas.rotate(90f)
+   359	            canvas.drawText("O V V", 0f, 0f, smallTextPaint)
+   360	            canvas.restore()
+   361	    
+   362	            canvas.save()
+   363	            canvas.translate(leftVBarcodeX + 35f, photoY + vBarH / 2f)
+   364	            canvas.rotate(90f)
+   365	            canvas.drawText("^ < barcode", 0f, 0f, smallTextPaint)
+   366	            canvas.restore()
+   367	        }
+   368	
+   369	        // Vertical Barcodes Right of Photo
+   370	        val rightVBarcodeX = photoX + photoW + 20f
+   371	        // top left
+   372	        canvas.drawLine(rightVBarcodeX, photoY, rightVBarcodeX + 15f, photoY, thinStroke) 
+   373	        canvas.drawLine(rightVBarcodeX, photoY, rightVBarcodeX, photoY + 15f, thinStroke) 
+   374	        // top right
+   375	        canvas.drawLine(rightVBarcodeX + vBarW - 15f, photoY, rightVBarcodeX + vBarW, photoY, thinStroke) 
+   376	        canvas.drawLine(rightVBarcodeX + vBarW, photoY, rightVBarcodeX + vBarW, photoY + 15f, thinStroke) 
+   377	        // bottom left
+   378	        canvas.drawLine(rightVBarcodeX, photoY + vBarH, rightVBarcodeX + 15f, photoY + vBarH, thinStroke) 
+   379	        canvas.drawLine(rightVBarcodeX, photoY + vBarH - 15f, rightVBarcodeX, photoY + vBarH, thinStroke) 
+   380	        // bottom right
+   381	        canvas.drawLine(rightVBarcodeX + vBarW - 15f, photoY + vBarH, rightVBarcodeX + vBarW, photoY + vBarH, thinStroke) 
+   382	        canvas.drawLine(rightVBarcodeX + vBarW, photoY + vBarH - 15f, rightVBarcodeX + vBarW, photoY + vBarH, thinStroke) 
+   383	        
+   384	        if (sideBarcodeBmp != null) {
+   385	            canvas.save()
+   386	            canvas.translate(rightVBarcodeX + 10f, photoY + (vBarH / 2f) + (sideBarcodeW / 2f))
+   387	            canvas.rotate(-90f)
+   388	            canvas.drawBitmap(sideBarcodeBmp, 0f, 0f, null)
+   389	            canvas.restore()
+   390	        } else {
+   391	            canvas.save()
+   392	            canvas.translate(rightVBarcodeX + 15f, photoY + vBarH / 2f)
+   393	            canvas.rotate(90f)
+   394	            canvas.drawText("O V V", 0f, 0f, smallTextPaint)
+   395	            canvas.restore()
+   396	    
+   397	            canvas.save()
+   398	            canvas.translate(rightVBarcodeX + 35f, photoY + vBarH / 2f)
+   399	            canvas.rotate(90f)
+   400	            canvas.drawText("^ < barcode", 0f, 0f, smallTextPaint)
+   401	            canvas.restore()
+   402	        }
+   403	
+   404	        // QR Box
+   405	        val qrBoxY = photoY + photoH + 20f
+   406	        val qrBoxX = photoX + photoW / 2f
+   407	        val qrSize = 90f
+   408	        val qrBmp = createBarcodeBitmap(rollNoText, BarcodeFormat.QR_CODE, qrSize.toInt(), qrSize.toInt())
+   409	        
+   410	        if (qrBmp != null) {
+   411	            canvas.drawBitmap(qrBmp, qrBoxX - qrSize / 2f, qrBoxY, null)
+   412	        } else {
+   413	            canvas.drawText("<<", qrBoxX, qrBoxY, smallTextPaint)
+   414	            canvas.drawRect(qrBoxX - 25f, qrBoxY + 10f, qrBoxX + 25f, qrBoxY + 60f, thinStroke)
+   415	            canvas.drawText("Q", qrBoxX, qrBoxY + 30f, smallTextPaint)
+   416	            canvas.drawText("R", qrBoxX, qrBoxY + 50f, smallTextPaint)
+   417	            canvas.drawText(">>", qrBoxX, qrBoxY + 75f, smallTextPaint)
+   418	        }
+   419	
+   420	        // Set Code Instructions
+   421	        val instrPaint = Paint().apply {
+   422	            isAntiAlias = true
+   423	            color = Color.BLACK
+   424	            textSize = 22f
+   425	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+   426	            textAlign = Paint.Align.RIGHT
+   427	        }
+   428	        val textY = 410f + 40f
+   429	        val textX = (1000 - 80f - 150f - 20f) // marksBoxLeft - 20f
+   430	        canvas.drawText("निर्देश: परीक्षार्थी अपना प्रश्न पत्र सेट कोड नीचे (क्र. 10)", textX, textY, instrPaint)
+   431	        canvas.drawText("में अवश्य भरें, अन्यथा परिणाम अमान्य हो सकता है।", textX, textY + 30f, instrPaint)
+   432	        
+   433	        // --- MARKS BOX ---
+   434	        val marksBoxTop = 410f
+   435	        val marksBoxBottom = 495f
+   436	        val marksBoxRight = SHEET_WIDTH - 80f
+   437	        val marksBoxLeft = marksBoxRight - 150f
+   438	        
+   439	        canvas.drawRect(marksBoxLeft, marksBoxTop, marksBoxRight, marksBoxBottom, blackStroke)
+   440	        
+   441	        val marksTextPaint = Paint().apply {
+   442	            isAntiAlias = true
+   443	            color = Color.BLACK
+   444	            textSize = 20f
+   445	            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+   446	            textAlign = Paint.Align.CENTER
+   447	        }
+   448	        
+   449	        canvas.drawText("MARKS", marksBoxLeft + 75f, marksBoxTop + 25f, marksTextPaint)
+   450	        canvas.drawLine(marksBoxLeft + 15f, marksBoxTop + 55f, marksBoxRight - 15f, marksBoxTop + 55f, blackStroke)
+   451	        canvas.drawText("50", marksBoxLeft + 75f, marksBoxTop + 80f, marksTextPaint)
+   452	
+   453	        // --- BOTTOM SECTION ---
+   454	        val boxTop = 510f
+   455	        val boxBottom = 1360f
+   456	        val boxLeft = 110f
+   457	        val boxRight = SHEET_WIDTH - 80f
+   458	        
+   459	        // Outer box
+   460	        canvas.drawRect(boxLeft, boxTop, boxRight, boxBottom, blackStroke)
+   461	        
+   462	        // Split line between left and right column
+   463	        val splitX = boxLeft + 160f
+   464	        canvas.drawLine(splitX, boxTop, splitX, boxBottom, blackStroke)
+   465	        
+   466	        // Top black header bar
+   467	        canvas.drawRect(boxLeft, boxTop, boxRight, boxTop + 40f, blackFill)
+   468	        
+   469	        // Left Column Title
+   470	        canvas.drawText("10. प्रश्न पत्र सेट कोड", boxLeft + 80f, boxTop + 25f, sectionTitlePaint)
+   471	        // Right Column Title
+   472	        canvas.drawText("वस्तुनिष्ठ प्रश्नों के उत्तर (For answering objective questions)", splitX + (boxRight - splitX) / 2f, boxTop + 25f, sectionTitlePaint)
+   473	
+   474	        // --- Left Column: Set Codes ---
+   475	        val setSets = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+   476	        val setBubbleRadius = 13f
+   477	        val setGridStartX = boxLeft + 105f
+   478	        val setGridStartY = boxTop + 80f
+   479	        val setRowHeight = 60f
+   480	        
+   481	        for (i in setSets.indices) {
+   482	            val cy = setGridStartY + i * setRowHeight
+   483	            canvas.drawText("SET-${setSets[i]}", boxLeft + 25f, cy + 6f, leftAlignedSmallText)
+   484	            canvas.drawCircle(setGridStartX, cy, setBubbleRadius, thinStroke)
+   485	            canvas.drawText(setSets[i], setGridStartX, cy + 5f, bubbleTextPaint)
+   486	        }
+   487	
+   488	        // --- Right Column: Objective Questions Answers ---
+   489	        val numCols = 5
+   490	        val numQPerCol = 20
+   491	        val rightBoxWidth = boxRight - splitX
+   492	        val colWidth = rightBoxWidth / numCols
+   493	        val bubbleRadius = 10f
+   494	        val optSpacing = 21f
+   495	        val qRowHeight = 39f
+   496	        val optLetters = listOf("A", "B", "C", "D")
+   497	        
+   498	        var currentQ = 1
+   499	        
+   500	        for (col in 0 until numCols) {
+   501	            val startX = splitX + col * colWidth
+   502	            val endX = startX + colWidth
+   503	            val qNumX = startX + 18f
+   504	            val bubblesStartX = startX + 46f
+   505	            
+   506	            // Draw column separator if not first column
+   507	            if (col > 0) {
+   508	                canvas.drawLine(startX, boxTop + 40f, startX, boxBottom, blackStroke)
+   509	            }
+   510	            
+   511	            // Draw Column Header
+   512	            val headerTop = boxTop + 40f
+   513	            val headerBottom = headerTop + 30f
+   514	            canvas.drawRect(startX, headerTop, endX, headerBottom, headerGrayFill)
+   515	            canvas.drawText("No.", qNumX, headerTop + 20f, headerTextPaint)
+   516	            for (opt in 0..3) {
+   517	                canvas.drawText(optLetters[opt], bubblesStartX + opt * optSpacing, headerTop + 20f, headerTextPaint)
+   518	            }
+   519	            
+   520	            for (row in 0 until numQPerCol) {
+   521	                val rowTop = headerBottom + row * qRowHeight
+   522	                val rowBottom = rowTop + qRowHeight
+   523	                val cy = rowTop + qRowHeight / 2f
+   524	                
+   525	                val qString = currentQ.toString()
+   526	                
+   527	                // Draw Q Num
+   528	                canvas.drawText(qString, qNumX, cy + 6f, smallTextPaint)
+   529	                
+   530	                // Draw Options
+   531	                for (opt in 0..3) {
+   532	                    val cx = bubblesStartX + opt * optSpacing
+   533	                    canvas.drawCircle(cx, cy, bubbleRadius, thinStroke)
+   534	                    canvas.drawText(optLetters[opt], cx, cy + 4f, bubbleTextPaint)
+   535	                }
+   536	                currentQ++
+   537	            }
+   538	        }
+   539	
+   540	    }
+   541	
+   542	    fun generateOmrBitmap(context: android.content.Context, numQuestions: Int, numOptions: Int, student: Student? = null, title: String = "बिहार विद्यालय परीक्षा , समिति", logoPath: String = "", logoOpacity: Float = 0.2f, logoSize: Float = 100f, logoPosition: String = "Left"): Bitmap {
+   543	        val bitmap = Bitmap.createBitmap(SHEET_WIDTH, SHEET_HEIGHT, Bitmap.Config.ARGB_8888)
+   544	        val canvas = Canvas(bitmap)
+   545	        drawOmrToCanvas(context, canvas, numQuestions, numOptions, student, title, logoPath, logoOpacity, logoSize, logoPosition)
+   546	        return bitmap
+   547	    }
+   548	}
+   549	

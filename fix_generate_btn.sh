@@ -1,0 +1,1 @@
+perl -0777 -pi -e 's/                \}\n                createDocumentLauncher\.launch\("\$\{exam\.name\}_QuestionPapers\.pdf"\)\n            \},/                }\n                pendingAction = "generatePapers"\n                createDocumentLauncher.launch("${exam.name}_QuestionPapers.pdf")\n            },/g' app/src/main/java/com/example/ui/ExamDashboardScreen.kt

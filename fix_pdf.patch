@@ -1,0 +1,181 @@
+--- app/src/main/java/com/example/ui/ExamDashboardScreen.kt
++++ app/src/main/java/com/example/ui/ExamDashboardScreen.kt
+@@ -621,9 +621,11 @@
+             val correctAnswers = shuffledQuestions.map { it.correctIndex }
+             viewModel.saveAnswerKey(exam.id, setName, shuffledQuestions.size, 4, correctAnswers) {}
+ 
+-            val totalPages = Math.ceil(shuffledQuestions.size / 50.0).toInt().coerceAtLeast(1)
++            var questionsDrawn = 0
++            val totalQuestions = shuffledQuestions.size
+             var pageIndex = 1
+ 
+-            for (p in 0 until totalPages) {
++            while (questionsDrawn < totalQuestions) {
+                 val pageInfo = PdfDocument.PageInfo.Builder(pageW.toInt(), pageH.toInt(), pageIndex).create()
+                 val page = pdfDocument.startPage(pageInfo)
+                 val canvas = page.canvas
+@@ -632,54 +634,68 @@
+                 canvas.drawRect(20f, 20f, pageW - 20f, pageH - 20f, thinStroke)
+ 
+-                // Top Left
+-                canvas.drawText("SET CODE", 40f, 45f, boldSmallPaint)
+-                canvas.drawRect(40f, 55f, 120f, 135f, blackFill)
+-                canvas.drawText(setName, 80f, 120f, whiteLargePaint)
+-
+-                // Top Center
+-                canvas.drawText("QUESTION PAPER", pageW / 2f, 65f, titlePaint)
+-                canvas.drawLine(pageW / 2f - 180f, 85f, pageW / 2f - 20f, 85f, thickStroke)
+-                canvas.drawLine(pageW / 2f + 20f, 85f, pageW / 2f + 180f, 85f, thickStroke)
+-                val diamondPath = android.graphics.Path().apply {
+-                    moveTo(pageW / 2f, 80f)
+-                    lineTo(pageW / 2f + 8f, 85f)
+-                    lineTo(pageW / 2f, 90f)
+-                    lineTo(pageW / 2f - 8f, 85f)
+-                    close()
+-                }
+-                canvas.drawPath(diamondPath, blackFill)
+-
+-                val mcqRect = android.graphics.RectF(pageW / 2f - 170f, 105f, pageW / 2f + 170f, 135f)
+-                canvas.drawRoundRect(mcqRect, 15f, 15f, blackFill)
+-                canvas.drawText("MULTIPLE CHOICE QUESTIONS (MCQ)", pageW / 2f, 127f, whiteNormalPaint)
+-
+-                // Top Right
+-                val detailsRect = android.graphics.RectF(pageW - 220f, 35f, pageW - 40f, 115f)
+-                canvas.drawRoundRect(detailsRect, 5f, 5f, thinStroke)
+-                
+-                val labelX = pageW - 210f
+-                val colonX = pageW - 105f
+-                val valueX = pageW - 95f
+-                
+-                canvas.drawText("Total Questions", labelX, 60f, boldSmallPaint)
+-                canvas.drawText(":", colonX, 60f, boldSmallPaint)
+-                canvas.drawText("${baseQuestions.size}", valueX, 60f, boldSmallPaint)
+-                
+-                canvas.drawText("Total Marks", labelX, 80f, boldSmallPaint)
+-                canvas.drawText(":", colonX, 80f, boldSmallPaint)
+-                canvas.drawText("${baseQuestions.size}", valueX, 80f, boldSmallPaint)
+-                
+-                canvas.drawText("Time Allowed", labelX, 100f, boldSmallPaint)
+-                canvas.drawText(":", colonX, 100f, boldSmallPaint)
+-                canvas.drawText("60 Minutes", valueX, 100f, boldSmallPaint)
+-
+-                // Instructions Box
+-                val instrRect = android.graphics.RectF(40f, 150f, pageW - 40f, 210f)
+-                canvas.drawRoundRect(instrRect, 5f, 5f, thinStroke)
+-                canvas.drawText("INSTRUCTIONS : ", 60f, 175f, instrBoldPaint)
+-                canvas.drawText("Each question carries 1 mark. Choose the correct option (A / B / C / D) and", 185f, 175f, instrRegularPaint)
+-                canvas.drawText("mark your answer on the OMR sheet.", 185f, 195f, instrRegularPaint)
+-
+-                // Center Divider
+-                canvas.drawLine(pageW / 2f, 220f, pageW / 2f, pageH - 80f, thinStroke)
+-
+                 // Footer
+                 canvas.drawLine(40f, pageH - 80f, pageW - 40f, pageH - 80f, thinStroke)
+                 canvas.drawText("★  ALL THE BEST  ★", pageW / 2f, pageH - 45f, footerPaint)
+ 
++                val questionsOnThisPage = if (pageIndex == 1) 24 else 26
++                val qPerCol = questionsOnThisPage / 2
++                
++                var startY = 0f
++                var rowSpacing = 0f
++
++                if (pageIndex == 1) {
++                    // Top Left
++                    canvas.drawText("SET CODE", 40f, 45f, boldSmallPaint)
++                    canvas.drawRect(40f, 55f, 120f, 135f, blackFill)
++                    canvas.drawText(setName, 80f, 120f, whiteLargePaint)
++
++                    // Top Center
++                    canvas.drawText("QUESTION PAPER", pageW / 2f, 65f, titlePaint)
++                    canvas.drawLine(pageW / 2f - 180f, 85f, pageW / 2f - 20f, 85f, thickStroke)
++                    canvas.drawLine(pageW / 2f + 20f, 85f, pageW / 2f + 180f, 85f, thickStroke)
++                    val diamondPath = android.graphics.Path().apply {
++                        moveTo(pageW / 2f, 80f)
++                        lineTo(pageW / 2f + 8f, 85f)
++                        lineTo(pageW / 2f, 90f)
++                        lineTo(pageW / 2f - 8f, 85f)
++                        close()
++                    }
++                    canvas.drawPath(diamondPath, blackFill)
++
++                    val mcqRect = android.graphics.RectF(pageW / 2f - 170f, 105f, pageW / 2f + 170f, 135f)
++                    canvas.drawRoundRect(mcqRect, 15f, 15f, blackFill)
++                    canvas.drawText("MULTIPLE CHOICE QUESTIONS (MCQ)", pageW / 2f, 127f, whiteNormalPaint)
++
++                    // Top Right
++                    val detailsRect = android.graphics.RectF(pageW - 220f, 35f, pageW - 40f, 115f)
++                    canvas.drawRoundRect(detailsRect, 5f, 5f, thinStroke)
++                    
++                    val labelX = pageW - 210f
++                    val colonX = pageW - 105f
++                    val valueX = pageW - 95f
++                    
++                    canvas.drawText("Total Questions", labelX, 60f, boldSmallPaint)
++                    canvas.drawText(":", colonX, 60f, boldSmallPaint)
++                    canvas.drawText("${baseQuestions.size}", valueX, 60f, boldSmallPaint)
++                    
++                    canvas.drawText("Total Marks", labelX, 80f, boldSmallPaint)
++                    canvas.drawText(":", colonX, 80f, boldSmallPaint)
++                    canvas.drawText("${baseQuestions.size}", valueX, 80f, boldSmallPaint)
++                    
++                    canvas.drawText("Time Allowed", labelX, 100f, boldSmallPaint)
++                    canvas.drawText(":", colonX, 100f, boldSmallPaint)
++                    canvas.drawText("60 Minutes", valueX, 100f, boldSmallPaint)
++
++                    // Instructions Box
++                    val instrRect = android.graphics.RectF(40f, 150f, pageW - 40f, 210f)
++                    canvas.drawRoundRect(instrRect, 5f, 5f, thinStroke)
++                    canvas.drawText("INSTRUCTIONS : ", 60f, 175f, instrBoldPaint)
++                    canvas.drawText("Each question carries 1 mark. Choose the correct option (A / B / C / D) and", 185f, 175f, instrRegularPaint)
++                    canvas.drawText("mark your answer on the OMR sheet.", 185f, 195f, instrRegularPaint)
++
++                    // Center Divider
++                    canvas.drawLine(pageW / 2f, 220f, pageW / 2f, pageH - 80f, thinStroke)
++                    
++                    startY = 245f
++                    rowSpacing = 65f
++                } else {
++                    // Small header for subsequent pages
++                    canvas.drawText("SET: $setName", pageW - 100f, 45f, boldSmallPaint)
++                    // Center Divider
++                    canvas.drawLine(pageW / 2f, 60f, pageW / 2f, pageH - 80f, thinStroke)
++                    
++                    startY = 70f
++                    rowSpacing = 72f
++                }
++
+                 // Questions
+-                val startQIndex = p * 50
+-                val endQIndex = Math.min(startQIndex + 50, shuffledQuestions.size)
++                val endQIndex = Math.min(questionsDrawn + questionsOnThisPage, totalQuestions)
+ 
+-                for (i in startQIndex until endQIndex) {
+-                    val qIndexOnPage = i - startQIndex
+-                    val isCol2 = qIndexOnPage >= 25
++                for (i in questionsDrawn until endQIndex) {
++                    val qIndexOnPage = i - questionsDrawn
++                    val isCol2 = qIndexOnPage >= qPerCol
+                     val colX = if (isCol2) pageW / 2f + 20f else 40f
+-                    val qY = 245f + (qIndexOnPage % 25) * 32f
++                    val rowIndex = qIndexOnPage % qPerCol
++                    val qY = startY + (rowIndex * rowSpacing)
+                     
+                     val q = shuffledQuestions[i]
+                     val qNum = "${i + 1}."
+                     canvas.drawText(qNum, colX, qY, qTextPaint)
+                     
+                     val qStr = if (q.text.isBlank()) "......................................................................... ?" else q.text
+                     canvas.drawText(qStr, colX + 25f, qY, qDotsPaint)
+                     
+-                    val optY = qY + 16f
++                    val optY = qY + 22f
+                     val optSpacing = 82f
+                     val labels = listOf("A", "B", "C", "D")
+                     
+@@ -729,6 +745,7 @@
+                 }
+                 pdfDocument.finishPage(page)
+                 pageIndex++
++                questionsDrawn = endQIndex
+             }
+         }
