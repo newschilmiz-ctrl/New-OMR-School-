@@ -180,12 +180,14 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                         )
                     }
 
-                    // Right: Status Pill badge (like ₹20 in the reference image)
+                    // Right: Cloud & MySQL Status Pill badge
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = Color(0xFFE0F2FE),
-                        border = BorderStroke(1.dp, Color(0xFFBAE6FD)),
-                        modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                        color = Color(0xFFEFF6FF),
+                        border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { navController.navigate(Screen.SyncSettings.route) }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -195,15 +197,15 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 modifier = Modifier
                                     .size(7.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF0284C7))
+                                    .background(Color(0xFF2563EB))
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "⚡ AI Engine",
+                                text = "☁️ Cloud & MySQL",
                                 style = TextStyle(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
-                                    color = Color(0xFF0369A1)
+                                    color = Color(0xFF1D4ED8)
                                 )
                             )
                         }
@@ -531,6 +533,16 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             } else {
                                 Toast.makeText(context, "Create an exam first", Toast.LENGTH_SHORT).show()
                             }
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.CloudSync,
+                            title = "MySQL Sync",
+                            bgGradient = listOf(Color(0xFFEFF6FF), Color(0xFFBFDBFE)),
+                            iconTint = Color(0xFF1D4ED8)
+                        ) {
+                            navController.navigate(Screen.SyncSettings.route)
                         }
                     }
                 }

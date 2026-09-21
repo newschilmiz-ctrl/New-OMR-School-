@@ -12,4 +12,5 @@ sealed class Screen(val route: String) {
         fun createRoute(examId: Int) = "scan_omr/$examId"
     }
     object CustomOmrDesigner : Screen("custom_omr_designer")
+    object SyncSettings : Screen("sync_settings")
 }

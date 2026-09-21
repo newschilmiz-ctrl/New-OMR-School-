@@ -16,6 +16,13 @@ object CloudSyncManager {
     private const val CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dckmi2k1j/image/upload"
     private const val CLOUDINARY_PRESET = "rs arts"
 
+    @Volatile
+    private var appContext: android.content.Context? = null
+
+    fun init(context: android.content.Context) {
+        appContext = context.applicationContext
+    }
+
     suspend fun uploadStudent(student: Student) {
         withContext(Dispatchers.IO) {
             try {
@@ -28,23 +35,25 @@ object CloudSyncManager {
                     }
                 }
 
+                val finalStudent = if (uploadedImageUrl.isNotEmpty()) student.copy(imagePath = uploadedImageUrl) else student
+
                 // 2. Upload Student to Firebase Realtime DB
                 val json = JSONObject().apply {
-                    put("name", student.name)
-                    put("fatherName", student.fatherName)
-                    put("motherName", student.motherName)
-                    put("gender", student.gender)
-                    put("registrationNo", student.registrationNo)
-                    put("rollNo", student.rollNo)
-                    put("dob", student.dob)
-                    put("mobileNo", student.mobileNo)
-                    put("email", student.email)
-                    put("stream", student.stream)
-                    put("subjects", student.subjects)
-                    put("imageUrl", uploadedImageUrl)
+                    put("name", finalStudent.name)
+                    put("fatherName", finalStudent.fatherName)
+                    put("motherName", finalStudent.motherName)
+                    put("gender", finalStudent.gender)
+                    put("registrationNo", finalStudent.registrationNo)
+                    put("rollNo", finalStudent.rollNo)
+                    put("dob", finalStudent.dob)
+                    put("mobileNo", finalStudent.mobileNo)
+                    put("email", finalStudent.email)
+                    put("stream", finalStudent.stream)
+                    put("subjects", finalStudent.subjects)
+                    put("imageUrl", finalStudent.imagePath)
                 }
 
-                val url = URL("$FIREBASE_DB_URL/students/${student.rollNo}.json")
+                val url = URL("$FIREBASE_DB_URL/students/${finalStudent.rollNo}.json")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "PUT"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -54,6 +63,11 @@ object CloudSyncManager {
                 val responseCode = conn.responseCode
                 Log.d("CloudSync", "Firebase response code: $responseCode")
                 conn.disconnect()
+
+                // 3. Dual-sync to MySQL Web Server
+                appContext?.let { ctx ->
+                    MySqlSyncManager.syncStudent(ctx, finalStudent)
+                }
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -85,6 +99,11 @@ object CloudSyncManager {
                 val responseCode = conn.responseCode
                 Log.d("CloudSync", "Scan Result Firebase response: $responseCode")
                 conn.disconnect()
+
+                // Dual-sync to MySQL Web Server
+                appContext?.let { ctx ->
+                    MySqlSyncManager.syncScanResult(ctx, result)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -133,6 +152,13 @@ object CloudSyncManager {
                 val responseCode = conn.responseCode
                 Log.d("CloudSync", "Exam upload response: $responseCode")
                 conn.disconnect()
+
+                // Dual-sync to MySQL Web Server
+                val updatedExam = exam.copy(id = idToUse, logoUrl = logoUrlToUse)
+                appContext?.let { ctx ->
+                    MySqlSyncManager.syncExam(ctx, updatedExam)
+                }
+
                 idToUse
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -218,6 +244,10 @@ object CloudSyncManager {
                 conn.requestMethod = "DELETE"
                 conn.responseCode
                 conn.disconnect()
+
+                appContext?.let { ctx ->
+                    MySqlSyncManager.deleteExam(ctx, id)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -247,6 +277,11 @@ object CloudSyncManager {
                 OutputStreamWriter(conn.outputStream).use { it.write(json.toString()) }
                 conn.responseCode
                 conn.disconnect()
+
+                val updatedKey = key.copy(id = idToUse)
+                appContext?.let { ctx ->
+                    MySqlSyncManager.syncAnswerKey(ctx, updatedKey)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -418,6 +453,10 @@ object CloudSyncManager {
                 conn.requestMethod = "DELETE"
                 conn.responseCode
                 conn.disconnect()
+
+                appContext?.let { ctx ->
+                    MySqlSyncManager.deleteStudent(ctx, rollNo)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -453,6 +492,11 @@ object CloudSyncManager {
                 OutputStreamWriter(conn.outputStream).use { it.write(json.toString()) }
                 conn.responseCode
                 conn.disconnect()
+
+                val updatedQ = q.copy(id = idToUse)
+                appContext?.let { ctx ->
+                    MySqlSyncManager.syncQuestion(ctx, updatedQ)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -524,6 +568,10 @@ object CloudSyncManager {
                 conn.requestMethod = "DELETE"
                 conn.responseCode
                 conn.disconnect()
+
+                appContext?.let { ctx ->
+                    MySqlSyncManager.deleteQuestion(ctx, examId, id)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

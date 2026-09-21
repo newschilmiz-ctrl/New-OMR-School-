@@ -292,6 +292,9 @@ fun MainAppScreen() {
             composable(Screen.CustomOmrDesigner.route) {
                 CustomOmrDesignerScreen(navController, viewModel)
             }
+            composable(Screen.SyncSettings.route) {
+                SyncSettingsScreen(navController, viewModel)
+            }
         }
     }
 }

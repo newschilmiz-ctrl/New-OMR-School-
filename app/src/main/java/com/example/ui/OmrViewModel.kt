@@ -29,6 +29,7 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     val exams: StateFlow<List<Exam>> = _exams
 
     init {
+        com.example.util.CloudSyncManager.init(application)
         fetchStudents()
         fetchExams()
     }
@@ -256,6 +257,31 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
             }
             
             onDone()
+        }
+    }
+
+    fun bulkSyncToMySql(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val examsList = _exams.value.ifEmpty { com.example.util.CloudSyncManager.fetchExams() }
+            val studentsList = _students.value.ifEmpty { com.example.util.CloudSyncManager.fetchStudents() }
+            val allResults = mutableListOf<ScanResult>()
+            examsList.forEach { exam ->
+                allResults.addAll(com.example.util.CloudSyncManager.fetchScanResultsForExam(exam.id))
+            }
+            val (success, msg) = com.example.util.MySqlSyncManager.bulkSync(
+                getApplication(),
+                examsList,
+                studentsList,
+                allResults
+            )
+            onResult(success, msg)
+        }
+    }
+
+    fun testMySqlConnection(url: String, apiKey: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val (success, msg) = com.example.util.MySqlSyncManager.testConnection(url, apiKey)
+            onResult(success, msg)
         }
     }
 }
