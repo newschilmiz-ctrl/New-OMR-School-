@@ -168,12 +168,12 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                     Text(
                         "Database & Cloud Sync",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 15.sp
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(36.dp)) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", modifier = Modifier.size(18.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -188,18 +188,18 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(scrollState)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // 1. FIREBASE REALTIME DB STATUS CARD
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(30.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFFFF7ED)),
                                 contentAlignment = Alignment.Center
@@ -217,44 +217,44 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                                     Icons.Default.CloudQueue,
                                     contentDescription = "Firebase",
                                     tint = Color(0xFFF97316),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
                                     "Firebase Realtime DB",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
+                                    fontSize = 13.5.sp,
                                     color = Color(0xFF0F172A)
                                 )
                                 Text(
                                     "Google Cloud Sync Active",
-                                    fontSize = 12.sp,
+                                    fontSize = 10.5.sp,
                                     color = Color(0xFF64748B)
                                 )
                             }
                         }
 
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = Color(0xFFDCFCE7),
                             border = BorderStroke(1.dp, Color(0xFFBBF7D0))
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(6.dp)
+                                        .size(5.dp)
                                         .clip(CircleShape)
                                         .background(Color(0xFF16A34A))
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text(
                                     "Connected",
-                                    fontSize = 11.sp,
+                                    fontSize = 9.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF15803D)
                                 )
@@ -262,12 +262,12 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "All exams, students, OMR keys, and scanned results automatically sync with Firebase Realtime Database in real-time.",
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         color = Color(0xFF475569),
-                        lineHeight = 16.sp
+                        lineHeight = 15.sp
                     )
                 }
             }
@@ -276,11 +276,11 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -289,7 +289,7 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(30.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFEFF6FF)),
                                 contentAlignment = Alignment.Center
@@ -298,20 +298,20 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                                     Icons.Default.Storage,
                                     contentDescription = "MySQL",
                                     tint = Color(0xFF2563EB),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
                                     "Web Server MySQL Sync",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
+                                    fontSize = 13.5.sp,
                                     color = Color(0xFF0F172A)
                                 )
                                 Text(
                                     "Dual-Write to Your Hosting / VPS",
-                                    fontSize = 12.sp,
+                                    fontSize = 10.5.sp,
                                     color = Color(0xFF64748B)
                                 )
                             }
@@ -336,29 +336,29 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     HorizontalDivider(color = Color(0xFFF1F5F9))
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Server URL Input
                     Text(
                         "Web Server API URL",
-                        fontSize = 13.sp,
+                        fontSize = 11.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF1E293B)
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
                         value = serverUrl,
                         onValueChange = { serverUrl = it },
-                        placeholder = { Text("http://rsartsclassess.whf.bz/omr_api/api.php", fontSize = 13.sp) },
+                        placeholder = { Text("http://rsartsclassess.whf.bz/omr_api/api.php", fontSize = 11.5.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("server_url_input"),
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         leadingIcon = {
-                            Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF2563EB),
@@ -367,10 +367,10 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                     )
 
                     if (serverUrl.contains(".omr_api")) {
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Surface(
                             color = Color(0xFFFEF2F2),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(6.dp),
                             border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -379,14 +379,14 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                                 }
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
                                 Text(
                                     "Typo detected: '.omr_api' found! Tap here to fix to '/omr_api/api.php'",
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     color = Color(0xFFDC2626),
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -396,32 +396,32 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
 
                     Text(
                         "Example: http://rsartsclassess.whf.bz/omr_api/api.php",
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         color = Color(0xFF64748B),
-                        modifier = Modifier.padding(top = 4.dp, start = 2.dp)
+                        modifier = Modifier.padding(top = 3.dp, start = 2.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // API Key / Secret Token Input
                     Text(
                         "API Secret Key (Optional / X-API-KEY)",
-                        fontSize = 13.sp,
+                        fontSize = 11.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF1E293B)
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
                         value = apiKey,
                         onValueChange = { apiKey = it },
-                        placeholder = { Text("Leave blank if not configured in db_config.php", fontSize = 13.sp) },
+                        placeholder = { Text("Leave blank if not configured in db_config.php", fontSize = 11.5.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("api_key_input"),
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         leadingIcon = {
-                            Icon(Icons.Default.Key, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Key, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF2563EB),
@@ -429,12 +429,12 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Action Buttons Row: Save & Test Connection
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = {
@@ -450,14 +450,15 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(44.dp)
+                                .height(38.dp)
                                 .testTag("save_sync_settings_btn"),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(vertical = 6.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
                         ) {
-                            Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Save URL", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text("Save URL", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                         }
 
                         OutlinedButton(
@@ -480,46 +481,47 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(44.dp)
+                                .height(38.dp)
                                 .testTag("test_mysql_conn_btn"),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(vertical = 6.dp),
                             border = BorderStroke(1.dp, Color(0xFF2563EB)),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF2563EB))
                         ) {
                             if (isTestingConnection) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color(0xFF2563EB))
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Color(0xFF2563EB))
                             } else {
-                                Icon(Icons.Default.NetworkCheck, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Test Connection", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.NetworkCheck, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text("Test Connection", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
 
                     // Test Connection Result Feedback Banner
                     testResult?.let { result ->
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         val (isSuccess, msg) = result
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = if (isSuccess) Color(0xFFDCFCE7) else Color(0xFFFEE2E2),
                             border = BorderStroke(1.dp, if (isSuccess) Color(0xFF86EFAC) else Color(0xFFFCA5A5)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
-                                modifier = Modifier.padding(12.dp),
+                                modifier = Modifier.padding(10.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Error,
                                     contentDescription = null,
                                     tint = if (isSuccess) Color(0xFF16A34A) else Color(0xFFDC2626),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = msg,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = if (isSuccess) Color(0xFF14532D) else Color(0xFF7F1D1D)
                                 )
@@ -527,23 +529,23 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     HorizontalDivider(color = Color(0xFFF1F5F9))
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Bulk Sync Button
                     Text(
                         "Force Bulk Sync",
-                        fontSize = 13.sp,
+                        fontSize = 11.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF1E293B)
                     )
                     Text(
                         "Upload all existing exams, answer keys, questions, students (with photos), and scan results to your MySQL server right now.",
-                        fontSize = 11.sp,
+                        fontSize = 10.5.sp,
                         color = Color(0xFF64748B)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Button(
                         onClick = {
@@ -564,28 +566,29 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         enabled = !isSyncingAll,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
+                            .height(38.dp)
                             .testTag("bulk_sync_btn"),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(vertical = 6.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
                     ) {
                         if (isSyncingAll) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Syncing to MySQL...", fontSize = 13.sp)
+                            CircularProgressIndicator(modifier = Modifier.size(15.dp), color = Color.White, strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Syncing to MySQL...", fontSize = 11.5.sp)
                         } else {
-                            Icon(Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Sync All Data to MySQL Now", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Sync All Data to MySQL Now", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
                     if (lastSyncTime > 0) {
                         val formattedDate = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(lastSyncTime))
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             "Last Full Sync: $formattedDate",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             color = Color(0xFF059669),
                             fontWeight = FontWeight.Medium
                         )
@@ -593,28 +596,28 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
 
                     // Bulk Sync Result Feedback Banner
                     syncAllResult?.let { result ->
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         val (isSuccess, msg) = result
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = if (isSuccess) Color(0xFFDCFCE7) else Color(0xFFFEE2E2),
                             border = BorderStroke(1.dp, if (isSuccess) Color(0xFF86EFAC) else Color(0xFFFCA5A5)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
-                                modifier = Modifier.padding(12.dp),
+                                modifier = Modifier.padding(10.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Error,
                                     contentDescription = null,
                                     tint = if (isSuccess) Color(0xFF16A34A) else Color(0xFFDC2626),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = msg,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = if (isSuccess) Color(0xFF14532D) else Color(0xFF7F1D1D)
                                 )
@@ -628,10 +631,10 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -640,7 +643,7 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(30.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFF3E8FF)),
                                 contentAlignment = Alignment.Center
@@ -649,48 +652,49 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                                     Icons.Default.Code,
                                     contentDescription = "SQL",
                                     tint = Color(0xFF9333EA),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
                                     "MySQL .sql Table Structure",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
+                                    fontSize = 13.5.sp,
                                     color = Color(0xFF0F172A)
                                 )
                                 Text(
                                     "Ready to import in phpMyAdmin",
-                                    fontSize = 12.sp,
+                                    fontSize = 10.5.sp,
                                     color = Color(0xFF64748B)
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Includes tables for: exams, students, answer_keys, questions, and scan_results with UTF8MB4 Hindi support.",
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         color = Color(0xFF475569)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
                             onClick = { showSqlSchemaDialog = true },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp),
-                            shape = RoundedCornerShape(8.dp)
+                                .height(34.dp),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(vertical = 4.dp)
                         ) {
-                            Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("View SQL", fontSize = 12.sp)
+                            Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("View SQL", fontSize = 11.sp)
                         }
 
                         Button(
@@ -702,13 +706,14 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
+                                .height(34.dp),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(vertical = 4.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA))
                         ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Copy SQL", fontSize = 12.sp)
+                            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Copy SQL", fontSize = 11.sp)
                         }
                     }
                 }
@@ -718,26 +723,26 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Text(
                         "Setup Steps for Your Web Server:",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = 12.5.sp,
                         color = Color(0xFF0F172A)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         "1. Open cPanel / phpMyAdmin and create a database named `omr_system`.\n" +
                         "2. Click 'Import' and run the SQL table structure above.\n" +
                         "3. Upload the provided `api.php` and `db_config.php` to your web server (e.g. `public_html/omr_api/`).\n" +
                         "4. Put your DB username and password in `db_config.php`.\n" +
                         "5. Enter your URL above (e.g. `https://yourdomain.com/omr_api/api.php`) and click 'Test Connection'.",
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         color = Color(0xFF334155),
-                        lineHeight = 18.sp
+                        lineHeight = 16.sp
                     )
                 }
             }

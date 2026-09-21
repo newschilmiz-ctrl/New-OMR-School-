@@ -73,21 +73,24 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                             Text(
                                 exam?.name ?: "Exam Dashboard",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
+                                fontSize = 15.sp,
                                 color = Color(0xFF0F172A)
                             )
                             if (exam != null) {
                                 Text(
                                     "${exam!!.subject} • Pass: ${exam!!.passMarks.toInt()} Marks",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 10.5.sp,
                                     color = Color(0xFF64748B)
                                 )
                             }
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF0F172A))
+                        IconButton(
+                            onClick = { navController.popBackStack() },
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
                         }
                     },
                     actions = {
@@ -97,17 +100,17 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                         if (showDeleteDialog) {
                             AlertDialog(
                                 onDismissRequest = { showDeleteDialog = false },
-                                title = { Text("Delete Exam", fontWeight = FontWeight.Bold) },
-                                text = { Text("Are you sure you want to delete this exam? All questions, answer keys, and scan results will be permanently removed.") },
+                                title = { Text("Delete Exam", fontWeight = FontWeight.Bold, fontSize = 15.sp) },
+                                text = { Text("Are you sure you want to delete this exam? All questions, answer keys, and scan results will be permanently removed.", fontSize = 12.sp) },
                                 confirmButton = {
                                     TextButton(onClick = {
                                         viewModel.deleteExam(examId) {
                                             navController.popBackStack()
                                         }
-                                    }) { Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) }
+                                    }) { Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                                    TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", fontSize = 12.sp) }
                                 }
                             )
                         }
@@ -117,21 +120,23 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                             var editSubject by remember { mutableStateOf(exam!!.subject) }
                             AlertDialog(
                                 onDismissRequest = { showEditDialog = false },
-                                title = { Text("Edit Exam Details", fontWeight = FontWeight.Bold) },
+                                title = { Text("Edit Exam Details", fontWeight = FontWeight.Bold, fontSize = 15.sp) },
                                 text = {
-                                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         OutlinedTextField(
                                             value = editName,
                                             onValueChange = { editName = it },
-                                            label = { Text("Exam Name") },
-                                            shape = RoundedCornerShape(12.dp),
+                                            label = { Text("Exam Name", fontSize = 11.sp) },
+                                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
+                                            shape = RoundedCornerShape(10.dp),
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                         OutlinedTextField(
                                             value = editSubject,
                                             onValueChange = { editSubject = it },
-                                            label = { Text("Subject") },
-                                            shape = RoundedCornerShape(12.dp),
+                                            label = { Text("Subject", fontSize = 11.sp) },
+                                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
+                                            shape = RoundedCornerShape(10.dp),
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                     }
@@ -142,40 +147,40 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                                             showEditDialog = false
                                             exam = exam!!.copy(name = editName, subject = editSubject)
                                         }
-                                    }) { Text("Save Changes", fontWeight = FontWeight.Bold) }
+                                    }) { Text("Save Changes", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showEditDialog = false }) { Text("Cancel") }
+                                    TextButton(onClick = { showEditDialog = false }) { Text("Cancel", fontSize = 12.sp) }
                                 }
                             )
                         }
 
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(30.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFFF1F5F9))
                                 .clickable { showEditDialog = true },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit Exam", tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Edit, contentDescription = "Edit Exam", tint = Color(0xFF0F172A), modifier = Modifier.size(15.dp))
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(30.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFFFEE2E2))
                                 .clickable { showDeleteDialog = true },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete Exam", tint = Color(0xFFDC2626), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Delete, contentDescription = "Delete Exam", tint = Color(0xFFDC2626), modifier = Modifier.size(15.dp))
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
                 )
-                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
             }
         },
         containerColor = Color(0xFFFAFBFD)
@@ -185,14 +190,14 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
                 contentColor = Color(0xFFE11D48),
-                edgePadding = 12.dp,
-                divider = { HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp) },
+                edgePadding = 6.dp,
+                divider = { HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp) },
                 indicator = { tabPositions ->
                     if (selectedTab < tabPositions.size) {
                         TabRowDefaults.SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
                             color = Color(0xFFE11D48),
-                            height = 3.dp
+                            height = 2.5.dp
                         )
                     }
                 }
@@ -212,7 +217,7 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                         text = {
                             Text(
                                 label,
-                                fontSize = 12.sp,
+                                fontSize = 10.5.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSelected) Color(0xFFE11D48) else Color(0xFF64748B)
                             )
@@ -221,7 +226,7 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                             Icon(
                                 icon,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(15.dp),
                                 tint = if (isSelected) Color(0xFFE11D48) else Color(0xFF94A3B8)
                             )
                         }
@@ -283,18 +288,18 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Enrolled Students Overview Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -304,52 +309,52 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
                         Text(
                             "Candidate Roster",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            fontSize = 13.5.sp,
                             color = Color(0xFF0F172A)
                         )
                         Text(
                             "Subject: ${exam?.subject ?: "N/A"}",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 10.5.sp,
                             color = Color(0xFF64748B)
                         )
                     }
                     Surface(
                         color = Color(0xFFF1F5F9),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
                             "${enrolledStudents.size} Enrolled",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
+                            fontSize = 10.5.sp,
                             color = Color(0xFF0F172A)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Surface(
                         modifier = Modifier.weight(1f),
                         color = Color(0xFFEFF6FF),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         border = BorderStroke(1.dp, Color(0xFFBFDBFE))
                     ) {
                         Row(
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Box(
-                                modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFF2563EB))
+                                modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF2563EB))
                             )
                             Column {
-                                Text("Male Candidates", fontSize = 11.sp, color = Color(0xFF1E40AF))
-                                Text("${males.size}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF1E3A8A))
+                                Text("Male Candidates", fontSize = 10.sp, color = Color(0xFF1E40AF))
+                                Text("${males.size}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF1E3A8A))
                             }
                         }
                     }
@@ -357,20 +362,20 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
                     Surface(
                         modifier = Modifier.weight(1f),
                         color = Color(0xFFFDF2F8),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         border = BorderStroke(1.dp, Color(0xFFFBCFE8))
                     ) {
                         Row(
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Box(
-                                modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFFDB2777))
+                                modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFDB2777))
                             )
                             Column {
-                                Text("Female Candidates", fontSize = 11.sp, color = Color(0xFF9D174D))
-                                Text("${females.size}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF831843))
+                                Text("Female Candidates", fontSize = 10.sp, color = Color(0xFF9D174D))
+                                Text("${females.size}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF831843))
                             }
                         }
                     }
@@ -381,43 +386,44 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
         // Custom Drag & Drop OMR Studio Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F3FF)),
             border = BorderStroke(1.dp, Color(0xFFDDD6FE)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(6.dp))
                             .background(Color(0xFF7C3AED)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.DesignServices, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.DesignServices, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Full Custom OMR Studio", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF4C1D95))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Full Custom OMR Studio", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF4C1D95))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEDE9FE)) {
-                                Text("PRO", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF6D28D9), modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                                Text("PRO", fontSize = 8.5.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF6D28D9), modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
                             }
                         }
-                        Text("Drag & drop, custom text, label sizes, bubble count & print", fontSize = 12.sp, color = Color(0xFF6D28D9))
+                        Text("Drag & drop, custom text, label sizes, bubble count & print", fontSize = 10.5.sp, color = Color(0xFF6D28D9))
                     }
                 }
 
                 Button(
                     onClick = { navController.navigate(Screen.CustomOmrDesigner.route) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
                 ) {
-                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Open Drag & Drop OMR Designer", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("Open Drag & Drop OMR Designer", fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
                 }
             }
         }
@@ -425,29 +431,29 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
         // Section 1: Pre-printed OMR Sheets
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(6.dp))
                             .background(Color(0xFFFFF1F2)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Download, contentDescription = null, tint = Color(0xFFE11D48), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Download, contentDescription = null, tint = Color(0xFFE11D48), modifier = Modifier.size(15.dp))
                     }
                     Column {
-                        Text("Pre-printed OMR Sheets (A4 PDF)", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF0F172A))
-                        Text("Generates individual OMR with candidate name & roll number", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Text("Pre-printed OMR Sheets (A4 PDF)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                        Text("Generates individual OMR with candidate name & roll number", fontSize = 10.5.sp, color = Color(0xFF64748B))
                     }
                 }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PremiumButton(
                         onClick = {
                             if (exam != null) {
@@ -456,9 +462,10 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
                             }
                         },
                         enabled = !isGeneratingMale && males.isNotEmpty(),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(vertical = 7.dp)
                     ) {
-                        Text(if (isGeneratingMale) "Generating..." else "Male OMRs (${males.size})", fontSize = 13.sp)
+                        Text(if (isGeneratingMale) "Generating..." else "Male OMRs (${males.size})", fontSize = 11.5.sp)
                     }
 
                     PremiumButton(
@@ -469,9 +476,10 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
                             }
                         },
                         enabled = !isGeneratingFemale && females.isNotEmpty(),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(vertical = 7.dp)
                     ) {
-                        Text(if (isGeneratingFemale) "Generating..." else "Female OMRs (${females.size})", fontSize = 13.sp)
+                        Text(if (isGeneratingFemale) "Generating..." else "Female OMRs (${females.size})", fontSize = 11.5.sp)
                     }
                 }
             }
@@ -480,29 +488,29 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
         // Section 2: Hall Documents
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(6.dp))
                             .background(Color(0xFFF1F5F9)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Event, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Event, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(15.dp))
                     }
                     Column {
-                        Text("Examination Hall Materials", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF0F172A))
-                        Text("Seating stickers and allocation tables for desks", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Text("Examination Hall Materials", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                        Text("Seating stickers and allocation tables for desks", fontSize = 10.5.sp, color = Color(0xFF64748B))
                     }
                 }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PremiumOutlinedButton(
                         onClick = {
                             if (exam != null) {
@@ -511,9 +519,10 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
                             }
                         },
                         enabled = enrolledStudents.isNotEmpty(),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(vertical = 7.dp)
                     ) {
-                        Text("Desk Slips (Stickers)", fontSize = 12.sp)
+                        Text("Desk Slips (Stickers)", fontSize = 11.sp)
                     }
 
                     PremiumOutlinedButton(
@@ -524,9 +533,10 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
                             }
                         },
                         enabled = enrolledStudents.isNotEmpty(),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(vertical = 7.dp)
                     ) {
-                        Text("Seating Plan PDF", fontSize = 12.sp)
+                        Text("Seating Plan PDF", fontSize = 11.sp)
                     }
                 }
             }
@@ -769,26 +779,38 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Questions (${questions.size}/100)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            IconButton(onClick = { showSettingsDialog = true }) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Questions (${questions.size}/100)", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+            IconButton(onClick = { showSettingsDialog = true }, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings", modifier = Modifier.size(17.dp))
             }
         }
-        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PremiumOutlinedButton(onClick = { pendingAction = "downloadAnswerKey"; createDocumentLauncher.launch("${exam.subject}_AnswerKey.pdf") }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(4.dp)) {
-                Text(if (isGenerating && pendingAction == "downloadAnswerKey") "Key" else "Ans Key", style = MaterialTheme.typography.labelSmall)
+        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PremiumOutlinedButton(
+                onClick = { pendingAction = "downloadAnswerKey"; createDocumentLauncher.launch("${exam.subject}_AnswerKey.pdf") },
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+            ) {
+                Text(if (isGenerating && pendingAction == "downloadAnswerKey") "Key" else "Ans Key", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
-            PremiumOutlinedButton(onClick = { showJsonDialog = true }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(4.dp)) {
-                Text("Import JSON", style = MaterialTheme.typography.labelSmall)
+            PremiumOutlinedButton(
+                onClick = { showJsonDialog = true },
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+            ) {
+                Text("Import JSON", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
-            PremiumButton(onClick = {
-                if (questions.size < 100) {
-                    viewModel.saveQuestion(QuestionEntity(examId = exam.id, text = "", optionA = "", optionB = "", optionC = "", optionD = "", correctIndex = 0)) {}
-                }
-            }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(4.dp)) {
-                Text("Add Question", style = MaterialTheme.typography.labelSmall)
+            PremiumButton(
+                onClick = {
+                    if (questions.size < 100) {
+                        viewModel.saveQuestion(QuestionEntity(examId = exam.id, text = "", optionA = "", optionB = "", optionC = "", optionD = "", correctIndex = 0)) {}
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+            ) {
+                Text("Add Question", fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -799,15 +821,16 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
             ) { index ->
                 val q = questions[index]
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(10.dp)) {
                         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text("Question ${index + 1}", fontWeight = FontWeight.Bold)
-                            IconButton(onClick = { viewModel.deleteQuestion(q) {} }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                            Text("Question ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                            IconButton(onClick = { viewModel.deleteQuestion(q) {} }, modifier = Modifier.size(28.dp)) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
                             }
                         }
                         OutlinedTextField(
@@ -816,11 +839,12 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
                                 questions[index] = q.copy(text = it)
                                 viewModel.updateQuestion(questions[index]) {} 
                             },
-                            label = { Text("Question Text") },
+                            label = { Text("Question Text", fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         
                         OutlinedTextField(
                             value = q.optionA,
@@ -828,47 +852,52 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
                                 questions[index] = q.copy(optionA = it)
                                 viewModel.updateQuestion(questions[index]) {} 
                             },
-                            label = { Text("Option A") },
+                            label = { Text("Option A", fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
                             value = q.optionB,
                             onValueChange = { 
                                 questions[index] = q.copy(optionB = it)
                                 viewModel.updateQuestion(questions[index]) {} 
                             },
-                            label = { Text("Option B") },
+                            label = { Text("Option B", fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
                             value = q.optionC,
                             onValueChange = { 
                                 questions[index] = q.copy(optionC = it)
                                 viewModel.updateQuestion(questions[index]) {} 
                             },
-                            label = { Text("Option C") },
+                            label = { Text("Option C", fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
                             value = q.optionD,
                             onValueChange = { 
                                 questions[index] = q.copy(optionD = it)
                                 viewModel.updateQuestion(questions[index]) {} 
                             },
-                            label = { Text("Option D") },
+                            label = { Text("Option D", fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         
-                        Text("Correct Answer:", fontWeight = FontWeight.SemiBold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Correct Answer:", fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = Color(0xFF475569))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             val labels = listOf("A", "B", "C", "D")
                             for (i in 0..3) {
                                 FilterChip(
@@ -877,7 +906,8 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
                                         questions[index] = q.copy(correctIndex = i)
                                         viewModel.updateQuestion(questions[index]) {} 
                                     },
-                                    label = { Text(labels[i]) }
+                                    label = { Text(labels[i], fontSize = 11.sp) },
+                                    shape = RoundedCornerShape(6.dp)
                                 )
                             }
                         }
@@ -886,7 +916,7 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
             }
         }
         
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PremiumButton(
                 onClick = {
                     if (questions.isEmpty()) {
@@ -922,12 +952,13 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
                         }.start()
                     }
                 },
-                modifier = Modifier.weight(1f).height(56.dp),
+                modifier = Modifier.weight(1f),
                 enabled = !isGenerating && questions.isNotEmpty(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(vertical = 9.dp)
             ) {
-                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                Text("Preview")
+                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(15.dp).padding(end = 4.dp))
+                Text("Preview", fontSize = 12.5.sp)
             }
             
             PremiumButton(
@@ -939,12 +970,13 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
                     pendingAction = "generatePapers"
                     createDocumentLauncher.launch("${exam.subject}_QuestionPapers.pdf")
                 },
-                modifier = Modifier.weight(1f).height(56.dp),
+                modifier = Modifier.weight(1f),
                 enabled = !isGenerating && questions.isNotEmpty(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(vertical = 9.dp)
             ) {
-                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                Text("Download")
+                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(15.dp).padding(end = 4.dp))
+                Text("Download", fontSize = 12.5.sp)
             }
         }
     }
@@ -1278,27 +1310,27 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Hero Card: Scanner Launch
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFFFFF1F2)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1306,19 +1338,19 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                             Icons.Default.CameraAlt,
                             contentDescription = null,
                             tint = Color(0xFFE11D48),
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             "OMR Sheet Scanner",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 17.sp,
+                            fontSize = 14.sp,
                             color = Color(0xFF0F172A)
                         )
                         Text(
                             "Instant camera grading with auto-alignment & edge detection",
-                            fontSize = 12.sp,
+                            fontSize = 10.5.sp,
                             color = Color(0xFF64748B)
                         )
                     }
@@ -1326,11 +1358,12 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
 
                 PremiumButton(
                     onClick = { navController.navigate(Screen.ScanOmr.createRoute(examId)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Launch Scanner Camera", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Launch Scanner Camera", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
         }
@@ -1344,18 +1377,18 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
             Text(
                 "Evaluation Records",
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                fontSize = 13.5.sp,
                 color = Color(0xFF0F172A)
             )
             Surface(
                 color = if (results.isNotEmpty()) Color(0xFFEFF6FF) else Color(0xFFF1F5F9),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
                     "${results.size} Evaluated",
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
+                    fontSize = 10.5.sp,
                     color = if (results.isNotEmpty()) Color(0xFF1D4ED8) else Color(0xFF64748B)
                 )
             }
@@ -1366,18 +1399,18 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFF8FAFC)),
                         contentAlignment = Alignment.Center
@@ -1386,20 +1419,20 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                             Icons.Default.Assessment,
                             contentDescription = null,
                             tint = Color(0xFF94A3B8),
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         "No OMR Sheets Evaluated Yet",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
+                        fontSize = 13.5.sp,
                         color = Color(0xFF334155)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         "Tap 'Launch Scanner Camera' above to start grading student OMR responses.",
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         color = Color(0xFF94A3B8),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -1408,7 +1441,7 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
         } else {
             androidx.compose.foundation.lazy.LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(results.size) { i ->
                     val result = results[i]
@@ -1419,12 +1452,12 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { expanded = !expanded },
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -1432,11 +1465,11 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(40.dp)
+                                            .size(32.dp)
                                             .clip(CircleShape)
                                             .background(Color(0xFFF1F5F9)),
                                         contentAlignment = Alignment.Center
@@ -1444,7 +1477,7 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                                         Text(
                                             studentName.take(1).uppercase(),
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp,
+                                            fontSize = 13.sp,
                                             color = Color(0xFF0F172A)
                                         )
                                     }
@@ -1452,12 +1485,12 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                                         Text(
                                             studentName,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 15.sp,
+                                            fontSize = 12.5.sp,
                                             color = Color(0xFF0F172A)
                                         )
                                         Text(
                                             "Roll: ${result.studentId} • Set: ${result.paperSet.ifEmpty { "A" }}",
-                                            fontSize = 12.sp,
+                                            fontSize = 10.5.sp,
                                             color = Color(0xFF64748B)
                                         )
                                     }
@@ -1465,35 +1498,35 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
 
                                 Surface(
                                     color = Color(0xFFDCFCE7),
-                                    shape = RoundedCornerShape(8.dp)
+                                    shape = RoundedCornerShape(6.dp)
                                 ) {
                                     Text(
                                         "${result.score} / ${result.totalQuestions}",
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
+                                        fontSize = 11.5.sp,
                                         color = Color(0xFF15803D)
                                     )
                                 }
                             }
 
                             if (expanded && result.questionStatuses.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(14.dp))
-                                HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                                 Spacer(modifier = Modifier.height(10.dp))
+                                HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 0.5.dp)
+                                Spacer(modifier = Modifier.height(8.dp))
                                 
                                 Text(
                                     "Question-by-Question Breakdown",
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF475569)
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
 
                                 val statusesList = com.example.data.Converters().toList(result.questionStatuses)
                                 val chunkedStatuses = statusesList.chunked(10)
                                 
-                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     chunkedStatuses.forEachIndexed { rowIndex, rowStatuses ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -1509,15 +1542,15 @@ fun ScannerTab(navController: NavController, viewModel: OmrViewModel, examId: In
                                                 Box(
                                                     modifier = Modifier
                                                         .padding(end = 4.dp)
-                                                        .size(24.dp)
-                                                        .clip(RoundedCornerShape(6.dp))
+                                                        .size(20.dp)
+                                                        .clip(RoundedCornerShape(4.dp))
                                                         .background(bg),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Text(
                                                         "${qIndex + 1}",
                                                         color = Color.White,
-                                                        fontSize = 10.sp,
+                                                        fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
                                                 }
@@ -1779,13 +1812,13 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
             "Evaluation Performance & Analytics",
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
+            fontSize = 13.5.sp,
             color = Color(0xFF0F172A)
         )
 
@@ -1795,66 +1828,66 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
         val avgScore = if (results.isNotEmpty()) results.map { it.score }.average() else 0.0
         val maxScore = results.maxOfOrNull { it.score } ?: 0f
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             Card(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text("Total Scanned", fontSize = 12.sp, color = Color(0xFF64748B))
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("${results.size}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                    Text("of ${allStudents.size} enrolled", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text("Total Scanned", fontSize = 10.5.sp, color = Color(0xFF64748B))
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text("${results.size}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Text("of ${allStudents.size} enrolled", fontSize = 9.5.sp, color = Color(0xFF94A3B8))
                 }
             }
 
             Card(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text("Passing Candidates", fontSize = 12.sp, color = Color(0xFF64748B))
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("$passCount ($passRate%)", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF16A34A))
-                    Text("Min marks: ${exam.passMarks.toInt()}", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text("Passing Candidates", fontSize = 10.5.sp, color = Color(0xFF64748B))
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text("$passCount ($passRate%)", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF16A34A))
+                    Text("Min marks: ${exam.passMarks.toInt()}", fontSize = 9.5.sp, color = Color(0xFF94A3B8))
                 }
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             Card(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text("Class Average", fontSize = 12.sp, color = Color(0xFF64748B))
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("${String.format("%.1f", avgScore)}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2563EB))
-                    Text("Marks per candidate", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text("Class Average", fontSize = 10.5.sp, color = Color(0xFF64748B))
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text("${String.format("%.1f", avgScore)}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2563EB))
+                    Text("Marks per candidate", fontSize = 9.5.sp, color = Color(0xFF94A3B8))
                 }
             }
 
             Card(
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text("Topper High Score", fontSize = 12.sp, color = Color(0xFF64748B))
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("${String.format("%.1f", maxScore)}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA580C))
-                    Text("Highest in batch", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text("Topper High Score", fontSize = 10.5.sp, color = Color(0xFF64748B))
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text("${String.format("%.1f", maxScore)}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA580C))
+                    Text("Highest in batch", fontSize = 9.5.sp, color = Color(0xFF94A3B8))
                 }
             }
         }
@@ -1862,7 +1895,7 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
         Text(
             "Official Export Reports",
             fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
+            fontSize = 13.5.sp,
             color = Color(0xFF0F172A)
         )
 
@@ -1887,22 +1920,22 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
                             viewingReport = title
                         }
                     },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                    modifier = Modifier.padding(10.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                        Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF0F172A))
-                        Text(desc, fontSize = 12.sp, color = Color(0xFF64748B))
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(title, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = Color(0xFF0F172A))
+                        Text(desc, fontSize = 10.5.sp, color = Color(0xFF64748B))
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (title != "CSV Exporter") {
                             FilledTonalButton(
                                 onClick = { viewingReport = title },
@@ -1910,22 +1943,22 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
                                     containerColor = Color(0xFFF1F5F9),
                                     contentColor = Color(0xFF0F172A)
                                 ),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(15.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("View", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text("View", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold)
                             }
                         }
 
                         PremiumOutlinedButton(
                             onClick = { startExport(title) },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 if (title == "CSV Exporter") "Export CSV" else "Export PDF",
-                                fontSize = 12.sp,
+                                fontSize = 10.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -1982,18 +2015,18 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Attendance Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val presentCount = enrolledStudents.count { attendanceMap[it.rollNo] == true }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -2001,43 +2034,43 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("1. Candidate Attendance", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF0F172A))
-                        Text("Check candidates present in examination room", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Text("1. Candidate Attendance", fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = Color(0xFF0F172A))
+                        Text("Check candidates present in examination room", fontSize = 10.5.sp, color = Color(0xFF64748B))
                     }
                     Surface(
                         color = Color(0xFFEFF6FF),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
                             "$presentCount / ${enrolledStudents.size} Present",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
+                            fontSize = 10.5.sp,
                             color = Color(0xFF1D4ED8)
                         )
                     }
                 }
 
                 Card(
-                    modifier = Modifier.fillMaxWidth().height(220.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().height(190.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
                     border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
-                    androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.fillMaxSize().padding(4.dp)) {
+                    androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.fillMaxSize().padding(2.dp)) {
                         items(enrolledStudents.size) { i ->
                             val student = enrolledStudents[i]
                             val isPresent = attendanceMap[student.rollNo] ?: false
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(6.dp))
                                     .clickable {
                                         val newMap = attendanceMap.toMutableMap()
                                         newMap[student.rollNo] = !isPresent
                                         viewModel.attendanceMap.value = newMap
                                     }
-                                    .padding(vertical = 6.dp, horizontal = 8.dp),
+                                    .padding(vertical = 4.dp, horizontal = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 androidx.compose.material3.Checkbox(
@@ -2047,16 +2080,16 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
                                         newMap[student.rollNo] = checked
                                         viewModel.attendanceMap.value = newMap
                                     },
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(student.name, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF0F172A))
-                                    Text("Roll No: ${student.rollNo}", fontSize = 11.sp, color = Color(0xFF64748B))
+                                    Text(student.name, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = Color(0xFF0F172A))
+                                    Text("Roll No: ${student.rollNo}", fontSize = 10.sp, color = Color(0xFF64748B))
                                 }
                                 if (isPresent) {
-                                    Surface(color = Color(0xFFDCFCE7), shape = RoundedCornerShape(6.dp)) {
-                                        Text("Present", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF15803D))
+                                    Surface(color = Color(0xFFDCFCE7), shape = RoundedCornerShape(4.dp)) {
+                                        Text("Present", modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF15803D))
                                     }
                                 }
                             }
@@ -2071,11 +2104,12 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
                         createDocumentLauncher.launch("${exam.name}_Attendance.pdf")
                     },
                     enabled = enrolledStudents.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 7.dp)
                 ) {
-                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Download Attendance Sheet (PDF)", fontSize = 13.sp)
+                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Download Attendance Sheet (PDF)", fontSize = 11.5.sp)
                 }
             }
         }
@@ -2083,14 +2117,14 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
         // Seating Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("2. Seating Plan Matrix", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF0F172A))
-                Text("Room allocation chart sorted by candidate roll numbers", fontSize = 12.sp, color = Color(0xFF64748B))
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("2. Seating Plan Matrix", fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = Color(0xFF0F172A))
+                Text("Room allocation chart sorted by candidate roll numbers", fontSize = 10.5.sp, color = Color(0xFF64748B))
                 
                 PremiumOutlinedButton(
                     onClick = {
@@ -2098,11 +2132,12 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
                         createDocumentLauncher.launch("${exam.name}_SeatingPlan.pdf")
                     },
                     enabled = enrolledStudents.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 7.dp)
                 ) {
-                    Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Generate Seating Plan PDF", fontSize = 13.sp)
+                    Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Generate Seating Plan PDF", fontSize = 11.5.sp)
                 }
             }
         }
@@ -2116,21 +2151,21 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("3. Scanning Discrepancies", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF0F172A))
+                    Text("3. Scanning Discrepancies", fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = Color(0xFF0F172A))
                     if (errorResults.isNotEmpty()) {
-                        Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(6.dp)) {
-                            Text("${errorResults.size} Issues", modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFDC2626))
+                        Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(4.dp)) {
+                            Text("${errorResults.size} Issues", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFDC2626))
                         }
                     }
                 }
@@ -2139,12 +2174,12 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color(0xFFF0FDF4),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         border = BorderStroke(1.dp, Color(0xFFBBF7D0))
                     ) {
-                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF16A34A)))
-                            Text("All scanned OMR sheets are verified and free of format errors.", fontSize = 12.sp, color = Color(0xFF15803D))
+                        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF16A34A)))
+                            Text("All scanned OMR sheets are verified and free of format errors.", fontSize = 10.5.sp, color = Color(0xFF15803D))
                         }
                     }
                 } else {
@@ -2152,23 +2187,23 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             color = Color(0xFFFFF1F2),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             border = BorderStroke(1.dp, Color(0xFFFECDD3))
                         ) {
                             Row(
-                                modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                                modifier = Modifier.padding(10.dp).fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Unknown Roll / Set: ${res.paperSet.ifEmpty { "MISSING" }}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF9F1239))
-                                    Text("Score: ${res.score}", fontSize = 11.sp, color = Color(0xFFBE123C))
+                                    Text("Unknown Roll / Set: ${res.paperSet.ifEmpty { "MISSING" }}", fontWeight = FontWeight.Bold, fontSize = 11.5.sp, color = Color(0xFF9F1239))
+                                    Text("Score: ${res.score}", fontSize = 10.sp, color = Color(0xFFBE123C))
                                 }
                                 PremiumButton(
                                     onClick = { Toast.makeText(context, "Opening manual resolver", Toast.LENGTH_SHORT).show() },
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 3.dp)
                                 ) {
-                                    Text("Resolve", fontSize = 11.sp)
+                                    Text("Resolve", fontSize = 10.5.sp)
                                 }
                             }
                         }

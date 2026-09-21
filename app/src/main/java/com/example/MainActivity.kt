@@ -95,13 +95,15 @@ fun MainAppScreen() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
                     containerColor = Color.White,
-                    tonalElevation = 8.dp,
+                    tonalElevation = 6.dp,
                     modifier = Modifier
                         .windowInsetsPadding(WindowInsets.navigationBars)
+                        .height(54.dp)
                         .border(width = 1.dp, color = Color(0xFFF1F5F9))
                 ) {
                     // 1. HOME
@@ -111,13 +113,13 @@ fun MainAppScreen() {
                             Icon(
                                 if (isHome) Icons.Filled.Home else Icons.Outlined.Home,
                                 contentDescription = "Home",
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         },
                         label = {
                             Text(
                                 "Home",
-                                fontSize = 11.sp,
+                                fontSize = 9.5.sp,
                                 fontWeight = if (isHome) FontWeight.Bold else FontWeight.Medium
                             )
                         },
@@ -145,13 +147,13 @@ fun MainAppScreen() {
                             Icon(
                                 if (isCreate) Icons.Filled.PostAdd else Icons.Outlined.PostAdd,
                                 contentDescription = "New Exam",
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         },
                         label = {
                             Text(
                                 "New Exam",
-                                fontSize = 11.sp,
+                                fontSize = 9.5.sp,
                                 fontWeight = if (isCreate) FontWeight.Bold else FontWeight.Medium
                             )
                         },
@@ -177,7 +179,7 @@ fun MainAppScreen() {
                         icon = {
                             Box(
                                 modifier = Modifier
-                                    .size(34.dp)
+                                    .size(28.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFE11D48)),
                                 contentAlignment = Alignment.Center
@@ -186,14 +188,14 @@ fun MainAppScreen() {
                                     Icons.Filled.DocumentScanner,
                                     contentDescription = "Scan",
                                     tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         },
                         label = {
                             Text(
                                 "Live Scan",
-                                fontSize = 11.sp,
+                                fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFE11D48)
                             )
@@ -220,13 +222,13 @@ fun MainAppScreen() {
                             Icon(
                                 if (isStudents) Icons.Filled.People else Icons.Outlined.People,
                                 contentDescription = "Students",
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         },
                         label = {
                             Text(
                                 "Students",
-                                fontSize = 11.sp,
+                                fontSize = 9.5.sp,
                                 fontWeight = if (isStudents) FontWeight.Bold else FontWeight.Medium
                             )
                         },
@@ -253,9 +255,12 @@ fun MainAppScreen() {
     ) { innerPadding ->
         NavHost(
             navController = navController, 
-            startDestination = Screen.Home.route,
+            startDestination = Screen.Splash.route,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable(Screen.Splash.route) {
+                SplashScreen(navController)
+            }
             composable(Screen.Home.route) {
                 HomeScreen(navController, viewModel)
             }

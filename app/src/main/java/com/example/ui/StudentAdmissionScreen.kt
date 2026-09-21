@@ -109,16 +109,20 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                     Text(
                         "New Student Admission",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
+                        fontSize = 15.sp,
                         color = Color(0xFF0F172A)
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.size(36.dp)
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color(0xFF0F172A)
+                            tint = Color(0xFF0F172A),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 },
@@ -134,27 +138,27 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 1. PROFILE PHOTO CARD
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = Color.White,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
                 Column(
-                    modifier = Modifier.padding(18.dp),
+                    modifier = Modifier.padding(14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(86.dp)
+                            .size(64.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFF1F5F9))
-                            .border(2.dp, Color(0xFFE2E8F0), CircleShape)
+                            .border(1.5.dp, Color(0xFFE2E8F0), CircleShape)
                             .clickable { imagePicker.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
@@ -169,17 +173,17 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                             Icon(
                                 Icons.Outlined.AddAPhoto,
                                 contentDescription = "Add Photo",
-                                modifier = Modifier.size(32.dp),
+                                modifier = Modifier.size(24.dp),
                                 tint = Color(0xFF64748B)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
                         text = if (compressedBitmap != null) "Change Photo" else "Upload Student Photo",
-                        fontSize = 13.sp,
+                        fontSize = 11.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFFE11D48),
                         modifier = Modifier.clickable { imagePicker.launch("image/*") }
@@ -187,57 +191,58 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
 
                     if (compressedBitmap != null) {
                         val kb = imageSizeBytes / 1024.0
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Surface(
                             color = Color(0xFFF0FDF4),
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(5.dp),
                             border = BorderStroke(1.dp, Color(0xFFBBF7D0))
                         ) {
                             Text(
-                                text = "⚡ Auto Converted: ${String.format("%.1f", kb)} KB (Target: ~20KB)",
-                                fontSize = 11.sp,
+                                text = "⚡ Auto Converted: ${String.format("%.1f", kb)} KB (~20KB target)",
+                                fontSize = 10.sp,
                                 color = Color(0xFF15803D),
                                 fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     } else {
                         Text(
                             text = "Auto-converted to ~20KB for Server & OMR desk slip",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             color = Color(0xFF94A3B8)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 2. PERSONAL DETAILS CARD
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = Color.White,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Text(
                         text = "Personal Details",
-                        fontSize = 14.sp,
+                        fontSize = 12.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F172A)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Full Name *") },
+                        label = { Text("Full Name *", fontSize = 11.5.sp) },
                         singleLine = true,
+                        textStyle = TextStyle(fontSize = 12.5.sp),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = Color(0xFFF8FAFC),
                             focusedContainerColor = Color.White,
@@ -246,30 +251,30 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Gender Pill Selector
-                    Text("Gender", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("Gender", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                    Spacer(modifier = Modifier.height(5.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf("Male", "Female", "Other").forEach { g ->
                             val isSelected = gender == g
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(8.dp))
                                     .clickable { gender = g },
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(8.dp),
                                 color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF8FAFC),
                                 border = BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0))
                             ) {
-                                Box(modifier = Modifier.padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
+                                Box(modifier = Modifier.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
                                     Text(
                                         text = g,
-                                        fontSize = 13.sp,
+                                        fontSize = 11.5.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) Color.White else Color(0xFF334155)
                                     )
@@ -278,15 +283,16 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = fatherName,
                         onValueChange = { fatherName = it },
-                        label = { Text("Father's Name *") },
+                        label = { Text("Father's Name *", fontSize = 11.5.sp) },
                         singleLine = true,
+                        textStyle = TextStyle(fontSize = 12.5.sp),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = Color(0xFFF8FAFC),
                             focusedContainerColor = Color.White,
@@ -295,15 +301,16 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = motherName,
                         onValueChange = { motherName = it },
-                        label = { Text("Mother's Name") },
+                        label = { Text("Mother's Name", fontSize = 11.5.sp) },
                         singleLine = true,
+                        textStyle = TextStyle(fontSize = 12.5.sp),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = Color(0xFFF8FAFC),
                             focusedContainerColor = Color.White,
@@ -312,19 +319,20 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Date of Birth Field
                     Box(modifier = Modifier.fillMaxWidth().clickable { datePickerVisible = true }) {
                         OutlinedTextField(
                             value = dob,
                             onValueChange = {},
-                            label = { Text("Date of Birth (DOB)") },
+                            label = { Text("Date of Birth (DOB)", fontSize = 11.5.sp) },
+                            textStyle = TextStyle(fontSize = 12.5.sp),
                             modifier = Modifier.fillMaxWidth(),
                             readOnly = true,
                             enabled = false,
-                            trailingIcon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = "Calendar", tint = Color(0xFF64748B)) },
-                            shape = RoundedCornerShape(10.dp),
+                            trailingIcon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = "Calendar", tint = Color(0xFF64748B), modifier = Modifier.size(18.dp)) },
+                            shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 disabledTextColor = Color(0xFF0F172A),
                                 disabledContainerColor = Color(0xFFF8FAFC),
@@ -336,34 +344,54 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 3. CONTACT & ACADEMICS CARD
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = Color.White,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Text(
                         text = "Contact & Academics",
-                        fontSize = 14.sp,
+                        fontSize = 12.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F172A)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = mobileNo,
                         onValueChange = { mobileNo = it },
-                        label = { Text("Mobile Number") },
+                        label = { Text("Mobile Number", fontSize = 11.5.sp) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         singleLine = true,
+                        textStyle = TextStyle(fontSize = 12.5.sp),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color(0xFFF8FAFC),
+                            focusedContainerColor = Color.White,
+                            unfocusedBorderColor = Color(0xFFE2E8F0),
+                            focusedBorderColor = Color(0xFF0F172A)
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email Address", fontSize = 11.5.sp) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true,
+                        textStyle = TextStyle(fontSize = 12.5.sp),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = Color(0xFFF8FAFC),
                             focusedContainerColor = Color.White,
@@ -374,46 +402,28 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email Address") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFFF8FAFC),
-                            focusedContainerColor = Color.White,
-                            unfocusedBorderColor = Color(0xFFE2E8F0),
-                            focusedBorderColor = Color(0xFF0F172A)
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
                     // Stream selection
-                    Text("Academic Stream", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("Academic Stream", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                    Spacer(modifier = Modifier.height(5.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         streams.forEach { st ->
                             val isSelected = stream == st
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(7.dp))
                                     .clickable { stream = st },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(7.dp),
                                 color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
                                 border = BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0))
                             ) {
-                                Box(modifier = Modifier.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+                                Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
                                     Text(
                                         text = st,
-                                        fontSize = 11.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) Color.White else Color(0xFF475569)
                                     )
@@ -422,23 +432,23 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Subjects Multi-select Chips
-                    Text("Enrolled Subjects (Used for Auto OMR Mapping)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Enrolled Subjects (Auto OMR Mapping)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         availableSubjects.chunked(3).forEach { rowSubjects ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 rowSubjects.forEach { subj ->
                                     val isSelected = selectedSubjects.contains(subj)
                                     Surface(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(16.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .clickable {
                                                 selectedSubjects = if (isSelected) {
                                                     selectedSubjects - subj
@@ -446,21 +456,21 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                                                     selectedSubjects + subj
                                                 }
                                             },
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = RoundedCornerShape(12.dp),
                                         color = if (isSelected) Color(0xFFE0F2FE) else Color(0xFFF8FAFC),
                                         border = BorderStroke(1.dp, if (isSelected) Color(0xFF0284C7) else Color(0xFFE2E8F0))
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             if (isSelected) {
-                                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(14.dp))
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(12.dp))
+                                                Spacer(modifier = Modifier.width(3.dp))
                                             }
                                             Text(
                                                 text = subj,
-                                                fontSize = 11.sp,
+                                                fontSize = 10.sp,
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                                 color = if (isSelected) Color(0xFF0369A1) else Color(0xFF64748B)
                                             )
@@ -473,7 +483,7 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // 4. SUBMIT BUTTON
             PremiumButton(
@@ -500,12 +510,12 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                 containerColor = Color(0xFFE11D48),
                 borderColor = Color(0xFFBE123C)
             ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Complete Student Admission")
+                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Complete Student Admission", fontSize = 12.5.sp)
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

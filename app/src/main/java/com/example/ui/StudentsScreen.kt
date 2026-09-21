@@ -103,49 +103,53 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                         Text(
                             "Student Directory",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = 15.sp,
                             color = Color(0xFF0F172A)
                         )
                         Text(
                             "${students.size} Enrolled Students",
-                            fontSize = 12.sp,
+                            fontSize = 10.5.sp,
                             color = Color(0xFF64748B),
                             fontWeight = FontWeight.Medium
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.size(36.dp)
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color(0xFF0F172A)
+                            tint = Color(0xFF0F172A),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 },
                 actions = {
                     Surface(
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(14.dp),
                         color = Color(0xFFE11D48),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .clickable { navController.navigate(Screen.StudentAdmission.route) }
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 "New Admission",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
+                                fontSize = 11.sp
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
@@ -165,8 +169,8 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val males = students.count { it.gender.equals("Male", ignoreCase = true) }
                     val females = students.count { it.gender.equals("Female", ignoreCase = true) }
@@ -174,42 +178,42 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                     // Total Card
                     Surface(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("TOTAL", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("${students.size}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0F172A))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("TOTAL", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("${students.size}", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0F172A))
                         }
                     }
 
                     // Male Card
                     Surface(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("MALES", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("$males", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0284C7))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("MALES", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("$males", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0284C7))
                         }
                     }
 
                     // Female Card
                     Surface(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("FEMALES", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE11D48))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("$females", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFE11D48))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("FEMALES", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE11D48))
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("$females", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFE11D48))
                         }
                     }
                 }
@@ -217,33 +221,33 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
 
             // 2. SEARCH & FILTER ROW
             item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)) {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp),
-                        shape = RoundedCornerShape(22.dp),
+                            .height(38.dp),
+                        shape = RoundedCornerShape(19.dp),
                         color = Color(0xFFF1F5F9),
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 12.dp),
+                                .padding(horizontal = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = "Search",
                                 tint = Color(0xFF94A3B8),
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(17.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Box(modifier = Modifier.weight(1f)) {
                                 if (searchQuery.isEmpty()) {
                                     Text(
                                         text = "Search by name, roll no, father...",
-                                        style = TextStyle(color = Color(0xFF94A3B8), fontSize = 13.sp)
+                                        style = TextStyle(color = Color(0xFF94A3B8), fontSize = 11.5.sp)
                                     )
                                 }
                                 BasicTextField(
@@ -252,7 +256,7 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                                     singleLine = true,
                                     textStyle = TextStyle(
                                         color = Color(0xFF0F172A),
-                                        fontSize = 13.sp,
+                                        fontSize = 11.5.sp,
                                         fontWeight = FontWeight.Medium
                                     ),
                                     cursorBrush = SolidColor(Color(0xFFE11D48)),
@@ -262,40 +266,40 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                             if (searchQuery.isNotEmpty()) {
                                 IconButton(
                                     onClick = { searchQuery = "" },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(20.dp)
                                 ) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color(0xFF64748B), modifier = Modifier.size(14.dp))
                                 }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Gender filter chips
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("All", "Male", "Female").forEach { filter ->
                             val isSelected = selectedGenderFilter == filter
                             Surface(
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 color = if (isSelected) Color(0xFF0F172A) else Color.White,
                                 border = BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFCBD5E1)),
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(16.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .clickable { selectedGenderFilter = filter }
                             ) {
                                 Text(
                                     text = filter,
-                                    fontSize = 12.sp,
+                                    fontSize = 10.5.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) Color.White else Color(0xFF334155),
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                    modifier = Modifier.padding(horizontal = 11.dp, vertical = 4.dp)
                                 )
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
             }
 
             // 3. STUDENT LIST
@@ -378,12 +382,12 @@ fun ModernStudentCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp),
-        shape = RoundedCornerShape(14.dp),
+            .padding(horizontal = 16.dp, vertical = 3.5.dp),
+        shape = RoundedCornerShape(12.dp),
         color = Color.White,
         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -397,7 +401,7 @@ fun ModernStudentCard(
 
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(34.dp)
                             .clip(CircleShape)
                             .background(avatarBg),
                         contentAlignment = Alignment.Center
@@ -406,40 +410,39 @@ fun ModernStudentCard(
                             text = student.name.take(1).uppercase(),
                             color = avatarTint,
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 17.sp
+                            fontSize = 13.5.sp
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(9.dp))
 
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = student.name,
-                                fontSize = 15.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0F172A),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
+                                shape = RoundedCornerShape(3.dp),
                                 color = if (isMale) Color(0xFFF0F9FF) else Color(0xFFFFF1F2)
                             ) {
                                 Text(
                                     text = student.gender.uppercase(),
-                                    fontSize = 9.sp,
+                                    fontSize = 8.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isMale) Color(0xFF0284C7) else Color(0xFFE11D48),
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.5.dp)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Father: ${student.fatherName.ifBlank { "N/A" }}",
-                            fontSize = 12.sp,
+                            fontSize = 10.5.sp,
                             color = Color(0xFF64748B)
                         )
                     }
@@ -447,20 +450,20 @@ fun ModernStudentCard(
 
                 IconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(34.dp)
+                    modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
                         Icons.Outlined.Delete,
                         contentDescription = "Delete",
                         tint = Color(0xFF94A3B8),
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(7.dp))
             HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(7.dp))
 
             // Bottom info row (Roll, Reg, Subjects)
             Row(
@@ -470,22 +473,22 @@ fun ModernStudentCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(5.dp),
                         color = Color(0xFFF1F5F9)
                     ) {
                         Text(
                             text = "Roll #${student.rollNo}",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF0F172A),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
                     if (student.registrationNo.isNotBlank()) {
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
                         Text(
                             text = "Reg: ${student.registrationNo}",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             color = Color(0xFF64748B)
                         )
                     }
@@ -494,12 +497,12 @@ fun ModernStudentCard(
                 if (student.subjects.isNotBlank()) {
                     Text(
                         text = student.subjects,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF475569),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.widthIn(max = 140.dp)
+                        modifier = Modifier.widthIn(max = 130.dp)
                     )
                 }
             }

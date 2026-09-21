@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Squircle Card Background with Warm White/Pink Tone -->
+    <path
+        android:pathData="M30,6 C14,6 6,14 6,30 L6,90 C6,106 14,114 30,114 L90,114 C106,114 114,106 114,90 L114,30 C114,14 106,6 90,6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="6"
+                android:startY="6"
+                android:endX="114"
+                android:endY="114"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFF" />
+                <item android:offset="0.6" android:color="#FFF5F8" />
+                <item android:offset="1.0" android:color="#FCE4EC" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Outer Squircle Pink Border -->
+    <path
+        android:pathData="M30,6 C14,6 6,14 6,30 L6,90 C6,106 14,114 30,114 L90,114 C106,114 114,106 114,90 L114,30 C114,14 106,6 90,6 Z"
+        android:strokeWidth="3.5"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="6"
+                android:startY="6"
+                android:endX="114"
+                android:endY="114"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF2E88" />
+                <item android:offset="0.5" android:color="#F43F7E" />
+                <item android:offset="1.0" android:color="#E11D62" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Soft Accent Frame -->
+    <path
+        android:pathData="M32,10 C18,10 10,18 10,32 L10,88 C10,102 18,110 32,110 L88,110 C102,110 110,102 110,88 L110,32 C110,18 102,10 88,10 Z"
+        android:strokeColor="#25F43F7E"
+        android:strokeWidth="1"
+        android:fillColor="#00000000" />
+
+    <!-- Top-Right Orbiting Crescent Arc -->
+    <path
+        android:pathData="M39,34 C48,26 63,23 78,27 C89,30 95,39 95,55 C95,48 90,36 79,30 C65,24 49,26 39,34 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="39"
+                android:startY="23"
+                android:endX="95"
+                android:endY="55"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF2E88" />
+                <item android:offset="0.5" android:color="#F43F7E" />
+                <item android:offset="1.0" android:color="#E11D62" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom-Left Orbiting Crescent Arc -->
+    <path
+        android:pathData="M83,92 C74,100 59,103 43,98 C32,95 26,86 26,70 C26,77 31,89 42,95 C56,101 73,99 83,92 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="26"
+                android:startY="70"
+                android:endX="83"
+                android:endY="103"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF2E88" />
+                <item android:offset="0.5" android:color="#F43F7E" />
+                <item android:offset="1.0" android:color="#E11D62" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Stylized Letter S -->
+    <path
+        android:pathData="M60,34 C58,33.5 54,33 50,33 C39,33 31,38 31,48 C31,55 35,59 45,63 C53,66.5 57,70 57,76 C57,83.5 50,88.5 41,88.5 C34,88.5 28,85 24,80.5 C25.5,80.5 28,79.5 28,76 C28,73 25,71.5 22,71.5 C19,71.5 17,73 17,76 C17,84 26,92 41,92 C54,92 63,84.5 63,74 C63,65 56,60 46,55.5 C38,52 35,49 35,45 C35,39 40,35.5 48,35.5 C52,35.5 56,36.5 58,38 C57.5,39.5 57.5,42.5 57.5,44.5 C59,44.5 60.5,43.5 61,42 C61.5,39 61,35 60,34 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="17"
+                android:startY="33"
+                android:endX="63"
+                android:endY="92"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF2E88" />
+                <item android:offset="0.4" android:color="#F4317A" />
+                <item android:offset="0.8" android:color="#E60067" />
+                <item android:offset="1.0" android:color="#BE185D" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Stylized Letter P (Stem & Base Serif) -->
+    <path
+        android:pathData="M56,45 L67,45 L67,82 C67,84 66,85 64,85.5 L64,87 L77,87 L77,85.5 C75,85 74,84 74,82 L74,45 L85,45 L85,43.5 L56,43.5 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="56"
+                android:startY="43.5"
+                android:endX="85"
+                android:endY="87"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF2E88" />
+                <item android:offset="0.6" android:color="#E11D62" />
+                <item android:offset="1.0" android:color="#BE185D" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bowl of P -->
+    <path
+        android:pathData="M74,45 C80,45 88,46.5 88,55.5 C88,65 80,67 74,67 L74,62 C78,62 81.5,60 81.5,55.5 C81.5,51 78,49.5 74,49.5 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="74"
+                android:startY="45"
+                android:endX="88"
+                android:endY="67"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF2E88" />
+                <item android:offset="1.0" android:color="#BE185D" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Dynamic Intertwining Ribbon Swoosh 1 -->
+    <path
+        android:pathData="M23,63 C30,60 38,65 46,71 C54,78.5 63,82 81,77 C70,85 54,85 44,75 C37,68 30,65.5 23,63 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="23"
+                android:startY="60"
+                android:endX="81"
+                android:endY="85"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF338F" />
+                <item android:offset="1.0" android:color="#D81B60" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Dynamic Intertwining Ribbon Swoosh 2 (Passes into P) -->
+    <path
+        android:pathData="M29,76 C41,76 51,69 61,61 C68,55 74,54.5 79,55.5 C71,58 63,62 56,70 C48,78 38,81 29,76 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="29"
+                android:startY="54.5"
+                android:endX="79"
+                android:endY="81"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF2E88" />
+                <item android:offset="1.0" android:color="#BE185D" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

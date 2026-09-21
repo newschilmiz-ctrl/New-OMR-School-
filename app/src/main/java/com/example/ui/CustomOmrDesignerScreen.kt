@@ -131,12 +131,12 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         Text(
                             "OMR Sheet Studio",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = 15.sp,
                             color = Color(0xFF0F172A)
                         )
                         Text(
                             if (isPreviewMode) "Preview Mode (Clean A4)" else "Drag & Drop Canvas Designer",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             color = if (isPreviewMode) Color(0xFF10B981) else Color(0xFF64748B)
                         )
                     }
@@ -144,43 +144,45 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                 navigationIcon = {
                     IconButton(
                         onClick = { navController.popBackStack() },
-                        modifier = Modifier.testTag("back_button")
+                        modifier = Modifier.size(36.dp).testTag("back_button")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF0F172A))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
                     }
                 },
                 actions = {
                     // Toggle Grid
-                    IconButton(onClick = { showGrid = !showGrid }) {
+                    IconButton(onClick = { showGrid = !showGrid }, modifier = Modifier.size(36.dp)) {
                         Icon(
                             if (showGrid) Icons.Default.GridOn else Icons.Default.GridOff,
                             contentDescription = "Grid",
-                            tint = if (showGrid) Color(0xFF2563EB) else Color(0xFF94A3B8)
+                            tint = if (showGrid) Color(0xFF2563EB) else Color(0xFF94A3B8),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
                     // Presets / Templates
-                    IconButton(onClick = { showPresetsDialog = true }) {
-                        Icon(Icons.Default.DashboardCustomize, contentDescription = "Templates", tint = Color(0xFF0F172A))
+                    IconButton(onClick = { showPresetsDialog = true }, modifier = Modifier.size(36.dp)) {
+                        Icon(Icons.Default.DashboardCustomize, contentDescription = "Templates", tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
                     }
 
                     // Preview Toggle
                     IconButton(onClick = {
                         isPreviewMode = !isPreviewMode
                         if (isPreviewMode) selectedElementId = null
-                    }) {
+                    }, modifier = Modifier.size(36.dp)) {
                         Icon(
                             if (isPreviewMode) Icons.Default.Edit else Icons.Default.Visibility,
                             contentDescription = "Preview",
-                            tint = if (isPreviewMode) Color(0xFF10B981) else Color(0xFF0F172A)
+                            tint = if (isPreviewMode) Color(0xFF10B981) else Color(0xFF0F172A),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
                     // Print & Export
                     IconButton(onClick = {
                         OmrSheetRenderer.printOmrSheet(context, elements, "Custom_OMR_Sheet")
-                    }) {
-                        Icon(Icons.Default.Print, contentDescription = "Print PDF", tint = Color(0xFFE11D48))
+                    }, modifier = Modifier.size(36.dp)) {
+                        Icon(Icons.Default.Print, contentDescription = "Print PDF", tint = Color(0xFFE11D48), modifier = Modifier.size(18.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -190,62 +192,62 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
             // Contextual Inspector / Add Item Controls
             Surface(
                 color = Color.White,
-                tonalElevation = 8.dp,
+                tonalElevation = 6.dp,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.navigationBars)
             ) {
-                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
                     if (selectedElement != null && !isPreviewMode) {
                         // Selected Element Quick Controls
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 6.dp),
+                                .padding(bottom = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Surface(
                                     color = Color(0xFFEEF2FF),
-                                    shape = RoundedCornerShape(6.dp)
+                                    shape = RoundedCornerShape(5.dp)
                                 ) {
                                     Text(
                                         text = selectedElement.type.displayName,
                                         color = Color(0xFF4F46E5),
-                                        fontSize = 12.sp,
+                                        fontSize = 10.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "X:${selectedElement.x.toInt()} Y:${selectedElement.y.toInt()} • ${selectedElement.width.toInt()}x${selectedElement.height.toInt()}",
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     color = Color(0xFF64748B)
                                 )
                             }
 
                             // Quick Action Chips
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 IconButton(
                                     onClick = { centerSelectedElement() },
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
-                                    Icon(Icons.Default.FormatAlignCenter, contentDescription = "Center", tint = Color(0xFF475569))
+                                    Icon(Icons.Default.FormatAlignCenter, contentDescription = "Center", tint = Color(0xFF475569), modifier = Modifier.size(15.dp))
                                 }
                                 IconButton(
                                     onClick = { duplicateSelectedElement() },
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
-                                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate", tint = Color(0xFF475569))
+                                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate", tint = Color(0xFF475569), modifier = Modifier.size(15.dp))
                                 }
                                 IconButton(
                                     onClick = { deleteSelectedElement() },
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFDC2626))
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFDC2626), modifier = Modifier.size(15.dp))
                                 }
                             }
                         }
@@ -253,49 +255,52 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         // Customize button & Nudge arrows
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Button(
                                 onClick = { showInspectorSheet = true },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(36.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
                             ) {
-                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Edit Size & Properties", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text("Edit Properties", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold)
                             }
 
                             // Step fine-nudge buttons
                             Row(
                                 modifier = Modifier
-                                    .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(8.dp))
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(6.dp))
+                                    .clip(RoundedCornerShape(6.dp))
                             ) {
                                 IconButton(
                                     onClick = { updateElement(selectedElement.copy(x = (selectedElement.x - 5f).coerceAtLeast(0f))) },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(30.dp)
                                 ) {
-                                    Icon(Icons.Default.ChevronLeft, contentDescription = "Left", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.ChevronLeft, contentDescription = "Left", modifier = Modifier.size(15.dp))
                                 }
                                 IconButton(
                                     onClick = { updateElement(selectedElement.copy(x = (selectedElement.x + 5f).coerceAtMost(1000f - selectedElement.width))) },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(30.dp)
                                 ) {
-                                    Icon(Icons.Default.ChevronRight, contentDescription = "Right", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.ChevronRight, contentDescription = "Right", modifier = Modifier.size(15.dp))
                                 }
                                 IconButton(
                                     onClick = { updateElement(selectedElement.copy(y = (selectedElement.y - 5f).coerceAtLeast(0f))) },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(30.dp)
                                 ) {
-                                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", modifier = Modifier.size(15.dp))
                                 }
                                 IconButton(
                                     onClick = { updateElement(selectedElement.copy(y = (selectedElement.y + 5f).coerceAtMost(1414f - selectedElement.height))) },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(30.dp)
                                 ) {
-                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", modifier = Modifier.size(15.dp))
                                 }
                             }
                         }
@@ -308,23 +313,28 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         ) {
                             Button(
                                 onClick = { showAddSheet = true },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(vertical = 6.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48))
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = null)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Add Items to Sheet", fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text("Add Items to Sheet", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
 
                             OutlinedButton(
                                 onClick = { OmrSheetRenderer.sharePdf(context, elements) },
-                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.height(38.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                                 border = BorderStroke(1.dp, Color(0xFFCBD5E1))
                             ) {
-                                Icon(Icons.Default.Share, contentDescription = null, tint = Color(0xFF475569))
+                                Icon(Icons.Default.Share, contentDescription = null, tint = Color(0xFF475569), modifier = Modifier.size(15.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Share PDF", color = Color(0xFF0F172A))
+                                Text("Share PDF", fontSize = 11.5.sp, color = Color(0xFF0F172A))
                             }
                         }
                     }
@@ -518,21 +528,21 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 32.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp)
             ) {
                 Text(
                     text = "Add Item to OMR Sheet",
-                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
                     color = Color(0xFF0F172A)
                 )
                 Text(
                     text = "Choose a component to insert and customize on your sheet",
-                    fontSize = 13.sp,
+                    fontSize = 11.sp,
                     color = Color(0xFF64748B)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 val addItems = listOf(
                     Triple(ElementType.CUSTOM_TEXT, "Custom Text / Label", "Header, note, board name, or custom instruction"),
@@ -550,13 +560,13 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     addItems.forEach { (type, title, desc) ->
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(10.dp))
                                 .clickable {
                                     val newEl = when (type) {
                                         ElementType.CUSTOM_TEXT -> OmrElement(
@@ -656,21 +666,21 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                             border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                         ) {
                             Row(
-                                modifier = Modifier.padding(14.dp),
+                                modifier = Modifier.padding(10.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .background(Color(0xFFE0E7FF), RoundedCornerShape(8.dp)),
+                                        .size(32.dp)
+                                        .background(Color(0xFFE0E7FF), RoundedCornerShape(6.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.Default.AddCircleOutline, contentDescription = null, tint = Color(0xFF4338CA))
+                                    Icon(Icons.Default.AddCircleOutline, contentDescription = null, tint = Color(0xFF4338CA), modifier = Modifier.size(18.dp))
                                 }
-                                Spacer(modifier = Modifier.width(14.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Column {
-                                    Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF0F172A))
-                                    Text(desc, fontSize = 12.sp, color = Color(0xFF64748B))
+                                    Text(title, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = Color(0xFF0F172A))
+                                    Text(desc, fontSize = 10.5.sp, color = Color(0xFF64748B))
                                 }
                             }
                         }
@@ -689,8 +699,8 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 36.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(
@@ -699,19 +709,21 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Customize Element", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text(selectedElement.type.displayName, fontSize = 12.sp, color = Color(0xFF64748B))
+                        Text("Customize Element", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text(selectedElement.type.displayName, fontSize = 11.sp, color = Color(0xFF64748B))
                     }
                     Button(
                         onClick = { showInspectorSheet = false },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp)
                     ) {
-                        Text("Done")
+                        Text("Done", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFE2E8F0))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFE2E8F0))
 
                 // 1. Text & Content Settings (If text-applicable)
                 if (selectedElement.type == ElementType.CUSTOM_TEXT ||
@@ -719,15 +731,15 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                     selectedElement.type == ElementType.SUBTITLE ||
                     selectedElement.type == ElementType.INSTRUCTIONS_BOX
                 ) {
-                    Text("Text Content", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text("Text Content", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
                     OutlinedTextField(
                         value = selectedElement.text,
                         onValueChange = { updateElement(selectedElement.copy(text = it)) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(8.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Font Size Slider
                     Row(
@@ -735,19 +747,19 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Font Size: ${selectedElement.fontSize.toInt()}sp", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        Text("Font Size: ${selectedElement.fontSize.toInt()}sp", fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(
                                 onClick = { updateElement(selectedElement.copy(fontSize = (selectedElement.fontSize - 1f).coerceAtLeast(8f))) },
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             ) {
-                                Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Decrease")
+                                Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Decrease", modifier = Modifier.size(16.dp))
                             }
                             IconButton(
                                 onClick = { updateElement(selectedElement.copy(fontSize = (selectedElement.fontSize + 1f).coerceAtMost(60f))) },
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             ) {
-                                Icon(Icons.Default.AddCircleOutline, contentDescription = "Increase")
+                                Icon(Icons.Default.AddCircleOutline, contentDescription = "Increase", modifier = Modifier.size(16.dp))
                             }
                         }
                     }
@@ -757,36 +769,36 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         valueRange = 8f..60f
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Text Style: Bold & Alignment
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         FilterChip(
                             selected = selectedElement.isBold,
                             onClick = { updateElement(selectedElement.copy(isBold = !selectedElement.isBold)) },
-                            label = { Text("Bold") }
+                            label = { Text("Bold", fontSize = 11.sp) }
                         )
                         FilterChip(
                             selected = selectedElement.alignment == TextAlignment.LEFT,
                             onClick = { updateElement(selectedElement.copy(alignment = TextAlignment.LEFT)) },
-                            label = { Text("Left") }
+                            label = { Text("Left", fontSize = 11.sp) }
                         )
                         FilterChip(
                             selected = selectedElement.alignment == TextAlignment.CENTER,
                             onClick = { updateElement(selectedElement.copy(alignment = TextAlignment.CENTER)) },
-                            label = { Text("Center") }
+                            label = { Text("Center", fontSize = 11.sp) }
                         )
                         FilterChip(
                             selected = selectedElement.alignment == TextAlignment.RIGHT,
                             onClick = { updateElement(selectedElement.copy(alignment = TextAlignment.RIGHT)) },
-                            label = { Text("Right") }
+                            label = { Text("Right", fontSize = 11.sp) }
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Border toggle
                     Row(
@@ -794,19 +806,19 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Show Outer Border", fontSize = 13.sp)
+                        Text("Show Outer Border", fontSize = 11.5.sp)
                         Switch(
                             checked = selectedElement.hasBorder,
                             onCheckedChange = { updateElement(selectedElement.copy(hasBorder = it)) }
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 // 2. Question Block Settings
                 if (selectedElement.type == ElementType.QUESTION_BLOCK) {
-                    Text("Number of Questions: ${selectedElement.numQuestions}", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text("Number of Questions: ${selectedElement.numQuestions}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                     Slider(
                         value = selectedElement.numQuestions.toFloat(),
                         onValueChange = { updateElement(selectedElement.copy(numQuestions = it.toInt())) },
@@ -814,55 +826,55 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         steps = 18
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Columns: ${selectedElement.numColumns}", fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Columns: ${selectedElement.numColumns}", fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             listOf(1, 2, 3, 4).forEach { col ->
                                 FilterChip(
                                     selected = selectedElement.numColumns == col,
                                     onClick = { updateElement(selectedElement.copy(numColumns = col)) },
-                                    label = { Text("$col Col") }
+                                    label = { Text("$col Col", fontSize = 10.5.sp) }
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Options Per Question:", fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Options Per Question:", fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             listOf(3, 4, 5).forEach { opt ->
                                 FilterChip(
                                     selected = selectedElement.numOptions == opt,
                                     onClick = { updateElement(selectedElement.copy(numOptions = opt)) },
-                                    label = { Text("$opt (A-${('A' + opt - 1)})") }
+                                    label = { Text("$opt (A-${('A' + opt - 1)})", fontSize = 10.5.sp) }
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Bubble Size Slider
-                    Text("Bubble Radius / Size: ${selectedElement.bubbleRadius.toInt()}px", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Text("Bubble Radius / Size: ${selectedElement.bubbleRadius.toInt()}px", fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
                     Slider(
                         value = selectedElement.bubbleRadius,
                         onValueChange = { updateElement(selectedElement.copy(bubbleRadius = it)) },
                         valueRange = 7f..16f
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Options label format
                     Row(
@@ -870,77 +882,77 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Option Labels:", fontSize = 13.sp)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Option Labels:", fontSize = 11.5.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             FilterChip(
                                 selected = selectedElement.optionsFormat == "ABCD",
                                 onClick = { updateElement(selectedElement.copy(optionsFormat = "ABCD")) },
-                                label = { Text("A, B, C, D") }
+                                label = { Text("A, B, C, D", fontSize = 10.5.sp) }
                             )
                             FilterChip(
                                 selected = selectedElement.optionsFormat == "1234",
                                 onClick = { updateElement(selectedElement.copy(optionsFormat = "1234")) },
-                                label = { Text("1, 2, 3, 4") }
+                                label = { Text("1, 2, 3, 4", fontSize = 10.5.sp) }
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 // 3. Roll Number Grid Settings
                 if (selectedElement.type == ElementType.ROLL_NO_GRID) {
-                    Text("Roll Number Title", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Text("Roll Number Title", fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
                     OutlinedTextField(
                         value = selectedElement.gridTitle,
                         onValueChange = { updateElement(selectedElement.copy(gridTitle = it)) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(8.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Text("Number of Digits: ${selectedElement.digitsCount}", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text("Number of Digits: ${selectedElement.digitsCount}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                     Slider(
                         value = selectedElement.digitsCount.toFloat(),
                         onValueChange = { updateElement(selectedElement.copy(digitsCount = it.toInt())) },
                         valueRange = 4f..10f,
                         steps = 5
                     )
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 // 4. Barcode / QR Settings
                 if (selectedElement.type == ElementType.BARCODE_QR) {
-                    Text("Barcode / QR Content", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Text("Barcode / QR Content", fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
                     OutlinedTextField(
                         value = selectedElement.barcodeContent,
                         onValueChange = { updateElement(selectedElement.copy(barcodeContent = it)) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(8.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         FilterChip(
                             selected = selectedElement.barcodeFormat == "QR",
                             onClick = { updateElement(selectedElement.copy(barcodeFormat = "QR")) },
-                            label = { Text("QR Code") }
+                            label = { Text("QR Code", fontSize = 10.5.sp) }
                         )
                         FilterChip(
                             selected = selectedElement.barcodeFormat == "BARCODE",
                             onClick = { updateElement(selectedElement.copy(barcodeFormat = "BARCODE")) },
-                            label = { Text("Code 128 Barcode") }
+                            label = { Text("Code 128 Barcode", fontSize = 10.5.sp) }
                         )
                     }
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 // 5. Position & Dimension Fine-Tuning
-                Text("Position & Dimensions (Canvas 1000 x 1414)", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+                Text("Position & Dimensions (Canvas 1000 x 1414)", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // Width
-                Text("Width: ${selectedElement.width.toInt()}px", fontSize = 12.sp)
+                Text("Width: ${selectedElement.width.toInt()}px", fontSize = 11.sp)
                 Slider(
                     value = selectedElement.width,
                     onValueChange = { updateElement(selectedElement.copy(width = it)) },
@@ -948,7 +960,7 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                 )
 
                 // Height
-                Text("Height: ${selectedElement.height.toInt()}px", fontSize = 12.sp)
+                Text("Height: ${selectedElement.height.toInt()}px", fontSize = 11.sp)
                 Slider(
                     value = selectedElement.height,
                     onValueChange = { updateElement(selectedElement.copy(height = it)) },
@@ -956,7 +968,7 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                 )
 
                 // X Position
-                Text("X Position: ${selectedElement.x.toInt()}px", fontSize = 12.sp)
+                Text("X Position: ${selectedElement.x.toInt()}px", fontSize = 11.sp)
                 Slider(
                     value = selectedElement.x,
                     onValueChange = { updateElement(selectedElement.copy(x = it)) },
@@ -964,14 +976,14 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                 )
 
                 // Y Position
-                Text("Y Position: ${selectedElement.y.toInt()}px", fontSize = 12.sp)
+                Text("Y Position: ${selectedElement.y.toInt()}px", fontSize = 11.sp)
                 Slider(
                     value = selectedElement.y,
                     onValueChange = { updateElement(selectedElement.copy(y = it)) },
                     valueRange = 0f..1350f
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Delete Button
                 Button(
@@ -979,13 +991,16 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         deleteSelectedElement()
                         showInspectorSheet = false
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE2E2)),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 6.dp)
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFDC2626))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Delete Element", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text("Delete Element", color = Color(0xFFDC2626), fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -996,14 +1011,14 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
         AlertDialog(
             onDismissRequest = { showPresetsDialog = false },
             title = {
-                Text("Choose OMR Template Preset", fontWeight = FontWeight.Bold)
+                Text("Choose OMR Template Preset", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .clickable {
                                 elements = OmrTemplatePresets.createStandard50()
                                 selectedElementId = null
@@ -1013,16 +1028,16 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         color = Color(0xFFF8FAFC),
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Standard 50 Questions", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("2 Columns of 25 • Roll Grid • Student Details • 4 Options (A-D)", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("Standard 50 Questions", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                            Text("2 Columns of 25 • Roll Grid • Student Details • 4 Options (A-D)", fontSize = 10.5.sp, color = Color(0xFF64748B))
                         }
                     }
 
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .clickable {
                                 elements = OmrTemplatePresets.createNeet100()
                                 selectedElementId = null
@@ -1032,16 +1047,16 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         color = Color(0xFFF8FAFC),
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Mock / NEET 100 Questions", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("4 Columns of 25 • 7-Digit Roll Matrix • QR Code • Instructions", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("Mock / NEET 100 Questions", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                            Text("4 Columns of 25 • 7-Digit Roll Matrix • QR Code • Instructions", fontSize = 10.5.sp, color = Color(0xFF64748B))
                         }
                     }
 
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .clickable {
                                 elements = OmrTemplatePresets.createQuick20()
                                 selectedElementId = null
@@ -1051,16 +1066,16 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         color = Color(0xFFF8FAFC),
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Quick Quiz 20 Questions", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Large extra-clear bubbles • Junior classes & single section tests", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("Quick Quiz 20 Questions", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                            Text("Large extra-clear bubbles • Junior classes & single section tests", fontSize = 10.5.sp, color = Color(0xFF64748B))
                         }
                     }
 
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .clickable {
                                 elements = listOf(
                                     OmrElement(
@@ -1079,9 +1094,9 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                         color = Color(0xFFFEF2F2),
                         border = BorderStroke(1.dp, Color(0xFFFECDD3))
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Start Blank Sheet", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFFBE123C))
-                            Text("Empty canvas with 4 corner alignment markers", fontSize = 12.sp, color = Color(0xFF9F1239))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("Start Blank Sheet", fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = Color(0xFFBE123C))
+                            Text("Empty canvas with 4 corner alignment markers", fontSize = 10.5.sp, color = Color(0xFF9F1239))
                         }
                     }
                 }

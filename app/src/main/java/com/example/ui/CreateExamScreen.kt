@@ -187,16 +187,20 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                     Text(
                         "Create New Exam",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
+                        fontSize = 15.sp,
                         color = Color(0xFF0F172A)
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.size(36.dp)
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color(0xFF0F172A)
+                            tint = Color(0xFF0F172A),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 },
@@ -210,27 +214,28 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // 1. BASIC EXAM INFO CARD
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = Color.White,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("1. Basic Information", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                    Spacer(modifier = Modifier.height(12.dp))
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("1. Basic Information", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = examName,
                         onValueChange = { examName = it },
-                        label = { Text("Exam Name (e.g. Mid-Term Physics 2026)") },
+                        label = { Text("Exam Name (e.g. Mid-Term Physics 2026)", fontSize = 11.5.sp) },
+                        textStyle = TextStyle(fontSize = 12.5.sp),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = Color(0xFFF8FAFC),
                             focusedContainerColor = Color.White,
@@ -239,19 +244,20 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Date Picker Input
                     Box(modifier = Modifier.fillMaxWidth().clickable { datePickerVisible = true }) {
                         OutlinedTextField(
                             value = examDate,
                             onValueChange = {},
-                            label = { Text("Exam Date (DD/MM/YYYY) *") },
+                            label = { Text("Exam Date (DD/MM/YYYY) *", fontSize = 11.5.sp) },
+                            textStyle = TextStyle(fontSize = 12.5.sp),
                             modifier = Modifier.fillMaxWidth(),
                             readOnly = true,
                             enabled = false,
-                            trailingIcon = { Icon(Icons.Outlined.CalendarToday, contentDescription = "Select Date", tint = Color(0xFF64748B)) },
-                            shape = RoundedCornerShape(10.dp),
+                            trailingIcon = { Icon(Icons.Outlined.CalendarToday, contentDescription = "Select Date", tint = Color(0xFF64748B), modifier = Modifier.size(17.dp)) },
+                            shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 disabledTextColor = Color(0xFF0F172A),
                                 disabledContainerColor = Color(0xFFF8FAFC),
@@ -261,35 +267,35 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Subject Selector Chips
-                    Text("Subject", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Subject", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         availableSubjects.chunked(3).forEach { rowSubjects ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 rowSubjects.forEach { subj ->
                                     val isSelected = selectedSubject == subj
                                     Surface(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(RoundedCornerShape(7.dp))
                                             .clickable { selectedSubject = subj },
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = RoundedCornerShape(7.dp),
                                         color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF8FAFC),
                                         border = BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0))
                                     ) {
                                         Box(
-                                            modifier = Modifier.padding(vertical = 8.dp),
+                                            modifier = Modifier.padding(vertical = 6.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 text = subj,
-                                                fontSize = 11.sp,
+                                                fontSize = 10.sp,
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                                 color = if (isSelected) Color.White else Color(0xFF475569)
                                             )
@@ -305,21 +311,22 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
             // 2. OMR SHEET BRANDING & HEADER
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = Color.White,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("2. OMR Sheet Branding", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                    Spacer(modifier = Modifier.height(12.dp))
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("2. OMR Sheet Branding", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = examTitle,
                         onValueChange = { examTitle = it },
-                        label = { Text("Header Title (Printed at top of OMR)") },
+                        label = { Text("Header Title (Printed on OMR)", fontSize = 11.5.sp) },
+                        textStyle = TextStyle(fontSize = 12.5.sp),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = Color(0xFFF8FAFC),
                             focusedContainerColor = Color.White,
@@ -328,7 +335,7 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Logo selector row
                     Row(
@@ -339,24 +346,24 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .size(30.dp)
+                                    .clip(RoundedCornerShape(6.dp))
                                     .background(Color(0xFFF1F5F9)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.Image, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Image, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
                                     text = if (logoPath.isEmpty()) "Institution Watermark" else "Logo Selected",
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color(0xFF0F172A)
                                 )
                                 Text(
-                                    text = if (logoPath.isEmpty()) "Optional logo printed on sheet" else "Watermark active",
-                                    fontSize = 10.sp,
+                                    text = if (logoPath.isEmpty()) "Optional logo on sheet" else "Watermark active",
+                                    fontSize = 9.sp,
                                     color = Color(0xFF64748B)
                                 )
                             }
@@ -364,15 +371,15 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
 
                         PremiumOutlinedButton(
                             onClick = { launcher.launch("image/*") },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                         ) {
-                            Text(if (logoPath.isEmpty()) "Upload" else "Change", fontSize = 12.sp)
+                            Text(if (logoPath.isEmpty()) "Upload" else "Change", fontSize = 10.5.sp)
                         }
                     }
 
                     if (logoPath.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("Watermark Opacity: ${(logoOpacity * 100).toInt()}%", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Color(0xFF475569))
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text("Watermark Opacity: ${(logoOpacity * 100).toInt()}%", fontSize = 10.5.sp, fontWeight = FontWeight.Medium, color = Color(0xFF475569))
                         Slider(
                             value = logoOpacity,
                             onValueChange = { logoOpacity = it },
@@ -383,25 +390,25 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                             )
                         )
 
-                        Text("Watermark Position", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Color(0xFF475569))
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Watermark Position", fontSize = 10.5.sp, fontWeight = FontWeight.Medium, color = Color(0xFF475569))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             listOf("Left", "Center", "Right").forEach { pos ->
                                 val isSelected = logoPosition == pos
                                 Surface(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(6.dp))
                                         .clickable { logoPosition = pos },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(6.dp),
                                     color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
                                     border = BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0))
                                 ) {
                                     Text(
                                         text = pos,
-                                        fontSize = 11.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) Color.White else Color(0xFF475569),
-                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                     )
                                 }
                             }
@@ -413,23 +420,24 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
             // 3. SCORING SCHEME CARD (2x2 GRID)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = Color.White,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("3. Evaluation & Marking Rules", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                    Spacer(modifier = Modifier.height(12.dp))
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("3. Evaluation & Marking Rules", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = marksPerQuestion,
                             onValueChange = { marksPerQuestion = it },
-                            label = { Text("Marks/Q") },
+                            label = { Text("Marks/Q", fontSize = 11.sp) },
+                            textStyle = TextStyle(fontSize = 12.sp),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedContainerColor = Color(0xFFF8FAFC),
                                 focusedContainerColor = Color.White,
@@ -440,11 +448,12 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         OutlinedTextField(
                             value = negativeMarks,
                             onValueChange = { negativeMarks = it },
-                            label = { Text("Negative") },
+                            label = { Text("Negative", fontSize = 11.sp) },
+                            textStyle = TextStyle(fontSize = 12.sp),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedContainerColor = Color(0xFFF8FAFC),
                                 focusedContainerColor = Color.White,
@@ -454,17 +463,18 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = passMarks,
                             onValueChange = { passMarks = it },
-                            label = { Text("Pass Marks") },
+                            label = { Text("Pass Marks", fontSize = 11.sp) },
+                            textStyle = TextStyle(fontSize = 12.sp),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedContainerColor = Color(0xFFF8FAFC),
                                 focusedContainerColor = Color.White,
@@ -475,11 +485,12 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         OutlinedTextField(
                             value = bonusMarks,
                             onValueChange = { bonusMarks = it },
-                            label = { Text("Bonus Marks") },
+                            label = { Text("Bonus Marks", fontSize = 11.sp) },
+                            textStyle = TextStyle(fontSize = 12.sp),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedContainerColor = Color(0xFFF8FAFC),
                                 focusedContainerColor = Color.White,
@@ -494,32 +505,38 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
             // 4. TEMPLATE SELECTION (Standard vs Simple)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = Color.White,
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("4. OMR Sheet Style", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                    Spacer(modifier = Modifier.height(10.dp))
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("4. OMR Sheet Style", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         // Standard Template Option
                         val isStandard = templateType == "Standard"
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .clickable { templateType = "Standard" },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = if (isStandard) Color(0xFFFFF1F2) else Color(0xFFF8FAFC),
                             border = BorderStroke(1.dp, if (isStandard) Color(0xFFE11D48) else Color(0xFFE2E8F0))
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column(modifier = Modifier.padding(8.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(selected = isStandard, onClick = { templateType = "Standard" })
-                                    Text("Standard", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isStandard) Color(0xFFE11D48) else Color(0xFF0F172A))
+                                    RadioButton(
+                                        selected = isStandard,
+                                        onClick = { templateType = "Standard" },
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Standard", fontWeight = FontWeight.Bold, fontSize = 11.5.sp, color = if (isStandard) Color(0xFFE11D48) else Color(0xFF0F172A))
                                 }
-                                Text("Student Details + QR code verification", fontSize = 10.sp, color = Color(0xFF64748B))
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text("Student Details + QR code verification", fontSize = 9.sp, color = Color(0xFF64748B))
                             }
                         }
 
@@ -528,18 +545,24 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .clickable { templateType = "RollNoOnly" },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = if (isSimple) Color(0xFFFFF1F2) else Color(0xFFF8FAFC),
                             border = BorderStroke(1.dp, if (isSimple) Color(0xFFE11D48) else Color(0xFFE2E8F0))
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column(modifier = Modifier.padding(8.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(selected = isSimple, onClick = { templateType = "RollNoOnly" })
-                                    Text("Simple", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (isSimple) Color(0xFFE11D48) else Color(0xFF0F172A))
+                                    RadioButton(
+                                        selected = isSimple,
+                                        onClick = { templateType = "RollNoOnly" },
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Simple", fontWeight = FontWeight.Bold, fontSize = 11.5.sp, color = if (isSimple) Color(0xFFE11D48) else Color(0xFF0F172A))
                                 }
-                                Text("Minimal layout with Roll Number bubbles only", fontSize = 10.sp, color = Color(0xFF64748B))
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text("Minimal layout with Roll bubbles only", fontSize = 9.sp, color = Color(0xFF64748B))
                             }
                         }
                     }
@@ -549,34 +572,34 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
             // 5. AUTOMATIC MAPPING CALLOUT
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
                 color = Color(0xFFF0FDF4),
                 border = BorderStroke(1.dp, Color(0xFFBBF7D0))
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(26.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFDCFCE7)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(15.dp))
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             "${mappedStudents.size} Students Enrolled in $selectedSubject",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             color = Color(0xFF15803D)
                         )
                         Text(
                             "They will be automatically assigned and personalized OMR answer sheets will be generated.",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             color = Color(0xFF166534)
                         )
                     }
@@ -586,15 +609,16 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
             // 6. ACTION BUTTONS
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PremiumOutlinedButton(
                     onClick = { previewVisible = true },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Preview")
+                    Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Preview", fontSize = 12.sp)
                 }
 
                 PremiumButton(
@@ -615,16 +639,17 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                     },
                     modifier = Modifier.weight(1.5f),
                     enabled = examName.isNotBlank() && examDate.isNotBlank(),
+                    contentPadding = PaddingValues(vertical = 8.dp),
                     containerColor = Color(0xFFE11D48),
                     borderColor = Color(0xFFBE123C)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Create Exam")
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text("Create Exam", fontSize = 12.5.sp)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

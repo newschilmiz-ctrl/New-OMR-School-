@@ -1,6 +1,7 @@
 package com.example.ui
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object Home : Screen("home")
     object Students : Screen("students")
     object StudentAdmission : Screen("student_admission")

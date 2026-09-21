@@ -221,13 +221,13 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                         Text(
                             "Live OMR Scanner",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = 15.sp,
                             color = Color(0xFF0F172A)
                         )
                         exam?.let {
                             Text(
                                 it.name,
-                                fontSize = 12.sp,
+                                fontSize = 10.5.sp,
                                 color = Color(0xFF64748B),
                                 fontWeight = FontWeight.Medium
                             )
@@ -235,11 +235,12 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(36.dp)) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color(0xFF0F172A)
+                            tint = Color(0xFF0F172A),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 },
@@ -260,27 +261,27 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                     verticalArrangement = Arrangement.Center
                 ) {
                     Surface(
-                        modifier = Modifier.padding(24.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.padding(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
                         Column(
-                            modifier = Modifier.padding(32.dp),
+                            modifier = Modifier.padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            CircularProgressIndicator(color = Color(0xFFE11D48), strokeWidth = 3.dp)
-                            Spacer(modifier = Modifier.height(18.dp))
+                            CircularProgressIndicator(color = Color(0xFFE11D48), strokeWidth = 2.5.dp, modifier = Modifier.size(36.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
                             Text(
                                 "Evaluating OMR Sheet...",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
+                                fontSize = 13.5.sp,
                                 color = Color(0xFF0F172A)
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 "Detecting corner markers, bubbles & Roll ID",
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 color = Color(0xFF64748B)
                             )
                         }
@@ -319,128 +320,131 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
+                        .padding(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Scanner Illustration / Viewport Box
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
                         Column(
-                            modifier = Modifier.padding(24.dp),
+                            modifier = Modifier.padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(90.dp)
+                                    .size(64.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFFFF1F2))
-                                    .border(2.dp, Color(0xFFFFE4E6), CircleShape),
+                                    .border(1.5.dp, Color(0xFFFFE4E6), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.DocumentScanner,
                                     contentDescription = null,
-                                    modifier = Modifier.size(44.dp),
+                                    modifier = Modifier.size(32.dp),
                                     tint = Color(0xFFE11D48)
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
                                 "Instant OMR Auto-Scoring",
-                                fontSize = 17.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0F172A)
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 "Evaluates 100 questions in under 1 second with automatic perspective correction & roll number extraction.",
-                                fontSize = 13.sp,
+                                fontSize = 11.5.sp,
                                 color = Color(0xFF64748B),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Best Practice Checklist Card
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(10.dp),
                         color = Color.White,
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
                             Text(
                                 "Tips for Highest Accuracy",
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0F172A)
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text("Hold phone parallel to the paper sheet", fontSize = 12.sp, color = Color(0xFF334155))
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Hold phone parallel to the paper sheet", fontSize = 11.sp, color = Color(0xFF334155))
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text("Ensure all 4 black corner boxes are in frame", fontSize = 12.sp, color = Color(0xFF334155))
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Ensure all 4 black corner boxes are in frame", fontSize = 11.sp, color = Color(0xFF334155))
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text("Auto de-skew works even if image is tilted or rotated", fontSize = 12.sp, color = Color(0xFF334155))
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Auto de-skew works even if image is tilted or rotated", fontSize = 11.sp, color = Color(0xFF334155))
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Scanner Action Buttons (Full Advanced Suite)
                     PremiumButton(
                         onClick = { showCameraXScanner = true },
                         modifier = Modifier.fillMaxWidth(),
                         containerColor = Color(0xFFE11D48),
-                        borderColor = Color(0xFFBE123C)
+                        borderColor = Color(0xFFBE123C),
+                        contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.CenterFocusStrong, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Live A4 Camera Scanner (Fast & Auto)")
+                        Icon(Icons.Default.CenterFocusStrong, contentDescription = null, modifier = Modifier.size(17.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Live A4 Camera Scanner (Fast & Auto)", fontSize = 12.sp)
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     PremiumOutlinedButton(
                         onClick = { startLiveScanner = true },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.DocumentScanner, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Document Edge-Detect Scanner")
+                        Icon(Icons.Default.DocumentScanner, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Document Edge-Detect Scanner", fontSize = 12.sp)
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     PremiumOutlinedButton(
                         onClick = { galleryLauncher.launch("image/*") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Pick Sheet Image from Gallery")
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Pick Sheet Image from Gallery", fontSize = 12.sp)
                     }
                 }
             }
@@ -721,59 +725,59 @@ fun ResultView(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 1. SCORE HERO CARD
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             color = Color.White,
             border = BorderStroke(1.dp, Color(0xFFE2E8F0))
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("FINAL EVALUATION", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
+                        Text("FINAL EVALUATION", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
                                 text = "%.1f".format(score),
-                                fontSize = 32.sp,
+                                fontSize = 24.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = if (isPassed) Color(0xFF15803D) else Color(0xFFE11D48)
                             )
                             Text(
                                 text = " / ${key!!.numQuestions * exam.marksPerQuestion}",
-                                fontSize = 16.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF94A3B8),
-                                modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                                modifier = Modifier.padding(bottom = 3.dp, start = 4.dp)
                             )
                         }
                     }
 
                     // Pass/Fail badge
                     Surface(
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(16.dp),
                         color = if (isPassed) Color(0xFFDCFCE7) else Color(0xFFFEE2E2)
                     ) {
                         Text(
                             text = if (isPassed) "PASSED" else "NEEDS IMPROVEMENT",
-                            fontSize = 11.sp,
+                            fontSize = 9.5.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = if (isPassed) Color(0xFF15803D) else Color(0xFFDC2626),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 0.5.dp)
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Student Identification Row
                 Row(
@@ -782,115 +786,115 @@ fun ResultView(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text(studentName, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                        Text(studentName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.clickable { showEditRollNo = true }
                         ) {
                             Text(
                                 "Roll: $editedStudentId",
-                                fontSize = 12.sp,
+                                fontSize = 10.5.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = if (isRollMatch) Color(0xFF0284C7) else Color(0xFFDC2626)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF94A3B8), modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF94A3B8), modifier = Modifier.size(11.dp))
                         }
                     }
 
                     // Paper Set pill
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(6.dp),
                         color = Color(0xFFF1F5F9),
                         modifier = Modifier.clickable { showEditSet = true }
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("SET $editedPaperSet", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF64748B), modifier = Modifier.size(12.dp))
+                            Text("SET $editedPaperSet", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF64748B), modifier = Modifier.size(11.dp))
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Stats breakdown strip
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp), color = Color(0xFFF0FDF4)) {
-                        Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("CORRECT", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF16A34A))
-                            Text("$correct", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF15803D))
+                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(6.dp), color = Color(0xFFF0FDF4)) {
+                        Column(modifier = Modifier.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("CORRECT", fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF16A34A))
+                            Text("$correct", fontSize = 13.5.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF15803D))
                         }
                     }
-                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp), color = Color(0xFFFEF2F2)) {
-                        Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("WRONG", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
-                            Text("$wrong", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFDC2626))
+                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(6.dp), color = Color(0xFFFEF2F2)) {
+                        Column(modifier = Modifier.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("WRONG", fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                            Text("$wrong", fontSize = 13.5.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFDC2626))
                         }
                     }
-                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp), color = Color(0xFFF8FAFC)) {
-                        Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("BLANK", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
-                            Text("$empty", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF475569))
+                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(6.dp), color = Color(0xFFF8FAFC)) {
+                        Column(modifier = Modifier.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("BLANK", fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
+                            Text("$empty", fontSize = 13.5.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF475569))
                         }
                     }
-                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp), color = Color(0xFFF0F9FF)) {
-                        Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("TOTAL", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
-                            Text("${key!!.numQuestions}", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0369A1))
+                    Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(6.dp), color = Color(0xFFF0F9FF)) {
+                        Column(modifier = Modifier.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("TOTAL", fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
+                            Text("${key!!.numQuestions}", fontSize = 13.5.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0369A1))
                         }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // 2. QUESTION MATRIX & MANUAL OVERRIDE
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             color = Color.White,
             border = BorderStroke(1.dp, Color(0xFFE2E8F0))
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Question Analysis", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                    Text("Tap to edit bubble", fontSize = 11.sp, color = Color(0xFF64748B))
+                    Text("Question Analysis", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Text("Tap to edit bubble", fontSize = 10.sp, color = Color(0xFF64748B))
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Color legend
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF16A34A)))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Correct", fontSize = 10.sp, color = Color(0xFF64748B))
+                        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(Color(0xFF16A34A)))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("Correct", fontSize = 9.5.sp, color = Color(0xFF64748B))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFDC2626)))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Incorrect", fontSize = 10.sp, color = Color(0xFF64748B))
+                        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(Color(0xFFDC2626)))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("Incorrect", fontSize = 9.5.sp, color = Color(0xFF64748B))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFCBD5E1)))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Unattempted", fontSize = 10.sp, color = Color(0xFF64748B))
+                        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(Color(0xFFCBD5E1)))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("Unattempted", fontSize = 9.5.sp, color = Color(0xFF64748B))
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Question bubble chips grid
                 val chunkedQuestions = (0 until key!!.numQuestions).chunked(8)
@@ -910,8 +914,8 @@ fun ResultView(
 
                             Box(
                                 modifier = Modifier
-                                    .padding(vertical = 3.dp)
-                                    .size(32.dp)
+                                    .padding(vertical = 2.dp)
+                                    .size(26.dp)
                                     .clip(CircleShape)
                                     .background(chipBg)
                                     .clickable { showEditDialogForQ = i },
@@ -920,7 +924,7 @@ fun ResultView(
                                 Text(
                                     "${i + 1}",
                                     color = chipText,
-                                    fontSize = 11.sp,
+                                    fontSize = 9.5.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -930,7 +934,7 @@ fun ResultView(
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // 3. SCANNED OMR IMAGE PREVIEW & ADVANCED ALIGNMENT TOOLBAR
         if (showFullPreviewDialog) {
@@ -952,7 +956,7 @@ fun ResultView(
                             onClick = { showFullPreviewDialog = false },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(20.dp)
+                                .padding(16.dp)
                                 .background(Color.Black.copy(alpha = 0.65f), CircleShape)
                         ) {
                             Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
@@ -964,42 +968,42 @@ fun ResultView(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             color = Color.White,
             border = BorderStroke(1.dp, Color(0xFFE2E8F0))
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Scanned Sheet & Calibrated Bubbles", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                        Text("Scanned Sheet & Calibrated Bubbles", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                         Text(
                             "Rotation: ${currentRotation}° ${if (currentRotation == 180) "(Flipped 180°)" else ""}",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             color = Color(0xFF64748B)
                         )
                     }
                     OutlinedButton(
                         onClick = { showFullPreviewDialog = true },
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier.height(34.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 3.dp),
+                        modifier = Modifier.height(28.dp)
                     ) {
-                        Icon(Icons.Default.ZoomIn, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Inspect", fontSize = 11.sp)
+                        Icon(Icons.Default.ZoomIn, contentDescription = null, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("Inspect", fontSize = 10.sp)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .height(210.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(Color(0xFF0F172A))
                         .clickable { showFullPreviewDialog = true }
                 ) {
@@ -1010,55 +1014,55 @@ fun ResultView(
                     )
                     Surface(
                         color = Color.Black.copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(8.dp)
+                            .padding(6.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.TouchApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Tap to Zoom", color = Color.White, fontSize = 10.sp)
+                            Icon(Icons.Default.TouchApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("Tap to Zoom", color = Color.White, fontSize = 9.sp)
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // ADVANCED ORIENTATION & CORRECTION TOOLBAR
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     color = Color(0xFFFFFBEB),
                     border = BorderStroke(1.dp, Color(0xFFFDE68A)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(10.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ScreenRotation, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(Icons.Default.ScreenRotation, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Column {
                                 Text(
                                     "Sheet Orientation Fix (उल्टा / सीधा)",
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF92400E)
                                 )
                                 Text(
                                     "Agar paper ulta scan hua hai, turant 1-tap me seedha karein:",
-                                    fontSize = 11.sp,
+                                    fontSize = 9.5.sp,
                                     color = Color(0xFFB45309)
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             // Primary 180° Invert button
                             Button(
@@ -1073,12 +1077,12 @@ fun ResultView(
                                     containerColor = Color(0xFFD97706),
                                     contentColor = Color.White
                                 ),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                             ) {
-                                Icon(Icons.Default.RotateRight, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Flip 180° (उल्टा/सीधा)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.RotateRight, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Flip 180° (उल्टा/सीधा)", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
 
                             // Rotate +90°
@@ -1090,10 +1094,10 @@ fun ResultView(
                                     }
                                 },
                                 modifier = Modifier.weight(0.85f),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
                             ) {
-                                Text("+90° ↻", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("+90° ↻", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
 
                             // Rotate -90°
@@ -1105,14 +1109,14 @@ fun ResultView(
                                     }
                                 },
                                 modifier = Modifier.weight(0.85f),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
                             ) {
-                                Text("-90° ↺", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("-90° ↺", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Sensitivity Selector
                         Row(
@@ -1120,22 +1124,22 @@ fun ResultView(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Bubble Fill Sensitivity:", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Color(0xFF78350F))
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Bubble Fill Sensitivity:", fontSize = 10.sp, fontWeight = FontWeight.Medium, color = Color(0xFF78350F))
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 FilterChip(
                                     selected = currentSensitivity < 0.9f,
                                     onClick = { onSensitivityChange(0.7f) },
-                                    label = { Text("Light Pencil", fontSize = 10.sp) }
+                                    label = { Text("Light Pencil", fontSize = 9.sp) }
                                 )
                                 FilterChip(
                                     selected = currentSensitivity in 0.9f..1.1f,
                                     onClick = { onSensitivityChange(1.0f) },
-                                    label = { Text("Pen (Normal)", fontSize = 10.sp) }
+                                    label = { Text("Pen (Normal)", fontSize = 9.sp) }
                                 )
                                 FilterChip(
                                     selected = currentSensitivity > 1.1f,
                                     onClick = { onSensitivityChange(1.35f) },
-                                    label = { Text("Strict", fontSize = 10.sp) }
+                                    label = { Text("Strict", fontSize = 9.sp) }
                                 )
                             }
                         }
@@ -1144,7 +1148,7 @@ fun ResultView(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // 4. ACTION BUTTONS
         PremiumButton(
@@ -1159,38 +1163,41 @@ fun ResultView(
             },
             modifier = Modifier.fillMaxWidth(),
             containerColor = Color(0xFFE11D48),
-            borderColor = Color(0xFFBE123C)
+            borderColor = Color(0xFFBE123C),
+            contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (autoSaved) "Done (Saved)" else "Save & Finish")
+            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(if (autoSaved) "Done (Saved)" else "Save & Finish", fontSize = 12.sp)
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             PremiumOutlinedButton(
                 onClick = { savePdfLauncher.launch("Scanned_OMR_${editedStudentId}.pdf") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(vertical = 7.dp)
             ) {
-                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Export PDF")
+                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("Export PDF", fontSize = 11.5.sp)
             }
 
             PremiumOutlinedButton(
                 onClick = onRescan,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(vertical = 7.dp)
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Scan Next")
+                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("Scan Next", fontSize = 11.5.sp)
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
