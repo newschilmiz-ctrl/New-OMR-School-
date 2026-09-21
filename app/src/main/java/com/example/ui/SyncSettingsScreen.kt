@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -41,7 +42,14 @@ fun SyncSettingsScreen(navController: NavController, viewModel: OmrViewModel) {
     val scrollState = rememberScrollState()
 
     var isMySqlEnabled by remember { mutableStateOf(SyncPreferences.isMySqlSyncEnabled(context)) }
-    var serverUrl by remember { mutableStateOf(SyncPreferences.getMySqlServerUrl(context)) }
+    var serverUrl by remember {
+        val saved = SyncPreferences.getMySqlServerUrl(context)
+        val fixed = com.example.util.MySqlSyncManager.normalizeUrl(saved)
+        if (fixed != saved && saved.isNotBlank()) {
+            SyncPreferences.setMySqlServerUrl(context, fixed)
+        }
+        mutableStateOf(fixed)
+    }
     var apiKey by remember { mutableStateOf(SyncPreferences.getMySqlApiKey(context)) }
     var lastSyncTime by remember { mutableLongStateOf(SyncPreferences.getLastSyncTime(context)) }
 
@@ -59,9 +67,9 @@ fun SyncSettingsScreen(navController: NavController, viewModel: OmrViewModel) {
 -- UTF8MB4 for Hindi/English Unicode Character Support
 -- ========================================================
 
-CREATE DATABASE IF NOT EXISTS `omr_system` 
+CREATE DATABASE IF NOT EXISTS `gceedakt_rsarts` 
 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `omr_system`;
+USE `gceedakt_rsarts`;
 
 -- 1. EXAMS TABLE
 CREATE TABLE IF NOT EXISTS `exams` (
@@ -343,7 +351,7 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                     OutlinedTextField(
                         value = serverUrl,
                         onValueChange = { serverUrl = it },
-                        placeholder = { Text("https://your-domain.com/omr_api/api.php", fontSize = 13.sp) },
+                        placeholder = { Text("http://rsartsclassess.whf.bz/omr_api/api.php", fontSize = 13.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("server_url_input"),
@@ -356,6 +364,41 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                             focusedBorderColor = Color(0xFF2563EB),
                             unfocusedBorderColor = Color(0xFFCBD5E1)
                         )
+                    )
+
+                    if (serverUrl.contains(".omr_api")) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Surface(
+                            color = Color(0xFFFEF2F2),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    serverUrl = com.example.util.MySqlSyncManager.normalizeUrl(serverUrl)
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    "Typo detected: '.omr_api' found! Tap here to fix to '/omr_api/api.php'",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFDC2626),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        "Example: http://rsartsclassess.whf.bz/omr_api/api.php",
+                        fontSize = 11.sp,
+                        color = Color(0xFF64748B),
+                        modifier = Modifier.padding(top = 4.dp, start = 2.dp)
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -371,7 +414,7 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                     OutlinedTextField(
                         value = apiKey,
                         onValueChange = { apiKey = it },
-                        placeholder = { Text("e.g. secret_token_abc123", fontSize = 13.sp) },
+                        placeholder = { Text("Leave blank if not configured in db_config.php", fontSize = 13.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("api_key_input"),
@@ -395,13 +438,15 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                     ) {
                         Button(
                             onClick = {
-                                SyncPreferences.setMySqlServerUrl(context, serverUrl)
-                                SyncPreferences.setMySqlApiKey(context, apiKey)
-                                if (serverUrl.isNotBlank() && !isMySqlEnabled) {
+                                val cleanUrl = com.example.util.MySqlSyncManager.normalizeUrl(serverUrl)
+                                serverUrl = cleanUrl
+                                SyncPreferences.setMySqlServerUrl(context, cleanUrl)
+                                SyncPreferences.setMySqlApiKey(context, apiKey.trim())
+                                if (cleanUrl.isNotBlank() && !isMySqlEnabled) {
                                     isMySqlEnabled = true
                                     SyncPreferences.setMySqlSyncEnabled(context, true)
                                 }
-                                Toast.makeText(context, "Settings saved successfully", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "URL normalized & saved", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -421,9 +466,14 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                                     Toast.makeText(context, "Please enter Server URL first", Toast.LENGTH_SHORT).show()
                                     return@OutlinedButton
                                 }
+                                val cleanUrl = com.example.util.MySqlSyncManager.normalizeUrl(serverUrl)
+                                serverUrl = cleanUrl
+                                SyncPreferences.setMySqlServerUrl(context, cleanUrl)
+                                SyncPreferences.setMySqlApiKey(context, apiKey.trim())
+                                
                                 isTestingConnection = true
                                 testResult = null
-                                viewModel.testMySqlConnection(serverUrl.trim(), apiKey.trim()) { success, msg ->
+                                viewModel.testMySqlConnection(cleanUrl, apiKey.trim()) { success, msg ->
                                     isTestingConnection = false
                                     testResult = Pair(success, msg)
                                 }
@@ -489,7 +539,7 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
                         color = Color(0xFF1E293B)
                     )
                     Text(
-                        "Upload all existing exams, students, and scan results to your MySQL server right now.",
+                        "Upload all existing exams, answer keys, questions, students (with photos), and scan results to your MySQL server right now.",
                         fontSize = 11.sp,
                         color = Color(0xFF64748B)
                     )

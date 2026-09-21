@@ -88,13 +88,17 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var compressedBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var imagePath by remember { mutableStateOf("") }
+    var imageSizeBytes by remember { mutableStateOf(0) }
 
     val imagePicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             imageUri = it
-            val bmp = compressImage(context, it)
-            compressedBitmap = bmp
-            imagePath = saveImageToInternalStorage(context, bmp)
+            val bytes = com.example.util.PhotoCompressor.compressTo20Kb(context, it)
+            if (bytes.isNotEmpty()) {
+                imageSizeBytes = bytes.size
+                compressedBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                imagePath = com.example.util.PhotoCompressor.saveBytesToInternalStorage(context, bytes)
+            }
         }
     }
 
@@ -180,11 +184,30 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                         color = Color(0xFFE11D48),
                         modifier = Modifier.clickable { imagePicker.launch("image/*") }
                     )
-                    Text(
-                        text = "Auto-formatted for OMR desk slip print",
-                        fontSize = 11.sp,
-                        color = Color(0xFF94A3B8)
-                    )
+
+                    if (compressedBitmap != null) {
+                        val kb = imageSizeBytes / 1024.0
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Surface(
+                            color = Color(0xFFF0FDF4),
+                            shape = RoundedCornerShape(6.dp),
+                            border = BorderStroke(1.dp, Color(0xFFBBF7D0))
+                        ) {
+                            Text(
+                                text = "⚡ Auto Converted: ${String.format("%.1f", kb)} KB (Target: ~20KB)",
+                                fontSize = 11.sp,
+                                color = Color(0xFF15803D),
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Auto-converted to ~20KB for Server & OMR desk slip",
+                            fontSize = 11.sp,
+                            color = Color(0xFF94A3B8)
+                        )
+                    }
                 }
             }
 

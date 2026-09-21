@@ -7,10 +7,11 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-CREATE DATABASE IF NOT EXISTS `omr_system` 
+-- Using user's database: gceedakt_rsarts
+CREATE DATABASE IF NOT EXISTS `gceedakt_rsarts` 
 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE `omr_system`;
+USE `gceedakt_rsarts`;
 
 -- --------------------------------------------------------
 -- Table 1: `exams`

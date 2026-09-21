@@ -26,12 +26,29 @@ object CloudSyncManager {
     suspend fun uploadStudent(student: Student) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. Upload Image to Cloudinary
                 var uploadedImageUrl = ""
+                val ctx = appContext
+
+                // 1. Auto-compress photo to ~20KB and upload to user's MySQL Web Server
                 if (student.imagePath.isNotEmpty()) {
-                    val file = File(student.imagePath)
-                    if (file.exists()) {
-                        uploadedImageUrl = uploadToCloudinary(file)
+                    if (student.imagePath.startsWith("http")) {
+                        uploadedImageUrl = student.imagePath
+                    } else {
+                        val file = File(student.imagePath)
+                        if (file.exists()) {
+                            val compressed20Kb = PhotoCompressor.compressFileTo20Kb(student.imagePath)
+                            if (compressed20Kb.isNotEmpty() && ctx != null) {
+                                // Attempt direct upload to user's MySQL Web Server
+                                val serverPhotoUrl = MySqlSyncManager.uploadStudentPhoto(ctx, student.rollNo, compressed20Kb)
+                                if (!serverPhotoUrl.isNullOrBlank()) {
+                                    uploadedImageUrl = serverPhotoUrl
+                                }
+                            }
+                            // Fallback to Cloudinary if MySQL upload not configured or failed
+                            if (uploadedImageUrl.isEmpty()) {
+                                uploadedImageUrl = uploadToCloudinary(file)
+                            }
+                        }
                     }
                 }
 
@@ -65,7 +82,7 @@ object CloudSyncManager {
                 conn.disconnect()
 
                 // 3. Dual-sync to MySQL Web Server
-                appContext?.let { ctx ->
+                if (ctx != null) {
                     MySqlSyncManager.syncStudent(ctx, finalStudent)
                 }
 
@@ -315,6 +332,48 @@ object CloudSyncManager {
                 e.printStackTrace()
             }
             null
+        }
+    }
+
+    suspend fun fetchAnswerKeysForExam(examId: Int): List<com.example.data.AnswerKey> {
+        return withContext(Dispatchers.IO) {
+            val list = mutableListOf<com.example.data.AnswerKey>()
+            try {
+                val url = URL("$FIREBASE_DB_URL/answer_keys/$examId.json")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+
+                if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = conn.inputStream.bufferedReader().readText()
+                    if (response != "null") {
+                        val parsed = org.json.JSONTokener(response).nextValue()
+                        if (parsed is JSONObject) {
+                            val keys = parsed.keys()
+                            while (keys.hasNext()) {
+                                val setName = keys.next()
+                                val keyObj = parsed.optJSONObject(setName)
+                                if (keyObj != null) {
+                                    list.add(
+                                        com.example.data.AnswerKey(
+                                            id = keyObj.optInt("id", 0),
+                                            examId = keyObj.optInt("examId", examId),
+                                            setName = keyObj.optString("setName", setName),
+                                            numQuestions = keyObj.optInt("numQuestions", 0),
+                                            numOptions = keyObj.optInt("numOptions", 0),
+                                            correctAnswers = keyObj.optString("correctAnswers", "[]"),
+                                            timestamp = keyObj.optLong("timestamp", 0)
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                conn.disconnect()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            list
         }
     }
 

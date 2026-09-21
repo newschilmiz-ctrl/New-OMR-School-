@@ -1,7 +1,8 @@
 <?php
 /**
  * OMR Web Server MySQL REST API
- * Handles real-time dual sync and bulk sync from Android OMR app.
+ * Handles real-time dual sync, student photo uploads with 20KB compression,
+ * questions & answer keys synchronization, and bulk sync.
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -15,6 +16,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/db_config.php';
+
+// Helper function to save base64 photo to uploads folder
+function saveBase64Image($base64Data, $rollNo) {
+    if (empty($base64Data)) return '';
+    // Strip data URI header if present
+    if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
+        $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
+    }
+    $decoded = base64_decode($base64Data);
+    if ($decoded === false || strlen($decoded) === 0) return '';
+
+    $uploadDir = __DIR__ . '/uploads';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0755, true);
+    }
+    $safeRoll = preg_replace('/[^a-zA-Z0-9_-]/', '_', $rollNo);
+    $filename = 'student_' . $safeRoll . '_' . time() . '.jpg';
+    $filepath = $uploadDir . '/' . $filename;
+    if (@file_put_contents($filepath, $decoded) !== false) {
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+        $protocol = $isHttps ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+        $scriptDir = ($scriptDir === '/' || $scriptDir === '\\') ? '' : $scriptDir;
+        return $protocol . $host . $scriptDir . '/uploads/' . $filename;
+    }
+    return '';
+}
 
 // Check API Key security if configured in db_config.php
 if (defined('API_SECRET_KEY') && API_SECRET_KEY !== '') {
@@ -51,7 +80,8 @@ if ($action === 'ping' || $action === 'test_connection') {
         'status' => 'success',
         'message' => 'MySQL Server Connected successfully!',
         'server_time' => date('Y-m-d H:i:s'),
-        'php_version' => PHP_VERSION
+        'php_version' => PHP_VERSION,
+        'uploads_writable' => is_writable(__DIR__) || is_writable(__DIR__ . '/uploads')
     ]);
     exit;
 }
@@ -61,7 +91,37 @@ $pdo = getDbConnection();
 try {
     switch ($action) {
         // ----------------------------------------------------
-        // 1. SYNC STUDENT
+        // 1. STUDENT PHOTO UPLOAD (Compressed ~20KB)
+        // ----------------------------------------------------
+        case 'upload_student_photo':
+        case 'upload_photo':
+            $rollNo = $d['roll_no'] ?? ($d['rollNo'] ?? 'photo');
+            $base64 = $d['image_base64'] ?? ($d['imageBase64'] ?? ($d['image'] ?? ''));
+            if (empty($base64)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Missing image_base64 data']);
+                exit;
+            }
+
+            $photoUrl = saveBase64Image($base64, $rollNo);
+            if (!empty($photoUrl)) {
+                // Also update student record if roll_no exists
+                $stmt = $pdo->prepare("UPDATE students SET image_url = :image_url WHERE roll_no = :roll_no");
+                $stmt->execute([':image_url' => $photoUrl, ':roll_no' => $rollNo]);
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Photo uploaded and saved to server',
+                    'image_url' => $photoUrl
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => 'Failed to write photo to uploads/ folder']);
+            }
+            break;
+
+        // ----------------------------------------------------
+        // 2. SYNC STUDENT
         // ----------------------------------------------------
         case 'sync_student':
         case 'save_student':
@@ -71,6 +131,15 @@ try {
                 http_response_code(400);
                 echo json_encode(['status' => 'error', 'message' => 'Missing roll_no or name']);
                 exit;
+            }
+
+            // Check if photo base64 is passed directly
+            $finalImageUrl = $d['image_url'] ?? ($d['imagePath'] ?? ($d['imageUrl'] ?? ''));
+            if (!empty($d['image_base64'])) {
+                $uploadedUrl = saveBase64Image($d['image_base64'], $rollNo);
+                if (!empty($uploadedUrl)) {
+                    $finalImageUrl = $uploadedUrl;
+                }
             }
 
             $stmt = $pdo->prepare("
@@ -103,11 +172,15 @@ try {
                 ':email' => $d['email'] ?? '',
                 ':stream' => $d['stream'] ?? 'ARTS',
                 ':subjects' => $d['subjects'] ?? '',
-                ':image_url' => $d['image_url'] ?? ($d['imagePath'] ?? ($d['imageUrl'] ?? '')),
+                ':image_url' => $finalImageUrl,
                 ':timestamp' => $d['timestamp'] ?? round(microtime(true) * 1000)
             ]);
 
-            echo json_encode(['status' => 'success', 'message' => 'Student synced successfully']);
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Student synced successfully',
+                'image_url' => $finalImageUrl
+            ]);
             break;
 
         case 'delete_student':
@@ -123,7 +196,7 @@ try {
             break;
 
         // ----------------------------------------------------
-        // 2. SYNC EXAM
+        // 3. SYNC EXAM
         // ----------------------------------------------------
         case 'sync_exam':
         case 'save_exam':
@@ -192,7 +265,7 @@ try {
             break;
 
         // ----------------------------------------------------
-        // 3. SYNC ANSWER KEY
+        // 4. SYNC ANSWER KEY
         // ----------------------------------------------------
         case 'sync_answer_key':
         case 'save_answer_key':
@@ -229,7 +302,7 @@ try {
             break;
 
         // ----------------------------------------------------
-        // 4. SYNC QUESTION
+        // 5. SYNC QUESTION
         // ----------------------------------------------------
         case 'sync_question':
         case 'save_question':
@@ -275,7 +348,7 @@ try {
             break;
 
         // ----------------------------------------------------
-        // 5. SYNC SCAN RESULT
+        // 6. SYNC SCAN RESULT
         // ----------------------------------------------------
         case 'sync_scan_result':
         case 'save_scan_result':
@@ -317,17 +390,21 @@ try {
             break;
 
         // ----------------------------------------------------
-        // 6. BULK SYNC (All Exams, Students, Scan Results in 1 call)
+        // 7. COMPLETE BULK SYNC (Exams, Students, Answer Keys, Questions, Results)
         // ----------------------------------------------------
         case 'bulk_sync':
             $pdo->beginTransaction();
 
             $examsCount = 0;
             $studentsCount = 0;
+            $keysCount = 0;
+            $questionsCount = 0;
             $resultsCount = 0;
 
             $bulkExams = $d['exams'] ?? ($data['exams'] ?? []);
             $bulkStudents = $d['students'] ?? ($data['students'] ?? []);
+            $bulkKeys = $d['answer_keys'] ?? ($data['answer_keys'] ?? ($d['answerKeys'] ?? []));
+            $bulkQuestions = $d['questions'] ?? ($data['questions'] ?? []);
             $bulkResults = $d['scan_results'] ?? ($data['scan_results'] ?? ($d['scanResults'] ?? []));
 
             // Sync Exams
@@ -395,6 +472,62 @@ try {
                 }
             }
 
+            // Sync Answer Keys
+            if (!empty($bulkKeys) && is_array($bulkKeys)) {
+                $stmtKey = $pdo->prepare("
+                    INSERT INTO answer_keys (id, exam_id, set_name, num_questions, num_options, correct_answers, timestamp)
+                    VALUES (:id, :exam_id, :set_name, :num_questions, :num_options, :correct_answers, :timestamp)
+                    ON DUPLICATE KEY UPDATE 
+                        num_questions = VALUES(num_questions),
+                        num_options = VALUES(num_options),
+                        correct_answers = VALUES(correct_answers),
+                        timestamp = VALUES(timestamp)
+                ");
+
+                foreach ($bulkKeys as $k) {
+                    $ans = $k['correct_answers'] ?? ($k['correctAnswers'] ?? '[]');
+                    $stmtKey->execute([
+                        ':id' => $k['id'] ?? 0,
+                        ':exam_id' => $k['exam_id'] ?? ($k['examId'] ?? 0),
+                        ':set_name' => $k['set_name'] ?? ($k['setName'] ?? ''),
+                        ':num_questions' => $k['num_questions'] ?? ($k['numQuestions'] ?? 50),
+                        ':num_options' => $k['num_options'] ?? ($k['numOptions'] ?? 4),
+                        ':correct_answers' => is_string($ans) ? $ans : json_encode($ans),
+                        ':timestamp' => $k['timestamp'] ?? 0
+                    ]);
+                    $keysCount++;
+                }
+            }
+
+            // Sync Questions
+            if (!empty($bulkQuestions) && is_array($bulkQuestions)) {
+                $stmtQ = $pdo->prepare("
+                    INSERT INTO questions (id, exam_id, text, option_a, option_b, option_c, option_d, correct_index)
+                    VALUES (:id, :exam_id, :text, :option_a, :option_b, :option_c, :option_d, :correct_index)
+                    ON DUPLICATE KEY UPDATE 
+                        text = VALUES(text),
+                        option_a = VALUES(option_a),
+                        option_b = VALUES(option_b),
+                        option_c = VALUES(option_c),
+                        option_d = VALUES(option_d),
+                        correct_index = VALUES(correct_index)
+                ");
+
+                foreach ($bulkQuestions as $q) {
+                    $stmtQ->execute([
+                        ':id' => $q['id'],
+                        ':exam_id' => $q['exam_id'] ?? ($q['examId'] ?? 0),
+                        ':text' => $q['text'] ?? '',
+                        ':option_a' => $q['option_a'] ?? ($q['optionA'] ?? ''),
+                        ':option_b' => $q['option_b'] ?? ($q['optionB'] ?? ''),
+                        ':option_c' => $q['option_c'] ?? ($q['optionC'] ?? ''),
+                        ':option_d' => $q['option_d'] ?? ($q['optionD'] ?? ''),
+                        ':correct_index' => $q['correct_index'] ?? ($q['correctIndex'] ?? 0)
+                    ]);
+                    $questionsCount++;
+                }
+            }
+
             // Sync Scan Results
             if (!empty($bulkResults) && is_array($bulkResults)) {
                 $stmtRes = $pdo->prepare("
@@ -426,7 +559,7 @@ try {
             $pdo->commit();
             echo json_encode([
                 'status' => 'success',
-                'message' => "Bulk sync complete: $examsCount exams, $studentsCount students, $resultsCount results synced."
+                'message' => "Bulk sync complete: $examsCount exams, $keysCount answer keys, $questionsCount questions, $studentsCount students, $resultsCount results synced."
             ]);
             break;
 

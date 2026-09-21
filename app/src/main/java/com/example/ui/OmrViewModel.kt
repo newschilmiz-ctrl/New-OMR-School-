@@ -265,14 +265,22 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
             val examsList = _exams.value.ifEmpty { com.example.util.CloudSyncManager.fetchExams() }
             val studentsList = _students.value.ifEmpty { com.example.util.CloudSyncManager.fetchStudents() }
             val allResults = mutableListOf<ScanResult>()
+            val allAnswerKeys = mutableListOf<com.example.data.AnswerKey>()
+            val allQuestions = mutableListOf<com.example.data.QuestionEntity>()
+
             examsList.forEach { exam ->
                 allResults.addAll(com.example.util.CloudSyncManager.fetchScanResultsForExam(exam.id))
+                allAnswerKeys.addAll(com.example.util.CloudSyncManager.fetchAnswerKeysForExam(exam.id))
+                allQuestions.addAll(com.example.util.CloudSyncManager.fetchQuestions(exam.id))
             }
+
             val (success, msg) = com.example.util.MySqlSyncManager.bulkSync(
                 getApplication(),
                 examsList,
                 studentsList,
-                allResults
+                allResults,
+                allAnswerKeys,
+                allQuestions
             )
             onResult(success, msg)
         }

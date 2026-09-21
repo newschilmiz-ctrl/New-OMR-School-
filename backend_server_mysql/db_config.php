@@ -5,9 +5,9 @@
  */
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'omr_system');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'gceedakt_rsarts');
+define('DB_USER', 'gceedakt_rsarts');
+define('DB_PASS', 'euTwqN5tWHQwbtGHPDNr');
 
 // Optional secret API key to protect your endpoint (Match with the app's setting)
 define('API_SECRET_KEY', ''); // Leave empty if you don't require an API Key
