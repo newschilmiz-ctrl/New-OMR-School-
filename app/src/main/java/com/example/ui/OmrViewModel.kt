@@ -100,6 +100,9 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val _scanResultsCache = mutableMapOf<Int, kotlinx.coroutines.flow.MutableStateFlow<List<ScanResult>>>()
+    private val _questionsCache = mutableMapOf<Int, kotlinx.coroutines.flow.MutableStateFlow<List<QuestionEntity>>>()
+
     fun deleteStudent(rollNo: String) {
         viewModelScope.launch {
             com.example.util.CloudSyncManager.deleteStudent(rollNo)
@@ -108,24 +111,41 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getScanResultsForExam(examId: Int): StateFlow<List<ScanResult>> {
-        val resultsFlow = kotlinx.coroutines.flow.MutableStateFlow<List<ScanResult>>(emptyList())
-        viewModelScope.launch {
-            resultsFlow.value = com.example.util.CloudSyncManager.fetchScanResultsForExam(examId)
+        return _scanResultsCache.getOrPut(examId) {
+            val resultsFlow = kotlinx.coroutines.flow.MutableStateFlow<List<ScanResult>>(emptyList())
+            viewModelScope.launch {
+                resultsFlow.value = com.example.util.CloudSyncManager.fetchScanResultsForExam(examId)
+            }
+            resultsFlow
         }
-        return resultsFlow
+    }
+
+    fun refreshScanResults(examId: Int) {
+        viewModelScope.launch {
+            val list = com.example.util.CloudSyncManager.fetchScanResultsForExam(examId)
+            _scanResultsCache.getOrPut(examId) {
+                kotlinx.coroutines.flow.MutableStateFlow(emptyList())
+            }.value = list
+        }
     }
 
     fun getQuestionsForExam(examId: Int): StateFlow<List<QuestionEntity>> {
-        val flow = kotlinx.coroutines.flow.MutableStateFlow<List<QuestionEntity>>(emptyList())
-        viewModelScope.launch {
-            flow.value = com.example.util.CloudSyncManager.fetchQuestions(examId)
+        return _questionsCache.getOrPut(examId) {
+            val flow = kotlinx.coroutines.flow.MutableStateFlow<List<QuestionEntity>>(emptyList())
+            viewModelScope.launch {
+                flow.value = com.example.util.CloudSyncManager.fetchQuestions(examId)
+            }
+            flow
         }
-        return flow
     }
 
     fun saveQuestions(questions: List<QuestionEntity>, onDone: () -> Unit) {
         viewModelScope.launch {
             com.example.util.CloudSyncManager.uploadQuestions(questions)
+            if (questions.isNotEmpty()) {
+                val examId = questions.first().examId
+                _questionsCache[examId]?.value = questions
+            }
             onDone()
         }
     }
@@ -133,6 +153,8 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     fun saveQuestion(question: QuestionEntity, onDone: () -> Unit) {
         viewModelScope.launch {
             com.example.util.CloudSyncManager.uploadQuestion(question)
+            val current = _questionsCache[question.examId]?.value.orEmpty()
+            _questionsCache[question.examId]?.value = current + question
             onDone()
         }
     }
@@ -140,6 +162,8 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     fun updateQuestion(question: QuestionEntity, onDone: () -> Unit) {
         viewModelScope.launch {
             com.example.util.CloudSyncManager.uploadQuestion(question)
+            val current = _questionsCache[question.examId]?.value.orEmpty()
+            _questionsCache[question.examId]?.value = current.map { if (it.id == question.id) question else it }
             onDone()
         }
     }
@@ -147,6 +171,8 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteQuestion(question: QuestionEntity, onDone: () -> Unit) {
         viewModelScope.launch {
             com.example.util.CloudSyncManager.deleteQuestion(question.examId, question.id)
+            val current = _questionsCache[question.examId]?.value.orEmpty()
+            _questionsCache[question.examId]?.value = current.filter { it.id != question.id }
             onDone()
         }
     }
@@ -154,6 +180,7 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteQuestionsForExam(examId: Int, onDone: () -> Unit) {
         viewModelScope.launch {
             com.example.util.CloudSyncManager.deleteQuestionsForExam(examId)
+            _questionsCache[examId]?.value = emptyList()
             onDone()
         }
     }
@@ -221,6 +248,11 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
             // Upload to Firebase
             launch {
                 com.example.util.CloudSyncManager.uploadScanResult(result)
+            }
+            
+            val cached = _scanResultsCache[examId]
+            if (cached != null) {
+                cached.value = cached.value.filter { it.studentId != studentId } + result
             }
             
             onDone()

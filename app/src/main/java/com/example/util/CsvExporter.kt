@@ -20,17 +20,23 @@ object CsvExporter {
         context.contentResolver.openOutputStream(uri)?.use { outputStream ->
             OutputStreamWriter(outputStream, "UTF-8").use { writer ->
                 // Header
-                writer.write("Roll No,Registration No,Name,Gender,Paper Set,Score,Max Questions,Attempted\n")
+                writer.write("Rank,Roll No,Registration No,Candidate Name,Father Name,Gender,Subject,Paper Set,Score,Max Marks,Percentage,Status\n")
                 
-                results.forEach { result ->
-                    val student = students.find { it.rollNo == result.studentId }
+                val sorted = results.sortedByDescending { it.score }
+                val totalQ = results.firstOrNull()?.totalQuestions?.takeIf { it > 0 } ?: 100
+                val totalMarks = if (exam.marksPerQuestion > 0) totalQ * exam.marksPerQuestion else 100f
+
+                sorted.forEachIndexed { index, result ->
+                    val rank = index + 1
+                    val student = students.find { it.rollNo.equals(result.studentId, ignoreCase = true) }
                     val name = student?.name ?: "Unknown"
-                    val regNo = student?.registrationNo ?: "Unknown"
-                    val gender = student?.gender ?: "Unknown"
+                    val regNo = student?.registrationNo ?: ""
+                    val fatherName = student?.fatherName ?: ""
+                    val gender = student?.gender ?: ""
+                    val pct = if (totalMarks > 0) (result.score / totalMarks) * 100f else 0f
+                    val status = if (result.score >= exam.passMarks) "PASS" else "FAIL"
                     
-                    val attempted = result.questionStatuses.count { it != ',' && it != '[' && it != ']' && it != '-' } // naive check for attempts
-                    
-                    writer.write("${result.studentId},$regNo,$name,$gender,${result.paperSet},${result.score},${result.totalQuestions},$attempted\n")
+                    writer.write("$rank,${result.studentId},\"$regNo\",\"$name\",\"$fatherName\",\"$gender\",\"${exam.subject}\",\"${result.paperSet}\",${result.score},$totalMarks,${String.format("%.1f", pct)}%,$status\n")
                 }
             }
         }

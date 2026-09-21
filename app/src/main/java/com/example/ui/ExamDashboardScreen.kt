@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DesignServices
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import com.example.ui.components.PremiumButton
 import com.example.ui.components.PremiumOutlinedButton
@@ -54,9 +56,9 @@ import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, examId: Int) {
+fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, examId: Int, initialTab: Int = 0) {
     var exam by remember { mutableStateOf<Exam?>(null) }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(initialTab) }
     
     LaunchedEffect(examId) {
         exam = viewModel.getExamById(examId)
@@ -372,6 +374,50 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // Custom Drag & Drop OMR Studio Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F3FF)),
+            border = BorderStroke(1.dp, Color(0xFFDDD6FE)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF7C3AED)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.DesignServices, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Full Custom OMR Studio", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF4C1D95))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEDE9FE)) {
+                                Text("PRO", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF6D28D9), modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                            }
+                        }
+                        Text("Drag & drop, custom text, label sizes, bubble count & print", fontSize = 12.sp, color = Color(0xFF6D28D9))
+                    }
+                }
+
+                Button(
+                    onClick = { navController.navigate(Screen.CustomOmrDesigner.route) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
+                ) {
+                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Open Drag & Drop OMR Designer", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }
@@ -1654,21 +1700,80 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var pendingReport by remember { mutableStateOf<String?>(null) }
+    var viewingReport by remember { mutableStateOf<String?>(null) }
+
+    val resultsFlow = remember(viewModel, examId) { viewModel.getScanResultsForExam(examId) }
+    val results by resultsFlow.collectAsStateWithLifecycle()
+    val students by viewModel.students.collectAsStateWithLifecycle()
+    val attendanceMap by viewModel.attendanceMap.collectAsStateWithLifecycle()
+    val allStudents = remember(students, exam.subject) {
+        students.filter { it.subjects.contains(exam.subject, ignoreCase = true) }
+    }
+
     val csvLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
         if (uri != null && pendingReport == "CSV Exporter") {
-            val r = viewModel.getScanResultsForExam(examId).value
-            val s = viewModel.students.value
+            val r = results
+            val s = students
             coroutineScope.launch {
-                com.example.util.CsvExporter.exportResults(context, uri, exam, r, s)
+                try {
+                    com.example.util.CsvExporter.exportResults(context, uri, exam, r, s)
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(context, "CSV exported successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(context, "CSV export error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
         pendingReport = null
     }
-    val results by viewModel.getScanResultsForExam(examId).collectAsStateWithLifecycle()
-    val students by viewModel.students.collectAsStateWithLifecycle()
-    val allStudents = students.filter { it.subjects.contains(exam.subject, ignoreCase = true) }
+
+    val pdfLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        if (uri != null && pendingReport != null) {
+            val r = results
+            val s = students
+            val att = attendanceMap
+            val rep = pendingReport!!
+            coroutineScope.launch {
+                try {
+                    when (rep) {
+                        "Rank List" -> com.example.util.ReportPdfGenerator.generateRankListPdf(context, exam, r, s, uri)
+                        "Merit List" -> com.example.util.ReportPdfGenerator.generateMeritListPdf(context, exam, r, s, uri)
+                        "Pass / Fail Summary" -> com.example.util.ReportPdfGenerator.generatePassFailSummaryPdf(context, exam, r, s, uri)
+                        "Top 10 High Achievers" -> com.example.util.ReportPdfGenerator.generateTopAchieversPdf(context, exam, r, s, uri)
+                        "Item Difficulty Analysis" -> com.example.util.ReportPdfGenerator.generateItemDifficultyPdf(context, exam, r, uri)
+                        "Attendance vs Scanned" -> com.example.util.ReportPdfGenerator.generateAttendanceVsScannedPdf(context, exam, r, s, att, uri)
+                    }
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(context, "$rep PDF exported successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(context, "PDF export error: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+                pendingReport = null
+            }
+        }
+    }
+
+    val startExport = { reportName: String ->
+        pendingReport = reportName
+        if (reportName == "CSV Exporter") {
+            csvLauncher.launch("${exam.name}_results.csv")
+        } else {
+            val cleanName = reportName.replace(" ", "_").replace("/", "_")
+            pdfLauncher.launch("${exam.name}_$cleanName.pdf")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -1684,7 +1789,12 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
             color = Color(0xFF0F172A)
         )
 
-        // Stat Overview Cards
+        // Stat Overview Cards (2x2 Grid)
+        val passCount = results.count { it.score >= exam.passMarks }
+        val passRate = if (results.isNotEmpty()) (passCount * 100) / results.size else 0
+        val avgScore = if (results.isNotEmpty()) results.map { it.score }.average() else 0.0
+        val maxScore = results.maxOfOrNull { it.score } ?: 0f
+
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
             Card(
                 modifier = Modifier.weight(1f),
@@ -1701,8 +1811,6 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
                 }
             }
 
-            val passCount = results.count { it.score >= exam.passMarks }
-            val passRate = if (results.isNotEmpty()) (passCount * 100) / results.size else 0
             Card(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(14.dp),
@@ -1714,7 +1822,39 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
                     Text("Passing Candidates", fontSize = 12.sp, color = Color(0xFF64748B))
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("$passCount ($passRate%)", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF16A34A))
-                    Text("Min marks: ${exam.passMarks}", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                    Text("Min marks: ${exam.passMarks.toInt()}", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                }
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("Class Average", fontSize = 12.sp, color = Color(0xFF64748B))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("${String.format("%.1f", avgScore)}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2563EB))
+                    Text("Marks per candidate", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                }
+            }
+
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("Topper High Score", fontSize = 12.sp, color = Color(0xFF64748B))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("${String.format("%.1f", maxScore)}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA580C))
+                    Text("Highest in batch", fontSize = 11.sp, color = Color(0xFF94A3B8))
                 }
             }
         }
@@ -1738,7 +1878,15 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
 
         reports.forEach { (title, desc) ->
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        if (title == "CSV Exporter") {
+                            startExport(title)
+                        } else {
+                            viewingReport = title
+                        }
+                    },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
@@ -1753,20 +1901,58 @@ fun ReportsTab(viewModel: OmrViewModel, examId: Int, exam: Exam) {
                         Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF0F172A))
                         Text(desc, fontSize = 12.sp, color = Color(0xFF64748B))
                     }
-                    PremiumOutlinedButton(
-                        onClick = { 
-                            if (title == "CSV Exporter") {
-                                pendingReport = title
-                                csvLauncher.launch("${exam.name}_results.csv")
-                            } else {
-                                Toast.makeText(context, "Exporting $title report...", Toast.LENGTH_SHORT).show()
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (title != "CSV Exporter") {
+                            FilledTonalButton(
+                                onClick = { viewingReport = title },
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = Color(0xFFF1F5F9),
+                                    contentColor = Color(0xFF0F172A)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("View", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                             }
-                        },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text("Export", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        PremiumOutlinedButton(
+                            onClick = { startExport(title) },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                if (title == "CSV Exporter") "Export CSV" else "Export PDF",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    // In-app Report Viewer Dialog
+    if (viewingReport != null) {
+        val ranked = remember(exam, results, students) {
+            com.example.util.ReportPdfGenerator.getRankedResults(exam, results, students)
+        }
+        ReportViewerDialog(
+            title = viewingReport!!,
+            subtitle = "${exam.name} • ${exam.subject}",
+            onDismiss = { viewingReport = null },
+            onExportPdf = { startExport(viewingReport!!) }
+        ) {
+            when (viewingReport) {
+                "Rank List" -> RankListContent(ranked)
+                "Merit List" -> MeritListContent(ranked)
+                "Pass / Fail Summary" -> PassFailSummaryContent(exam, ranked)
+                "Top 10 High Achievers" -> TopAchieversContent(ranked)
+                "Item Difficulty Analysis" -> ItemDifficultyContent(results)
+                "Attendance vs Scanned" -> AttendanceAuditContent(allStudents, results, attendanceMap)
             }
         }
     }
@@ -1922,8 +2108,11 @@ fun ExamDayTab(navController: NavController, viewModel: OmrViewModel, examId: In
         }
 
         // OMR Errors / Discrepancies Card
-        val results by viewModel.getScanResultsForExam(examId).collectAsStateWithLifecycle()
-        val errorResults = results.filter { it.paperSet.isEmpty() || it.studentAnswers.contains("[-1,-1]") || it.studentId.isEmpty() }
+        val resultsFlow = remember(viewModel, examId) { viewModel.getScanResultsForExam(examId) }
+        val results by resultsFlow.collectAsStateWithLifecycle()
+        val errorResults = remember(results) {
+            results.filter { it.paperSet.isEmpty() || it.studentAnswers.contains("[-1,-1]") || it.studentId.isEmpty() }
+        }
 
         Card(
             modifier = Modifier.fillMaxWidth(),

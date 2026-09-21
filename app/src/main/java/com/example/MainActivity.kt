@@ -57,10 +57,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (!OpenCVLoader.initDebug()) {
-            Log.e("OpenCV", "Unable to load OpenCV!")
-        } else {
-            Log.d("OpenCV", "OpenCV loaded Successfully!")
+        try {
+            System.loadLibrary("opencv_java4")
+            Log.d("OpenCV", "OpenCV loaded Successfully via native library")
+        } catch (e: Throwable) {
+            try {
+                if (!OpenCVLoader.initDebug()) {
+                    Log.w("OpenCV", "Unable to load OpenCV via OpenCVLoader")
+                } else {
+                    Log.d("OpenCV", "OpenCV loaded Successfully via OpenCVLoader")
+                }
+            } catch (t: Throwable) {
+                Log.w("OpenCV", "OpenCV initialization failed: ${t.message}")
+            }
         }
         enableEdgeToEdge()
         setContent {
@@ -261,10 +270,17 @@ fun MainAppScreen() {
             }
             composable(
                 route = Screen.ExamDashboard.route,
-                arguments = listOf(navArgument("examId") { type = NavType.IntType })
+                arguments = listOf(
+                    navArgument("examId") { type = NavType.IntType },
+                    navArgument("tab") {
+                        type = NavType.IntType
+                        defaultValue = 0
+                    }
+                )
             ) { backStackEntry ->
                 val examId = backStackEntry.arguments?.getInt("examId") ?: return@composable
-                ExamDashboardScreen(navController, viewModel, examId)
+                val initialTab = backStackEntry.arguments?.getInt("tab") ?: 0
+                ExamDashboardScreen(navController, viewModel, examId, initialTab)
             }
             composable(
                 route = Screen.ScanOmr.route,
@@ -272,6 +288,9 @@ fun MainAppScreen() {
             ) { backStackEntry ->
                 val examId = backStackEntry.arguments?.getInt("examId") ?: return@composable
                 ScanOmrScreen(navController, viewModel, examId)
+            }
+            composable(Screen.CustomOmrDesigner.route) {
+                CustomOmrDesignerScreen(navController, viewModel)
             }
         }
     }

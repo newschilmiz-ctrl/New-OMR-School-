@@ -35,6 +35,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.data.Exam
@@ -58,6 +60,10 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
     val coroutineScope = rememberCoroutineScope()
     var isProcessing by remember { mutableStateOf(false) }
     var scanResult by remember { mutableStateOf<OmrScanner.ScanResult?>(null) }
+    var rawCapturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var manualRotationDegrees by remember { mutableIntStateOf(0) }
+    var currentSensitivityMultiplier by remember { mutableFloatStateOf(1.0f) }
+    var showCameraXScanner by remember { mutableStateOf(false) }
     val students by viewModel.students.collectAsStateWithLifecycle()
 
     LaunchedEffect(examId) {
@@ -66,6 +72,31 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
 
     val numQuestions = 100
     val numOptions = 4
+
+    fun evaluateOmrSheet(bitmap: Bitmap, rotation: Int, sensitivity: Float) {
+        isProcessing = true
+        coroutineScope.launch(Dispatchers.Default) {
+            try {
+                val res = OmrScanner.scan(
+                    bitmap = bitmap,
+                    numQuestions = numQuestions,
+                    numOptions = numOptions,
+                    templateType = exam?.templateType ?: "Standard",
+                    manualRotation = rotation,
+                    sensitivityMultiplier = sensitivity
+                )
+                withContext(Dispatchers.Main) {
+                    scanResult = res
+                    isProcessing = false
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Scanning error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    isProcessing = false
+                }
+            }
+        }
+    }
 
     var startLiveScanner by remember { mutableStateOf(false) }
 
@@ -94,11 +125,11 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                         inputStream?.close()
 
                         if (bitmap != null) {
-                            val res = OmrScanner.scan(bitmap, numQuestions, numOptions, exam?.templateType ?: "Standard")
                             withContext(Dispatchers.Main) {
-                                scanResult = res
-                                isProcessing = false
+                                rawCapturedBitmap = bitmap
+                                manualRotationDegrees = 0
                             }
+                            evaluateOmrSheet(bitmap, 0, currentSensitivityMultiplier)
                         } else {
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, "Failed to load OMR image", Toast.LENGTH_SHORT).show()
@@ -128,11 +159,11 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                     inputStream?.close()
 
                     if (bitmap != null) {
-                        val res = OmrScanner.scan(bitmap, numQuestions, numOptions, exam?.templateType ?: "Standard")
                         withContext(Dispatchers.Main) {
-                            scanResult = res
-                            isProcessing = false
+                            rawCapturedBitmap = bitmap
+                            manualRotationDegrees = 0
                         }
+                        evaluateOmrSheet(bitmap, 0, currentSensitivityMultiplier)
                     } else {
                         withContext(Dispatchers.Main) {
                             Toast.makeText(context, "Could not decode selected image", Toast.LENGTH_SHORT).show()
@@ -161,6 +192,25 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                     startLiveScanner = false
                 }
         }
+    }
+
+    if (showCameraXScanner) {
+        LiveScanner(
+            numQuestions = numQuestions,
+            numOptions = numOptions,
+            onScanSuccess = { res ->
+                scanResult = res
+                showCameraXScanner = false
+            },
+            onCancel = { showCameraXScanner = false },
+            onImageCaptured = { bmp, res ->
+                rawCapturedBitmap = bmp
+                manualRotationDegrees = 0
+                scanResult = res
+                showCameraXScanner = false
+            }
+        )
+        return
     }
 
     Scaffold(
@@ -241,8 +291,27 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                     result = scanResult!!,
                     exam = exam!!,
                     viewModel = viewModel,
+                    rawBitmap = rawCapturedBitmap,
+                    currentRotation = manualRotationDegrees,
+                    currentSensitivity = currentSensitivityMultiplier,
+                    onRotate = { newRot ->
+                        manualRotationDegrees = newRot
+                        rawCapturedBitmap?.let { bmp ->
+                            evaluateOmrSheet(bmp, newRot, currentSensitivityMultiplier)
+                        }
+                    },
+                    onSensitivityChange = { newSens ->
+                        currentSensitivityMultiplier = newSens
+                        rawCapturedBitmap?.let { bmp ->
+                            evaluateOmrSheet(bmp, manualRotationDegrees, newSens)
+                        }
+                    },
                     onDismiss = { navController.popBackStack() },
-                    onRescan = { scanResult = null }
+                    onRescan = {
+                        scanResult = null
+                        rawCapturedBitmap = null
+                        manualRotationDegrees = 0
+                    }
                 )
             } else {
                 // Pre-scan State
@@ -292,7 +361,7 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                "Evaluates 100 questions in under 1 second with automatic perspective correction.",
+                                "Evaluates 100 questions in under 1 second with automatic perspective correction & roll number extraction.",
                                 fontSize = 13.sp,
                                 color = Color(0xFF64748B),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -333,23 +402,34 @@ fun ScanOmrScreen(navController: NavController, viewModel: OmrViewModel, examId:
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text("Avoid shadows and glare over student bubbles", fontSize = 12.sp, color = Color(0xFF334155))
+                                Text("Auto de-skew works even if image is tilted or rotated", fontSize = 12.sp, color = Color(0xFF334155))
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Scanner Action Buttons
+                    // Scanner Action Buttons (Full Advanced Suite)
                     PremiumButton(
-                        onClick = { startLiveScanner = true },
+                        onClick = { showCameraXScanner = true },
                         modifier = Modifier.fillMaxWidth(),
                         containerColor = Color(0xFFE11D48),
                         borderColor = Color(0xFFBE123C)
                     ) {
-                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.CenterFocusStrong, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Open Scanner Camera")
+                        Text("Live A4 Camera Scanner (Fast & Auto)")
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    PremiumOutlinedButton(
+                        onClick = { startLiveScanner = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.DocumentScanner, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Document Edge-Detect Scanner")
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -373,11 +453,17 @@ fun ResultView(
     result: OmrScanner.ScanResult,
     exam: Exam,
     viewModel: OmrViewModel,
+    rawBitmap: Bitmap?,
+    currentRotation: Int,
+    currentSensitivity: Float,
+    onRotate: (Int) -> Unit,
+    onSensitivityChange: (Float) -> Unit,
     onDismiss: () -> Unit,
     onRescan: () -> Unit
 ) {
-    var editedStudentId by remember { mutableStateOf(result.studentId) }
-    var editedPaperSet by remember { mutableStateOf(result.paperSet) }
+    var editedStudentId by remember(result) { mutableStateOf(result.studentId) }
+    var editedPaperSet by remember(result) { mutableStateOf(result.paperSet) }
+    var showFullPreviewDialog by remember { mutableStateOf(false) }
 
     var key by remember { mutableStateOf<com.example.data.AnswerKey?>(null) }
     var keyLoaded by remember { mutableStateOf(false) }
@@ -510,7 +596,7 @@ fun ResultView(
     }
 
     val correctAnswersList = viewModel.converters.toList(key!!.correctAnswers)
-    var editedAnswers by remember { mutableStateOf(result.answers.toList()) }
+    var editedAnswers by remember(result) { mutableStateOf(result.answers.toList()) }
     var showEditDialogForQ by remember { mutableStateOf<Int?>(null) }
 
     var correct = 0
@@ -846,7 +932,36 @@ fun ResultView(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // 3. SCANNED OMR IMAGE PREVIEW
+        // 3. SCANNED OMR IMAGE PREVIEW & ADVANCED ALIGNMENT TOOLBAR
+        if (showFullPreviewDialog) {
+            Dialog(
+                onDismissRequest = { showFullPreviewDialog = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color.Black
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Image(
+                            bitmap = result.annotatedBitmap.asImageBitmap(),
+                            contentDescription = "Full High-Res Scanned Sheet",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        IconButton(
+                            onClick = { showFullPreviewDialog = false },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(20.dp)
+                                .background(Color.Black.copy(alpha = 0.65f), CircleShape)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -854,17 +969,178 @@ fun ResultView(
             border = BorderStroke(1.dp, Color(0xFFE2E8F0))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Scanned Sheet Preview", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Scanned Sheet & Calibrated Bubbles", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                        Text(
+                            "Rotation: ${currentRotation}° ${if (currentRotation == 180) "(Flipped 180°)" else ""}",
+                            fontSize = 11.sp,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { showFullPreviewDialog = true },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.height(34.dp)
+                    ) {
+                        Icon(Icons.Default.ZoomIn, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Inspect", fontSize = 11.sp)
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(10.dp))
-                Image(
-                    bitmap = result.annotatedBitmap.asImageBitmap(),
-                    contentDescription = "Annotated OMR Scan",
+
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(240.dp)
+                        .height(260.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFF1F5F9))
-                )
+                        .background(Color(0xFF0F172A))
+                        .clickable { showFullPreviewDialog = true }
+                ) {
+                    Image(
+                        bitmap = result.annotatedBitmap.asImageBitmap(),
+                        contentDescription = "Annotated OMR Scan",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.TouchApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Tap to Zoom", color = Color.White, fontSize = 10.sp)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // ADVANCED ORIENTATION & CORRECTION TOOLBAR
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFFFFBEB),
+                    border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.ScreenRotation, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    "Sheet Orientation Fix (उल्टा / सीधा)",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF92400E)
+                                )
+                                Text(
+                                    "Agar paper ulta scan hua hai, turant 1-tap me seedha karein:",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFB45309)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Primary 180° Invert button
+                            Button(
+                                onClick = {
+                                    if (rawBitmap != null) {
+                                        val newRot = (currentRotation + 180) % 360
+                                        onRotate(newRot)
+                                    }
+                                },
+                                modifier = Modifier.weight(1.3f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFD97706),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                            ) {
+                                Icon(Icons.Default.RotateRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Flip 180° (उल्टा/सीधा)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            // Rotate +90°
+                            OutlinedButton(
+                                onClick = {
+                                    if (rawBitmap != null) {
+                                        val newRot = (currentRotation + 90) % 360
+                                        onRotate(newRot)
+                                    }
+                                },
+                                modifier = Modifier.weight(0.85f),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                            ) {
+                                Text("+90° ↻", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            // Rotate -90°
+                            OutlinedButton(
+                                onClick = {
+                                    if (rawBitmap != null) {
+                                        val newRot = ((currentRotation - 90) % 360 + 360) % 360
+                                        onRotate(newRot)
+                                    }
+                                },
+                                modifier = Modifier.weight(0.85f),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                            ) {
+                                Text("-90° ↺", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Sensitivity Selector
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Bubble Fill Sensitivity:", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Color(0xFF78350F))
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                FilterChip(
+                                    selected = currentSensitivity < 0.9f,
+                                    onClick = { onSensitivityChange(0.7f) },
+                                    label = { Text("Light Pencil", fontSize = 10.sp) }
+                                )
+                                FilterChip(
+                                    selected = currentSensitivity in 0.9f..1.1f,
+                                    onClick = { onSensitivityChange(1.0f) },
+                                    label = { Text("Pen (Normal)", fontSize = 10.sp) }
+                                )
+                                FilterChip(
+                                    selected = currentSensitivity > 1.1f,
+                                    onClick = { onSensitivityChange(1.35f) },
+                                    label = { Text("Strict", fontSize = 10.sp) }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 

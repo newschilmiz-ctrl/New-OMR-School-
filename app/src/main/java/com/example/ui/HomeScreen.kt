@@ -62,7 +62,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
     var currentInstitution by remember { mutableStateOf("St. Xavier's Academy • Grade 10-A") }
     var currentBannerIndex by remember { mutableStateOf(0) }
 
-    val categoryTabs = listOf("ALL", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
+    val categoryTabs = listOf("ALL", "OMR STUDIO", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
 
     // Filter exams based on search query, category, and subject
     val filteredExams = remember(exams, searchQuery, selectedCategoryTab, selectedSubjectFilter) {
@@ -401,6 +401,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             onClick = {
                                 selectedCategoryTab = index
                                 when (tabTitle) {
+                                    "OMR STUDIO" -> navController.navigate(Screen.CustomOmrDesigner.route)
                                     "LIVE SCAN" -> {
                                         if (exams.isNotEmpty()) {
                                             navController.navigate(Screen.ScanOmr.createRoute(exams.first().id))
@@ -448,6 +449,16 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 ) {
                     item {
                         SquircleCategoryItem(
+                            icon = Icons.Default.DesignServices,
+                            title = "OMR Studio",
+                            bgGradient = listOf(Color(0xFFEDE9FE), Color(0xFFDDD6FE)),
+                            iconTint = Color(0xFF7C3AED)
+                        ) {
+                            navController.navigate(Screen.CustomOmrDesigner.route)
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
                             icon = Icons.Default.DocumentScanner,
                             title = "Live Scan",
                             bgGradient = listOf(Color(0xFFD1FAE5), Color(0xFFA7F3D0)),
@@ -488,7 +499,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             iconTint = Color(0xFF7E22CE)
                         ) {
                             if (exams.isNotEmpty()) {
-                                navController.navigate(Screen.ExamDashboard.createRoute(exams.first().id))
+                                navController.navigate(Screen.ExamDashboard.createRoute(exams.first().id, tab = 1))
                             } else {
                                 Toast.makeText(context, "Create an exam first", Toast.LENGTH_SHORT).show()
                             }
@@ -502,7 +513,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             iconTint = Color(0xFFBE123C)
                         ) {
                             if (exams.isNotEmpty()) {
-                                navController.navigate(Screen.ExamDashboard.createRoute(exams.first().id))
+                                navController.navigate(Screen.ExamDashboard.createRoute(exams.first().id, tab = 4))
                             } else {
                                 Toast.makeText(context, "Create an exam first", Toast.LENGTH_SHORT).show()
                             }
@@ -516,7 +527,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             iconTint = Color(0xFF0F766E)
                         ) {
                             if (exams.isNotEmpty()) {
-                                navController.navigate(Screen.ExamDashboard.createRoute(exams.first().id))
+                                navController.navigate(Screen.ExamDashboard.createRoute(exams.first().id, tab = 0))
                             } else {
                                 Toast.makeText(context, "Create an exam first", Toast.LENGTH_SHORT).show()
                             }
@@ -587,6 +598,82 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // 5B. PROMO: CUSTOM OMR STUDIO (DRAG & DROP DESIGNER)
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 2.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFFF5F3FF),
+                    border = BorderStroke(1.dp, Color(0xFFDDD6FE))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .background(Color(0xFF7C3AED), RoundedCornerShape(10.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.DesignServices, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Custom OMR Studio",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF4C1D95)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEDE9FE)) {
+                                        Text(
+                                            "NEW",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color(0xFF6D28D9),
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "Drag & drop, custom labels, bubble sizes & print",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF6D28D9)
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color(0xFF7C3AED),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable {
+                                    navController.navigate(Screen.CustomOmrDesigner.route)
+                                }
+                        ) {
+                            Text(
+                                text = "Design",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                             )
                         }
                     }

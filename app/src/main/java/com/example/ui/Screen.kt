@@ -5,10 +5,11 @@ sealed class Screen(val route: String) {
     object Students : Screen("students")
     object StudentAdmission : Screen("student_admission")
     object CreateExam : Screen("create_exam")
-    object ExamDashboard : Screen("exam_dashboard/{examId}") {
-        fun createRoute(examId: Int) = "exam_dashboard/$examId"
+    object ExamDashboard : Screen("exam_dashboard/{examId}?tab={tab}") {
+        fun createRoute(examId: Int, tab: Int = 0) = "exam_dashboard/$examId?tab=$tab"
     }
     object ScanOmr : Screen("scan_omr/{examId}") {
         fun createRoute(examId: Int) = "scan_omr/$examId"
     }
+    object CustomOmrDesigner : Screen("custom_omr_designer")
 }

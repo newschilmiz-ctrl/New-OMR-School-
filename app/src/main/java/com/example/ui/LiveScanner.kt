@@ -41,13 +41,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import android.graphics.Matrix
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.filled.FlashlightOff
+import androidx.compose.material.icons.filled.FlashlightOn
+import androidx.compose.ui.draw.clip
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LiveScanner(
     numQuestions: Int,
     numOptions: Int,
     onScanSuccess: (OmrScanner.ScanResult) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onImageCaptured: ((Bitmap, OmrScanner.ScanResult) -> Unit)? = null
 ) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
@@ -58,7 +65,7 @@ fun LiveScanner(
     }
 
     if (cameraPermissionState.status.isGranted) {
-        LiveCameraPreview(numQuestions, numOptions, onScanSuccess, onCancel)
+        LiveCameraPreview(numQuestions, numOptions, onScanSuccess, onCancel, onImageCaptured)
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Camera permission is required to scan OMR sheets.")
@@ -72,28 +79,31 @@ fun LiveCameraPreview(
     numQuestions: Int,
     numOptions: Int,
     onScanSuccess: (OmrScanner.ScanResult) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onImageCaptured: ((Bitmap, OmrScanner.ScanResult) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     
-var isProcessing by remember { mutableStateOf(false) }
-    var scanStatus by remember { mutableStateOf("Align sheet and press shutter") }
+    var isProcessing by remember { mutableStateOf(false) }
+    var scanStatus by remember { mutableStateOf("Position sheet inside frame") }
+    var isTorchOn by remember { mutableStateOf(false) }
+    var currentCamera by remember { mutableStateOf<Camera?>(null) }
     
-    var previewWidth by remember { mutableIntStateOf(1080) }
-    var previewHeight by remember { mutableIntStateOf(1920) }
-    val density = LocalContext.current.resources.displayMetrics.density
-    
-    val imageCapture = remember { ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build() }
+    val imageCapture = remember { 
+        ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .build() 
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("HINDI EXAMINAT...", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text("12th", fontSize = 14.sp)
+                        Text("OMR Scanner", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text("Auto De-Skew & Align Active", fontSize = 12.sp, color = Color(0xFF10B981))
                     }
                 },
                 navigationIcon = {
@@ -102,8 +112,15 @@ var isProcessing by remember { mutableStateOf(false) }
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO */ }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "More")
+                    IconButton(onClick = {
+                        isTorchOn = !isTorchOn
+                        currentCamera?.cameraControl?.enableTorch(isTorchOn)
+                    }) {
+                        Icon(
+                            if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
+                            contentDescription = "Flashlight",
+                            tint = if (isTorchOn) Color(0xFFF59E0B) else LocalContentColor.current
+                        )
                     }
                 }
             )
@@ -129,12 +146,13 @@ var isProcessing by remember { mutableStateOf(false) }
 
                         try {
                             cameraProvider.unbindAll()
-                            cameraProvider.bindToLifecycle(
+                            val camera = cameraProvider.bindToLifecycle(
                                 lifecycleOwner,
                                 CameraSelector.DEFAULT_BACK_CAMERA,
                                 preview,
                                 imageCapture
                             )
+                            currentCamera = camera
                         } catch (e: Exception) {
                             Log.e("LiveScanner", "Use case binding failed", e)
                         }
@@ -142,157 +160,181 @@ var isProcessing by remember { mutableStateOf(false) }
 
                     previewView
                 },
-                modifier = Modifier.fillMaxSize().onGloballyPositioned {
-                    previewWidth = it.size.width
-                    previewHeight = it.size.height
-                }
+                modifier = Modifier.fillMaxSize()
             )
 
-            // Overlays
-            Text(
-                text = "शीर्ष",
-                color = Color(0xFF1E88E5), // Blue matching Ekodroid
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 24.dp)
-            )
-
+            // Document Viewfinder Overlay
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val boxSize = 80.dp.toPx()
-                val marginX = 24.dp.toPx()
-                val marginY = 80.dp.toPx()
-                val bottomMargin = 160.dp.toPx()
-                
-                val strokeWidth = 3.dp.toPx()
-                val blueColor = Color(0xFF0000CC) // Deep Blue
-                
-                // Top Left
-                drawRect(color = blueColor, topLeft = Offset(marginX, marginY), size = Size(boxSize, boxSize), style = Stroke(width = strokeWidth))
-                // Top Right
-                drawRect(color = blueColor, topLeft = Offset(size.width - marginX - boxSize, marginY), size = Size(boxSize, boxSize), style = Stroke(width = strokeWidth))
-                // Bottom Left
-                val bottomY = size.height - bottomMargin - boxSize
-                drawRect(color = blueColor, topLeft = Offset(marginX, bottomY), size = Size(boxSize, boxSize), style = Stroke(width = strokeWidth))
-                // Bottom Right
-                drawRect(color = blueColor, topLeft = Offset(size.width - marginX - boxSize, bottomY), size = Size(boxSize, boxSize), style = Stroke(width = strokeWidth))
+                val screenW = size.width
+                val screenH = size.height
+
+                // A4 aspect ratio guide box (1:1.414) centered on screen
+                val guideW = screenW * 0.86f
+                val guideH = (guideW * 1.414f).coerceAtMost(screenH * 0.72f)
+                val left = (screenW - guideW) / 2f
+                val top = (screenH - guideH) / 2.3f
+
+                val bracketLen = 32.dp.toPx()
+                val strokeW = 4.dp.toPx()
+                val bracketColor = Color(0xFF10B981) // Emerald Green
+
+                // Top-Left corner bracket
+                drawLine(bracketColor, Offset(left, top), Offset(left + bracketLen, top), strokeW)
+                drawLine(bracketColor, Offset(left, top), Offset(left, top + bracketLen), strokeW)
+
+                // Top-Right corner bracket
+                drawLine(bracketColor, Offset(left + guideW, top), Offset(left + guideW - bracketLen, top), strokeW)
+                drawLine(bracketColor, Offset(left + guideW, top), Offset(left + guideW, top + bracketLen), strokeW)
+
+                // Bottom-Left corner bracket
+                drawLine(bracketColor, Offset(left, top + guideH), Offset(left + bracketLen, top + guideH), strokeW)
+                drawLine(bracketColor, Offset(left, top + guideH), Offset(left, top + guideH - bracketLen), strokeW)
+
+                // Bottom-Right corner bracket
+                drawLine(bracketColor, Offset(left + guideW, top + guideH), Offset(left + guideW - bracketLen, top + guideH), strokeW)
+                drawLine(bracketColor, Offset(left + guideW, top + guideH), Offset(left + guideW, top + guideH - bracketLen), strokeW)
+
+                // Subtle inner guide border
+                drawRect(
+                    color = Color.White.copy(alpha = 0.25f),
+                    topLeft = Offset(left, top),
+                    size = Size(guideW, guideH),
+                    style = Stroke(width = 1.dp.toPx())
+                )
             }
 
-            // Shutter Button
+            // Top Helper Hint
+            Surface(
+                color = Color.Black.copy(alpha = 0.65f),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+            ) {
+                Text(
+                    text = "Sheet chahe thedha ya chota ho, auto-straighten kar lega",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                )
+            }
+
+            // Bottom Shutter Controls
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 48.dp)
-                    .size(72.dp)
-                    .background(if (isProcessing) Color.Gray else Color.White, shape = CircleShape)
-                    .clickable(enabled = !isProcessing) {
-                        isProcessing = true
-                        scanStatus = "Capturing..."
-                        
-                        imageCapture.takePicture(
-                            ContextCompat.getMainExecutor(context),
-                            object : ImageCapture.OnImageCapturedCallback() {
-                                override fun onCaptureSuccess(image: ImageProxy) {
-                                    val buffer = image.planes[0].buffer
-                                    val bytes = ByteArray(buffer.remaining())
-                                    buffer.get(bytes)
-                                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                                    val rotation = image.imageInfo.rotationDegrees
-                                    image.close()
-
-                                    val matrix = android.graphics.Matrix().apply { postRotate(rotation.toFloat()) }
-                                    val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-
-                                    scope.launch(Dispatchers.Default) {
-                                        try {
-                                            scanStatus = "Processing Image..."
-                                            
-                                            // 1. Calculate the exact crop area based on the blue boxes on screen
-                                            val screenWidth = previewWidth.toFloat()
-                                            val screenHeight = previewHeight.toFloat()
-                                            
-                                            val imgWidth = rotatedBitmap.width.toFloat()
-                                            val imgHeight = rotatedBitmap.height.toFloat()
-                                            
-                                            // PreviewView ScaleType.FILL_CENTER logic
-                                            val scale = Math.max(screenWidth / imgWidth, screenHeight / imgHeight)
-                                            val dispWidth = imgWidth * scale
-                                            val dispHeight = imgHeight * scale
-                                            val leftOffset = (screenWidth - dispWidth) / 2f
-                                            val topOffset = (screenHeight - dispHeight) / 2f
-                                            
-                                            // Margins used for blue boxes (in pixels)
-                                            val marginX = 24f * density
-                                            val marginY = 80f * density
-                                            val bottomMargin = 160f * density
-                                            
-                                            val screenX1 = marginX
-                                            val screenY1 = marginY
-                                            val screenX2 = screenWidth - marginX
-                                            val screenY2 = screenHeight - bottomMargin
-                                            
-                                            // Map screen coordinates back to image coordinates
-                                            val imgX1 = ((screenX1 - leftOffset) / scale).toInt().coerceIn(0, imgWidth.toInt())
-                                            val imgY1 = ((screenY1 - topOffset) / scale).toInt().coerceIn(0, imgHeight.toInt())
-                                            val imgX2 = ((screenX2 - leftOffset) / scale).toInt().coerceIn(0, imgWidth.toInt())
-                                            val imgY2 = ((screenY2 - topOffset) / scale).toInt().coerceIn(0, imgHeight.toInt())
-                                            
-                                            val cropW = (imgX2 - imgX1).coerceAtLeast(1)
-                                            val cropH = (imgY2 - imgY1).coerceAtLeast(1)
-                                            
-                                            // Crop the image to the exact bounding box
-                                            val croppedBitmap = Bitmap.createBitmap(rotatedBitmap, imgX1, imgY1, cropW, cropH)
-                                            
-                                            // Scale to standard A4 size expected by the scanner
-                                            val a4Bitmap = Bitmap.createScaledBitmap(croppedBitmap, 1000, 1414, true)
-
-                                            // Process Image directly
-                                            val result = OmrScanner.scan(a4Bitmap, numQuestions, numOptions, "Standard")
-                                            
-                                            withContext(Dispatchers.Main) {
-                                                if (result.studentId.isNotEmpty() && result.studentId != "?") {
-                                                    scanStatus = "Success!"
-                                                    onScanSuccess(result)
-                                                } else {
-                                                    scanStatus = "Could not read. Try again."
-                                                    isProcessing = false
-                                                }
-                                            }
-                                        } catch (e: Exception) {
-                                            Log.e("LiveScanner", "Error analyzing", e)
-                                            withContext(Dispatchers.Main) {
-                                                scanStatus = "Error: ${e.message}"
-                                                isProcessing = false
-                                            }
-                                        }
-                                    }
-                                }
-
-                                override fun onError(exception: ImageCaptureException) {
-                                    Log.e("LiveScanner", "Photo capture failed", exception)
-                                    isProcessing = false
-                                    scanStatus = "Capture failed!"
-                                }
-                            }
-                        )
-                    },
+                    .fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.45f))
+                    .padding(vertical = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
-               // Inner UI if needed
-            }
-
-            if (isProcessing) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.align(Alignment.Center)
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = scanStatus,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.titleMedium
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(bottom = 14.dp)
                     )
+
+                    // Large Shutter Button
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.25f))
+                            .padding(4.dp)
+                            .clip(CircleShape)
+                            .background(if (isProcessing) Color.Gray else Color.White)
+                            .clickable(enabled = !isProcessing) {
+                                isProcessing = true
+                                scanStatus = "Capturing high-resolution photo..."
+
+                                imageCapture.takePicture(
+                                    ContextCompat.getMainExecutor(context),
+                                    object : ImageCapture.OnImageCapturedCallback() {
+                                        override fun onCaptureSuccess(image: ImageProxy) {
+                                            val buffer = image.planes[0].buffer
+                                            val bytes = ByteArray(buffer.remaining())
+                                            buffer.get(bytes)
+                                            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                            val rotation = image.imageInfo.rotationDegrees
+                                            image.close()
+
+                                            val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
+                                            val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+
+                                            scope.launch(Dispatchers.Default) {
+                                                try {
+                                                    withContext(Dispatchers.Main) {
+                                                        scanStatus = "Auto-aligning & de-skewing OMR..."
+                                                    }
+
+                                                    val maxDim = Math.max(rotatedBitmap.width, rotatedBitmap.height)
+                                                    val processingBitmap = if (maxDim > 2000) {
+                                                        val scale = 2000f / maxDim
+                                                        Bitmap.createScaledBitmap(
+                                                            rotatedBitmap,
+                                                            (rotatedBitmap.width * scale).toInt(),
+                                                            (rotatedBitmap.height * scale).toInt(),
+                                                            true
+                                                        )
+                                                    } else {
+                                                        rotatedBitmap
+                                                    }
+
+                                                    // Pass directly to OmrScanner for auto-detection, de-skewing & perspective warp
+                                                    val result = OmrScanner.scan(processingBitmap, numQuestions, numOptions, "Standard")
+
+                                                    withContext(Dispatchers.Main) {
+                                                        if (result.answers.isNotEmpty()) {
+                                                            scanStatus = "Success! Sheet calibrated."
+                                                            if (onImageCaptured != null) {
+                                                                onImageCaptured(processingBitmap, result)
+                                                            } else {
+                                                                onScanSuccess(result)
+                                                            }
+                                                        } else {
+                                                            scanStatus = "Could not detect sheet. Please center OMR and retry."
+                                                            isProcessing = false
+                                                        }
+                                                    }
+                                                } catch (e: Exception) {
+                                                    Log.e("LiveScanner", "Error analyzing", e)
+                                                    withContext(Dispatchers.Main) {
+                                                        scanStatus = "Error: ${e.message}"
+                                                        isProcessing = false
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        override fun onError(exception: ImageCaptureException) {
+                                            Log.e("LiveScanner", "Photo capture failed", exception)
+                                            isProcessing = false
+                                            scanStatus = "Capture failed. Try again."
+                                        }
+                                    }
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(32.dp),
+                                color = Color.White,
+                                strokeWidth = 3.dp
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, Color.Black.copy(alpha = 0.2f), CircleShape)
+                            )
+                        }
+                    }
                 }
             }
         }
