@@ -64,7 +64,17 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
     var bonusMarks by remember { mutableStateOf("0") }
     var templateType by remember { mutableStateOf("Standard") }
 
-    val availableSubjects = listOf("Mathematics", "Science", "Physics", "Chemistry", "Biology", "English", "Social Studies")
+    val coachingSubjects by viewModel.subjects.collectAsStateWithLifecycle()
+    val availableSubjects = remember(coachingSubjects) {
+        val names = coachingSubjects.map { it.name }.distinct()
+        if (names.isNotEmpty()) names else listOf("General", "Science", "Arts", "Commerce")
+    }
+
+    LaunchedEffect(availableSubjects) {
+        if (selectedSubject.isEmpty() || (selectedSubject == "Mathematics" && !availableSubjects.contains("Mathematics") && availableSubjects.isNotEmpty())) {
+            selectedSubject = availableSubjects.first()
+        }
+    }
 
     val students by viewModel.students.collectAsStateWithLifecycle()
     val mappedStudents = remember(students, selectedSubject) {
@@ -270,7 +280,23 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                     Spacer(modifier = Modifier.height(10.dp))
 
                     // Subject Selector Chips
-                    Text("Subject", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Subject *", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                        Text(
+                            "+ Coaching Control",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE11D48),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable { navController.navigate(Screen.CoachingControl.route) }
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(5.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         availableSubjects.chunked(3).forEach { rowSubjects ->

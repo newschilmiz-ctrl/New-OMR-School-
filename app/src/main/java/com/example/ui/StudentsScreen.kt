@@ -219,6 +219,76 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                 }
             }
 
+            // Quick Hub Actions Row (ID Card, Fee Tracker, Attendance)
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { navController.navigate(Screen.StudentCards.createRoute("ALL")) },
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFEFF6FF),
+                        border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.Badge, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("ID Cards", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E40AF))
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { navController.navigate(Screen.FeeTracker.route) },
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFECFDF5),
+                        border = BorderStroke(1.dp, Color(0xFFA7F3D0))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.Payments, contentDescription = null, tint = Color(0xFF059669), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Fee Tracker", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF065F46))
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { navController.navigate(Screen.AttendanceRegister.route) },
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFFEF3C7),
+                        border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.FactCheck, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Attendance", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
+                        }
+                    }
+                }
+            }
+
             // 2. SEARCH & FILTER ROW
             item {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)) {
@@ -366,6 +436,9 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                 items(filteredStudents, key = { it.rollNo }) { student ->
                     ModernStudentCard(
                         student = student,
+                        onGenerateCard = {
+                            navController.navigate(Screen.StudentCards.createRoute(student.rollNo))
+                        },
                         onDelete = { showDeleteConfirmDialog = student }
                     )
                 }
@@ -377,6 +450,7 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
 @Composable
 fun ModernStudentCard(
     student: Student,
+    onGenerateCard: () -> Unit = {},
     onDelete: () -> Unit
 ) {
     Surface(
@@ -445,19 +519,69 @@ fun ModernStudentCard(
                             fontSize = 10.5.sp,
                             color = Color(0xFF64748B)
                         )
+                        if (student.sessionName.isNotBlank() || student.className.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                if (student.sessionName.isNotBlank()) {
+                                    Surface(
+                                        shape = RoundedCornerShape(3.dp),
+                                        color = Color(0xFFF3E8FF)
+                                    ) {
+                                        Text(
+                                            text = student.sessionName,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFF7E22CE),
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                                if (student.className.isNotBlank()) {
+                                    Surface(
+                                        shape = RoundedCornerShape(3.dp),
+                                        color = Color(0xFFEDE9FE)
+                                    ) {
+                                        Text(
+                                            text = student.className,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFF6D28D9),
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = "Delete",
-                        tint = Color(0xFF94A3B8),
-                        modifier = Modifier.size(16.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onGenerateCard,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Badge,
+                            contentDescription = "ID Card",
+                            tint = Color(0xFF2563EB),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = "Delete",
+                            tint = Color(0xFF94A3B8),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
 

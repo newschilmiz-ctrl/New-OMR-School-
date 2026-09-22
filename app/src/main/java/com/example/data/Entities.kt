@@ -47,8 +47,11 @@ data class Student(
     val mobileNo: String = "",
     val email: String = "",
     val stream: String = "ARTS",
-    val subjects: String = "", // Used as single subject now, or comma separated
+    val subjects: String = "", // Comma-separated list of selected subjects
     val imagePath: String = "",
+    val sessionId: String = "",
+    val sessionName: String = "",
+    val className: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -90,4 +93,60 @@ class Converters {
         return adapter.fromJson(json) ?: emptyList()
     }
 }
+
+data class CoachingClass(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String,
+    val section: String = "",
+    val description: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class CoachingSubject(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String,
+    val classId: String = "",
+    val className: String = "",
+    val stream: String = "SCIENCE", // "ARTS", "SCIENCE", "COMMERCE", "GENERAL"
+    val subjectCode: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class CoachingSession(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val title: String = "",
+    val classId: String = "",
+    val className: String = "",
+    val startTime: String = "07:00 AM",
+    val endTime: String = "08:30 AM",
+    val days: String = "Mon - Sat",
+    val academicYear: String = "2024-2025",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class FeeRecord(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val studentRollNo: String,
+    val studentName: String,
+    val amountPaid: Double,
+    val totalFee: Double,
+    val paymentDate: String,
+    val paymentMode: String = "Cash", // Cash, UPI, Cheque, Online
+    val receiptNo: String = "",
+    val monthOrInstallment: String = "Monthly Installment",
+    val remarks: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class AttendanceRecord(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val studentRollNo: String,
+    val studentName: String,
+    val date: String, // YYYY-MM-DD
+    val status: String = "PRESENT", // PRESENT, ABSENT, LATE, EXCUSED
+    val sessionId: String = "",
+    val sessionName: String = "",
+    val inTime: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
 

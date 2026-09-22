@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -12,6 +13,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.ui.components.PremiumButton
 import com.example.ui.components.PremiumOutlinedButton
@@ -59,8 +63,56 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
     var stream by remember { mutableStateOf("GENERAL") }
 
     val streams = listOf("GENERAL", "SCIENCE", "ARTS", "COMMERCE")
-    val availableSubjects = listOf("Mathematics", "Science", "Physics", "Chemistry", "Biology", "English", "Social Studies")
-    var selectedSubjects by remember { mutableStateOf(setOf("Mathematics", "Science", "English")) }
+    val coachingSessions by viewModel.sessions.collectAsStateWithLifecycle()
+    val coachingClasses by viewModel.classes.collectAsStateWithLifecycle()
+    val coachingSubjects by viewModel.subjects.collectAsStateWithLifecycle()
+
+    var selectedSessionId by remember { mutableStateOf("") }
+
+    LaunchedEffect(coachingSessions) {
+        if (selectedSessionId.isEmpty() && coachingSessions.isNotEmpty()) {
+            selectedSessionId = coachingSessions.first().id
+        }
+    }
+
+    val selectedSession = coachingSessions.find { it.id == selectedSessionId }
+
+    // Dynamic subjects filtered by the selected session and stream
+    val sessionSubjects: List<com.example.data.CoachingSubject> = remember(coachingSubjects, selectedSession, stream) {
+        val forSession = if (selectedSession != null) {
+            val matching = coachingSubjects.filter { subj ->
+                (subj.classId.isNotEmpty() && subj.classId == selectedSession.classId) ||
+                (subj.className.isNotEmpty() && subj.className.equals(selectedSession.className, ignoreCase = true))
+            }
+            if (matching.isNotEmpty()) matching else coachingSubjects
+        } else {
+            coachingSubjects
+        }
+
+        val forStream = if (stream != "GENERAL") {
+            val filtered = forSession.filter { it.stream.equals(stream, ignoreCase = true) }
+            if (filtered.isNotEmpty()) filtered else forSession
+        } else {
+            forSession
+        }
+
+        if (forStream.isNotEmpty()) forStream else coachingSubjects
+    }
+
+    var selectedSubjects by remember { mutableStateOf(setOf<String>()) }
+
+    // When session or available subjects change, ensure selected subjects update gracefully
+    LaunchedEffect(selectedSessionId) {
+        if (sessionSubjects.isNotEmpty()) {
+            selectedSubjects = sessionSubjects.map { it.name }.toSet()
+        }
+    }
+
+    LaunchedEffect(sessionSubjects) {
+        if (selectedSubjects.isEmpty() && sessionSubjects.isNotEmpty()) {
+            selectedSubjects = sessionSubjects.map { it.name }.toSet()
+        }
+    }
 
     var datePickerVisible by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
@@ -346,7 +398,173 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // 3. CONTACT & ACADEMICS CARD
+            // 3. ACADEMIC SESSION & BATCH CARD
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = Color(0xFF6366F1),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Select Academic Session / Batch",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A)
+                            )
+                        }
+
+                        Text(
+                            "+ Coaching Control",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE11D48),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable { navController.navigate(Screen.CoachingControl.route) }
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Subjects for admission will be filtered according to the selected batch & session.",
+                        fontSize = 10.5.sp,
+                        color = Color(0xFF64748B)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (coachingSessions.isEmpty()) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF8FAFC),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = null,
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "No Sessions Created Yet",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF334155)
+                                    )
+                                    Text(
+                                        text = "Student will be enrolled in Default Batch. You can create sessions in Coaching Control anytime.",
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(vertical = 2.dp)
+                        ) {
+                            items(coachingSessions) { session ->
+                                val isSelected = session.id == selectedSessionId
+                                Surface(
+                                    modifier = Modifier
+                                        .width(220.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable { selectedSessionId = session.id },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) Color(0xFFF0FDF4) else Color(0xFFF8FAFC),
+                                    border = BorderStroke(
+                                        1.5.dp,
+                                        if (isSelected) Color(0xFF16A34A) else Color(0xFFE2E8F0)
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = session.title,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) Color(0xFF15803D) else Color(0xFF0F172A),
+                                                maxLines = 1
+                                            )
+                                            if (isSelected) {
+                                                Icon(
+                                                    Icons.Default.CheckCircle,
+                                                    contentDescription = "Selected",
+                                                    tint = Color(0xFF16A34A),
+                                                    modifier = Modifier.size(15.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            if (session.className.isNotBlank()) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = if (isSelected) Color(0xFFDCFCE7) else Color(0xFFE2E8F0)
+                                                ) {
+                                                    Text(
+                                                        text = session.className,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = if (isSelected) Color(0xFF166534) else Color(0xFF475569),
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            if (session.startTime.isNotBlank() && session.endTime.isNotBlank()) {
+                                                Text(
+                                                    text = "${session.startTime} - ${session.endTime}",
+                                                    fontSize = 9.5.sp,
+                                                    color = Color(0xFF64748B)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 4. CONTACT DETAILS CARD
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -357,7 +575,7 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Contact & Academics",
+                        text = "Contact Details",
                         fontSize = 12.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F172A)
@@ -399,11 +617,65 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                             focusedBorderColor = Color(0xFF0F172A)
                         )
                     )
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 5. SESSION SUBJECTS MULTI-SELECT CARD
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Session Subjects",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A)
+                            )
+                            Text(
+                                text = if (selectedSession != null)
+                                    "Showing subjects for: ${selectedSession.title} (${selectedSession.className})"
+                                else
+                                    "Showing all coaching subjects",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            TextButton(
+                                onClick = { selectedSubjects = sessionSubjects.map { it.name }.toSet() },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                modifier = Modifier.height(28.dp)
+                            ) {
+                                Text("Select All", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
+                            }
+                            TextButton(
+                                onClick = { selectedSubjects = emptySet() },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                modifier = Modifier.height(28.dp)
+                            ) {
+                                Text("Clear", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Stream selection
-                    Text("Academic Stream", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                    Text("Filter By Stream", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
                     Spacer(modifier = Modifier.height(5.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -434,50 +706,146 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Subjects Multi-select Chips
-                    Text("Enrolled Subjects (Auto OMR Mapping)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
-                    Spacer(modifier = Modifier.height(6.dp))
+                    // Selected count indicator
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Tap to select multiple subjects:",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF334155)
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = if (selectedSubjects.isNotEmpty()) Color(0xFFEFF6FF) else Color(0xFFF1F5F9)
+                        ) {
+                            Text(
+                                text = "${selectedSubjects.size} Selected",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedSubjects.isNotEmpty()) Color(0xFF2563EB) else Color(0xFF64748B),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
 
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        availableSubjects.chunked(3).forEach { rowSubjects ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                rowSubjects.forEach { subj ->
-                                    val isSelected = selectedSubjects.contains(subj)
-                                    Surface(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .clickable {
-                                                selectedSubjects = if (isSelected) {
-                                                    selectedSubjects - subj
-                                                } else {
-                                                    selectedSubjects + subj
-                                                }
-                                            },
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = if (isSelected) Color(0xFFE0F2FE) else Color(0xFFF8FAFC),
-                                        border = BorderStroke(1.dp, if (isSelected) Color(0xFF0284C7) else Color(0xFFE2E8F0))
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            if (isSelected) {
-                                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(12.dp))
-                                                Spacer(modifier = Modifier.width(3.dp))
-                                            }
-                                            Text(
-                                                text = subj,
-                                                fontSize = 10.sp,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                color = if (isSelected) Color(0xFF0369A1) else Color(0xFF64748B)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (sessionSubjects.isEmpty()) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFFFBEB),
+                            border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "No subjects found for this session / stream.",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF92400E)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Go to Coaching Control -> Add Subject or Manage Subjects to configure subjects for this session.",
+                                    fontSize = 10.sp,
+                                    color = Color(0xFFB45309)
+                                )
+                            }
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            sessionSubjects.chunked(2).forEach { rowSubjects ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowSubjects.forEach { subj ->
+                                        val isSelected = selectedSubjects.contains(subj.name)
+                                        Surface(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .clickable {
+                                                    selectedSubjects = if (isSelected) {
+                                                        selectedSubjects - subj.name
+                                                    } else {
+                                                        selectedSubjects + subj.name
+                                                    }
+                                                },
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (isSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC),
+                                            border = BorderStroke(
+                                                1.dp,
+                                                if (isSelected) Color(0xFF3B82F6) else Color(0xFFE2E8F0)
                                             )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Outlined.Circle,
+                                                    contentDescription = null,
+                                                    tint = if (isSelected) Color(0xFF2563EB) else Color(0xFF94A3B8),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(7.dp))
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = subj.name,
+                                                        fontSize = 11.sp,
+                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                        color = if (isSelected) Color(0xFF1E3A8A) else Color(0xFF1E293B),
+                                                        maxLines = 1
+                                                    )
+                                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        if (subj.stream.isNotBlank()) {
+                                                            Text(
+                                                                text = subj.stream,
+                                                                fontSize = 9.sp,
+                                                                color = if (isSelected) Color(0xFF3B82F6) else Color(0xFF64748B),
+                                                                fontWeight = FontWeight.Medium
+                                                            )
+                                                        }
+                                                        if (subj.subjectCode.isNotBlank()) {
+                                                            Text(
+                                                                text = "• ${subj.subjectCode}",
+                                                                fontSize = 9.sp,
+                                                                color = Color(0xFF94A3B8)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
+                                    }
+                                    // If odd number in row, fill empty space
+                                    if (rowSubjects.size == 1) {
+                                        Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    if (selectedSubjects.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFFF1F5F9),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Enrolled: ${selectedSubjects.joinToString(", ")}",
+                                fontSize = 10.sp,
+                                color = Color(0xFF334155),
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                            )
                         }
                     }
                 }
@@ -485,28 +853,40 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 4. SUBMIT BUTTON
+            // 6. SUBMIT BUTTON
             PremiumButton(
                 onClick = {
+                    val assignedSessionId = selectedSession?.id ?: ""
+                    val assignedSessionName = selectedSession?.title ?: (if (coachingSessions.isEmpty()) "General Batch" else "")
+                    val assignedClassName = selectedSession?.className ?: ""
+
                     viewModel.addStudent(
-                        name = name,
-                        fatherName = fatherName,
-                        motherName = motherName,
+                        name = name.trim(),
+                        fatherName = fatherName.trim(),
+                        motherName = motherName.trim(),
                         gender = gender,
                         dob = dob,
-                        mobileNo = mobileNo,
-                        email = email,
+                        mobileNo = mobileNo.trim(),
+                        email = email.trim(),
                         stream = stream,
                         subjects = selectedSubjects.joinToString(", "),
-                        imagePath = imagePath
+                        imagePath = imagePath,
+                        sessionId = assignedSessionId,
+                        sessionName = assignedSessionName,
+                        className = assignedClassName
                     ) {
+                        Toast.makeText(
+                            context,
+                            "Student admitted successfully in ${assignedSessionName.ifEmpty { "Session" }}!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         navController.popBackStack()
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                enabled = name.isNotBlank() && fatherName.isNotBlank(),
+                enabled = name.isNotBlank() && fatherName.isNotBlank() && selectedSubjects.isNotEmpty(),
                 containerColor = Color(0xFFE11D48),
                 borderColor = Color(0xFFBE123C)
             ) {

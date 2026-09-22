@@ -68,6 +68,14 @@ object CloudSyncManager {
                     put("stream", finalStudent.stream)
                     put("subjects", finalStudent.subjects)
                     put("imageUrl", finalStudent.imagePath)
+                    put("sessionId", finalStudent.sessionId)
+                    put("sessionName", finalStudent.sessionName)
+                    put("className", finalStudent.className)
+                    val subjectsArray = org.json.JSONArray()
+                    finalStudent.subjects.split(",").map { it.trim() }.filter { it.isNotEmpty() }.forEach {
+                        subjectsArray.put(it)
+                    }
+                    put("subjectsList", subjectsArray)
                 }
 
                 val url = URL("$FIREBASE_DB_URL/students/${finalStudent.rollNo}.json")
@@ -408,7 +416,10 @@ object CloudSyncManager {
                                         email = studentJson.optString("email", ""),
                                         stream = studentJson.optString("stream", "ARTS"),
                                         subjects = studentJson.optString("subjects", ""),
-                                        imagePath = studentJson.optString("imageUrl", "")
+                                        imagePath = studentJson.optString("imageUrl", ""),
+                                        sessionId = studentJson.optString("sessionId", ""),
+                                        sessionName = studentJson.optString("sessionName", ""),
+                                        className = studentJson.optString("className", "")
                                     )
                                 )
                             }
@@ -430,7 +441,10 @@ object CloudSyncManager {
                                         email = studentJson.optString("email", ""),
                                         stream = studentJson.optString("stream", "ARTS"),
                                         subjects = studentJson.optString("subjects", ""),
-                                        imagePath = studentJson.optString("imageUrl", "")
+                                        imagePath = studentJson.optString("imageUrl", ""),
+                                        sessionId = studentJson.optString("sessionId", ""),
+                                        sessionName = studentJson.optString("sessionName", ""),
+                                        className = studentJson.optString("className", "")
                                     )
                                 )
                             }

@@ -201,6 +201,9 @@ object MySqlSyncManager {
                     put("stream", student.stream)
                     put("subjects", student.subjects)
                     put("image_url", student.imagePath)
+                    put("session_id", student.sessionId)
+                    put("session_name", student.sessionName)
+                    put("class_name", student.className)
                     if (photoBase64.isNotEmpty()) {
                         put("image_base64", photoBase64)
                     }

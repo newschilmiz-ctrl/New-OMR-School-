@@ -55,6 +55,9 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
     val context = LocalContext.current
     val exams by viewModel.exams.collectAsStateWithLifecycle()
     val isLoadingExams by viewModel.isLoadingExams.collectAsStateWithLifecycle()
+    val coachingClasses by viewModel.classes.collectAsStateWithLifecycle()
+    val coachingSubjects by viewModel.subjects.collectAsStateWithLifecycle()
+    val coachingSessions by viewModel.sessions.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryTab by remember { mutableStateOf(0) }
@@ -63,7 +66,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
     var currentInstitution by remember { mutableStateOf("St. Xavier's Academy • Grade 10-A") }
     var currentBannerIndex by remember { mutableStateOf(0) }
 
-    val categoryTabs = listOf("ALL", "OMR STUDIO", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
+    val categoryTabs = listOf("ALL", "COACHING", "ID & ADMIT", "FEES", "ATTENDANCE", "OMR STUDIO", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
 
     // Filter exams based on search query, category, and subject
     val filteredExams = remember(exams, searchQuery, selectedCategoryTab, selectedSubjectFilter) {
@@ -395,6 +398,10 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             onClick = {
                                 selectedCategoryTab = index
                                 when (tabTitle) {
+                                    "COACHING" -> navController.navigate(Screen.CoachingControl.route)
+                                    "ID & ADMIT" -> navController.navigate(Screen.StudentCards.createRoute("ALL"))
+                                    "FEES" -> navController.navigate(Screen.FeeTracker.route)
+                                    "ATTENDANCE" -> navController.navigate(Screen.AttendanceRegister.route)
                                     "OMR STUDIO" -> navController.navigate(Screen.CustomOmrDesigner.route)
                                     "LIVE SCAN" -> {
                                         if (exams.isNotEmpty()) {
@@ -441,6 +448,46 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                     contentPadding = PaddingValues(horizontal = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.AccountBalance,
+                            title = "Coaching",
+                            bgGradient = listOf(Color(0xFFFFF1F2), Color(0xFFFFE4E6)),
+                            iconTint = Color(0xFFE11D48)
+                        ) {
+                            navController.navigate(Screen.CoachingControl.route)
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.Badge,
+                            title = "ID Cards",
+                            bgGradient = listOf(Color(0xFFEFF6FF), Color(0xFFDBEAFE)),
+                            iconTint = Color(0xFF2563EB)
+                        ) {
+                            navController.navigate(Screen.StudentCards.createRoute("ALL"))
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.Payments,
+                            title = "Fees",
+                            bgGradient = listOf(Color(0xFFECFDF5), Color(0xFFA7F3D0)),
+                            iconTint = Color(0xFF059669)
+                        ) {
+                            navController.navigate(Screen.FeeTracker.route)
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.FactCheck,
+                            title = "Attendance",
+                            bgGradient = listOf(Color(0xFFFEF3C7), Color(0xFFFDE68A)),
+                            iconTint = Color(0xFFD97706)
+                        ) {
+                            navController.navigate(Screen.AttendanceRegister.route)
+                        }
+                    }
                     item {
                         SquircleCategoryItem(
                             icon = Icons.Default.DesignServices,
@@ -685,6 +732,69 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
+            // 5C. COACHING MAIN CONTROL BANNER
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 2.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFF0F172A),
+                    shadowElevation = 2.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .background(Color(0xFFE11D48), RoundedCornerShape(8.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.School, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Coaching Main Control", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Surface(shape = RoundedCornerShape(3.dp), color = Color(0xFFE11D48)) {
+                                        Text("NEW", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                                    }
+                                }
+                                Text(
+                                    "${coachingClasses.size} Classes • ${coachingSubjects.size} Subjects • ${coachingSessions.size} Sessions",
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF94A3B8)
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color(0xFFE11D48),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable { navController.navigate(Screen.CoachingControl.route) }
+                        ) {
+                            Text(
+                                text = "Open Hub",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             // 6. HERO BANNER CAROUSEL
             item {
                 Surface(
@@ -893,7 +1003,11 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val subjects = listOf("All", "Mathematics", "Science", "Physics", "Chemistry", "English")
+                    val subjects = remember(exams, coachingSubjects) {
+                        val examSubjects = exams.map { it.subject }.filter { it.isNotBlank() }
+                        val coachingNames = coachingSubjects.map { it.name }
+                        listOf("All") + (examSubjects + coachingNames).distinct()
+                    }
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {

@@ -9,6 +9,10 @@ import com.example.data.Converters
 import com.example.data.ScanResult
 import com.example.data.Student
 import com.example.data.QuestionEntity
+import com.example.data.CoachingClass
+import com.example.data.CoachingSubject
+import com.example.data.CoachingSession
+import com.example.util.CoachingManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -28,10 +32,196 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     private val _exams = kotlinx.coroutines.flow.MutableStateFlow<List<Exam>>(emptyList())
     val exams: StateFlow<List<Exam>> = _exams
 
+    private val _classes = kotlinx.coroutines.flow.MutableStateFlow<List<CoachingClass>>(emptyList())
+    val classes: StateFlow<List<CoachingClass>> = _classes
+
+    private val _subjects = kotlinx.coroutines.flow.MutableStateFlow<List<CoachingSubject>>(emptyList())
+    val subjects: StateFlow<List<CoachingSubject>> = _subjects
+
+    private val _sessions = kotlinx.coroutines.flow.MutableStateFlow<List<CoachingSession>>(emptyList())
+    val sessions: StateFlow<List<CoachingSession>> = _sessions
+
+    private val _fees = kotlinx.coroutines.flow.MutableStateFlow<List<com.example.data.FeeRecord>>(emptyList())
+    val fees: StateFlow<List<com.example.data.FeeRecord>> = _fees
+
+    private val _attendance = kotlinx.coroutines.flow.MutableStateFlow<List<com.example.data.AttendanceRecord>>(emptyList())
+    val attendance: StateFlow<List<com.example.data.AttendanceRecord>> = _attendance
+
     init {
         com.example.util.CloudSyncManager.init(application)
+        CoachingManager.init(application)
+        com.example.util.FeeAndAttendanceManager.init(application)
+        loadCoachingData()
+        loadFeesAndAttendance()
         fetchStudents()
         fetchExams()
+    }
+
+    fun loadFeesAndAttendance() {
+        _fees.value = com.example.util.FeeAndAttendanceManager.getFees()
+        _attendance.value = com.example.util.FeeAndAttendanceManager.getAttendance()
+    }
+
+    fun addFeeRecord(fee: com.example.data.FeeRecord, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.FeeAndAttendanceManager.addFeeRecord(fee)
+            _fees.value = com.example.util.FeeAndAttendanceManager.getFees()
+            onDone()
+        }
+    }
+
+    fun deleteFeeRecord(feeId: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.FeeAndAttendanceManager.deleteFeeRecord(feeId)
+            _fees.value = com.example.util.FeeAndAttendanceManager.getFees()
+            onDone()
+        }
+    }
+
+    fun markAttendance(
+        studentRollNo: String,
+        studentName: String,
+        date: String,
+        status: String,
+        sessionId: String = "",
+        sessionName: String = "",
+        inTime: String = "",
+        onDone: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            com.example.util.FeeAndAttendanceManager.markAttendance(
+                studentRollNo = studentRollNo,
+                studentName = studentName,
+                date = date,
+                status = status,
+                sessionId = sessionId,
+                sessionName = sessionName,
+                inTime = inTime
+            )
+            _attendance.value = com.example.util.FeeAndAttendanceManager.getAttendance()
+            onDone()
+        }
+    }
+
+    fun markBatchAttendance(records: List<com.example.data.AttendanceRecord>, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.FeeAndAttendanceManager.markBatchAttendance(records)
+            _attendance.value = com.example.util.FeeAndAttendanceManager.getAttendance()
+            onDone()
+        }
+    }
+
+    fun loadCoachingData() {
+        _classes.value = CoachingManager.getClasses()
+        _subjects.value = CoachingManager.getSubjects()
+        _sessions.value = CoachingManager.getSessions()
+    }
+
+    fun createClass(name: String, section: String = "", description: String = "", onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            val newClass = CoachingClass(name = name, section = section, description = description)
+            CoachingManager.saveClass(newClass)
+            _classes.value = CoachingManager.getClasses()
+            onDone()
+        }
+    }
+
+    fun updateClass(coachingClass: CoachingClass, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.saveClass(coachingClass)
+            _classes.value = CoachingManager.getClasses()
+            onDone()
+        }
+    }
+
+    fun deleteClass(classId: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.deleteClass(classId)
+            _classes.value = CoachingManager.getClasses()
+            _subjects.value = CoachingManager.getSubjects()
+            _sessions.value = CoachingManager.getSessions()
+            onDone()
+        }
+    }
+
+    fun addMultipleSubjects(
+        classId: String,
+        className: String,
+        stream: String,
+        subjectNames: List<String>,
+        onDone: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            CoachingManager.addMultipleSubjects(classId, className, stream, subjectNames)
+            _subjects.value = CoachingManager.getSubjects()
+            onDone()
+        }
+    }
+
+    fun saveSubject(subject: CoachingSubject, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.saveSubject(subject)
+            _subjects.value = CoachingManager.getSubjects()
+            onDone()
+        }
+    }
+
+    fun deleteSubject(subjectId: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.deleteSubject(subjectId)
+            _subjects.value = CoachingManager.getSubjects()
+            onDone()
+        }
+    }
+
+    fun clearDemoSubjects(onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.clearDemoSubjectsAndReset()
+            _subjects.value = CoachingManager.getSubjects()
+            onDone()
+        }
+    }
+
+    fun createSession(
+        title: String,
+        classId: String,
+        className: String,
+        startTime: String,
+        endTime: String,
+        days: String = "Mon - Sat",
+        academicYear: String = "2024-2025",
+        onDone: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val session = CoachingSession(
+                title = title,
+                classId = classId,
+                className = className,
+                startTime = startTime,
+                endTime = endTime,
+                days = days,
+                academicYear = academicYear
+            )
+            CoachingManager.saveSession(session)
+            _sessions.value = CoachingManager.getSessions()
+            onDone()
+        }
+    }
+
+    fun updateSession(session: CoachingSession, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.saveSession(session)
+            _sessions.value = CoachingManager.getSessions()
+            onDone()
+        }
+    }
+
+    fun deleteSession(sessionId: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.deleteSession(sessionId)
+            _sessions.value = CoachingManager.getSessions()
+            onDone()
+        }
     }
 
     private fun fetchStudents() {
@@ -63,6 +253,9 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
         stream: String,
         subjects: String,
         imagePath: String,
+        sessionId: String = "",
+        sessionName: String = "",
+        className: String = "",
         onDone: () -> Unit
     ) {
         viewModelScope.launch {
@@ -88,7 +281,10 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
                 email = email,
                 stream = stream,
                 subjects = subjects,
-                imagePath = imagePath
+                imagePath = imagePath,
+                sessionId = sessionId,
+                sessionName = sessionName,
+                className = className
             )
             
             // Upload to Firebase & Cloudinary
@@ -97,6 +293,14 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
                 fetchStudents() // Refresh list
             }
             
+            onDone()
+        }
+    }
+
+    fun updateStudent(student: Student, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.CloudSyncManager.uploadStudent(student)
+            fetchStudents()
             onDone()
         }
     }

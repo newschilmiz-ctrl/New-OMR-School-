@@ -300,6 +300,30 @@ fun MainAppScreen() {
             composable(Screen.SyncSettings.route) {
                 SyncSettingsScreen(navController, viewModel)
             }
+            composable(Screen.CoachingControl.route) {
+                CoachingControlScreen(navController, viewModel)
+            }
+            composable(Screen.CoachingSubjects.route) {
+                CoachingSubjectsScreen(navController, viewModel)
+            }
+            composable(
+                route = Screen.StudentCards.route,
+                arguments = listOf(
+                    navArgument("rollNo") {
+                        type = NavType.StringType
+                        defaultValue = "ALL"
+                    }
+                )
+            ) { backStackEntry ->
+                val rollNo = backStackEntry.arguments?.getString("rollNo") ?: "ALL"
+                StudentCardsScreen(navController, viewModel, rollNo)
+            }
+            composable(Screen.FeeTracker.route) {
+                FeeTrackerScreen(navController, viewModel)
+            }
+            composable(Screen.AttendanceRegister.route) {
+                AttendanceRegisterScreen(navController, viewModel)
+            }
         }
     }
 }

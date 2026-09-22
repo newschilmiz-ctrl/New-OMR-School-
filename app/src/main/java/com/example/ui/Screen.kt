@@ -14,4 +14,11 @@ sealed class Screen(val route: String) {
     }
     object CustomOmrDesigner : Screen("custom_omr_designer")
     object SyncSettings : Screen("sync_settings")
+    object CoachingControl : Screen("coaching_control")
+    object CoachingSubjects : Screen("coaching_subjects")
+    object StudentCards : Screen("student_cards/{rollNo}") {
+        fun createRoute(rollNo: String = "ALL") = "student_cards/$rollNo"
+    }
+    object FeeTracker : Screen("fee_tracker")
+    object AttendanceRegister : Screen("attendance_register")
 }
