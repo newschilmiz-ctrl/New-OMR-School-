@@ -18,6 +18,12 @@ object FeeAndAttendanceManager {
     @Volatile
     private var prefs: SharedPreferences? = null
 
+    @Volatile
+    private var cachedFees: List<FeeRecord>? = null
+
+    @Volatile
+    private var cachedAttendance: List<AttendanceRecord>? = null
+
     fun init(context: Context) {
         if (prefs == null) {
             prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -49,6 +55,7 @@ object FeeAndAttendanceManager {
 
     // ==================== FEE RECORDS ====================
     fun getFees(): List<FeeRecord> {
+        cachedFees?.let { return it }
         val p = prefs ?: return emptyList()
         val jsonStr = p.getString(KEY_FEES, "[]") ?: "[]"
         val list = mutableListOf<FeeRecord>()
@@ -75,7 +82,9 @@ object FeeAndAttendanceManager {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return list.sortedByDescending { it.timestamp }
+        val sorted = list.sortedByDescending { it.timestamp }
+        cachedFees = sorted
+        return sorted
     }
 
     fun addFeeRecord(fee: FeeRecord) {
@@ -94,6 +103,7 @@ object FeeAndAttendanceManager {
     }
 
     private fun saveFees(list: List<FeeRecord>) {
+        cachedFees = list
         val p = prefs ?: return
         val arr = JSONArray()
         for (f in list) {
@@ -117,6 +127,7 @@ object FeeAndAttendanceManager {
 
     // ==================== ATTENDANCE RECORDS ====================
     fun getAttendance(): List<AttendanceRecord> {
+        cachedAttendance?.let { return it }
         val p = prefs ?: return emptyList()
         val jsonStr = p.getString(KEY_ATTENDANCE, "[]") ?: "[]"
         val list = mutableListOf<AttendanceRecord>()
@@ -141,7 +152,9 @@ object FeeAndAttendanceManager {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return list.sortedByDescending { it.timestamp }
+        val sorted = list.sortedByDescending { it.timestamp }
+        cachedAttendance = sorted
+        return sorted
     }
 
     fun markAttendance(
@@ -196,6 +209,7 @@ object FeeAndAttendanceManager {
     }
 
     private fun saveAttendance(list: List<AttendanceRecord>) {
+        cachedAttendance = list
         val p = prefs ?: return
         val arr = JSONArray()
         for (a in list) {

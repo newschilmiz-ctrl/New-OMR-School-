@@ -71,16 +71,24 @@ fun AttendanceRegisterScreen(
     }
 
     // Counts
-    val presentCount = sessionStudents.count {
-        dateAttendanceMap[it.rollNo]?.status == "PRESENT"
+    val counts = remember(sessionStudents, dateAttendanceMap) {
+        var p = 0
+        var a = 0
+        var l = 0
+        for (st in sessionStudents) {
+            when (dateAttendanceMap[st.rollNo]?.status) {
+                "PRESENT" -> p++
+                "ABSENT" -> a++
+                "LATE" -> l++
+            }
+        }
+        val pending = (sessionStudents.size - (p + a + l)).coerceAtLeast(0)
+        listOf(p, a, l, pending)
     }
-    val absentCount = sessionStudents.count {
-        dateAttendanceMap[it.rollNo]?.status == "ABSENT"
-    }
-    val lateCount = sessionStudents.count {
-        dateAttendanceMap[it.rollNo]?.status == "LATE"
-    }
-    val unmarkedCount = sessionStudents.size - (presentCount + absentCount + lateCount)
+    val presentCount = counts[0]
+    val absentCount = counts[1]
+    val lateCount = counts[2]
+    val unmarkedCount = counts[3]
 
     Scaffold(
         topBar = {
@@ -220,7 +228,7 @@ fun AttendanceRegisterScreen(
                                 }
                             }
 
-                            items(sessions) { s ->
+                            items(sessions, key = { it.id }) { s ->
                                 val isSelected = selectedSessionId == s.id
                                 Surface(
                                     shape = RoundedCornerShape(14.dp),
@@ -272,7 +280,7 @@ fun AttendanceRegisterScreen(
                     }
                 }
             } else {
-                items(sessionStudents) { student ->
+                items(sessionStudents, key = { it.rollNo }) { student ->
                     val record = dateAttendanceMap[student.rollNo]
                     val currentStatus = record?.status ?: "UNMARKED"
 

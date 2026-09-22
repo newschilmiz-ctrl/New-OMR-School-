@@ -82,22 +82,26 @@ fun StudentCardsScreen(
     val activeStudent = students.find { it.rollNo == selectedStudentRoll } ?: students.firstOrNull()
     val activeExam = exams.find { it.id == selectedExamId } ?: exams.firstOrNull()
 
-    // Generate barcodes and QR codes for the active student
-    val qrBitmap = remember(activeStudent, activeExam, selectedTab) {
+    // Generate barcodes and QR codes for the active student asynchronously without freezing UI thread
+    val qrBitmap by produceState<Bitmap?>(initialValue = null, activeStudent, activeExam, selectedTab) {
         if (activeStudent != null) {
             val qrPayload = if (selectedTab == 0) {
                 "STUDENT_ID|${activeStudent.rollNo}|${activeStudent.name}|${activeStudent.sessionName}|${activeStudent.stream}"
             } else {
                 "ADMIT_CARD|${activeStudent.rollNo}|${activeStudent.name}|EXAM:${activeExam?.name ?: "Exam"}|${activeExam?.date ?: "Date"}"
             }
-            CodeGenerator.generateQrCodeBitmap(qrPayload, 260)
-        } else null
+            value = CodeGenerator.getQrCodeBitmapAsync(qrPayload, 260)
+        } else {
+            value = null
+        }
     }
 
-    val barcodeBitmap = remember(activeStudent) {
+    val barcodeBitmap by produceState<Bitmap?>(initialValue = null, activeStudent) {
         if (activeStudent != null) {
-            CodeGenerator.generateBarcodeBitmap(activeStudent.rollNo, 360, 90)
-        } else null
+            value = CodeGenerator.getBarcodeBitmapAsync(activeStudent.rollNo, 360, 90)
+        } else {
+            value = null
+        }
     }
 
     Scaffold(
@@ -248,7 +252,7 @@ fun StudentCardsScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(vertical = 2.dp)
                         ) {
-                            items(students) { st ->
+                            items(students, key = { it.rollNo }) { st ->
                                 val isSelected = st.rollNo == selectedStudentRoll
                                 Surface(
                                     modifier = Modifier
@@ -308,7 +312,7 @@ fun StudentCardsScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 contentPadding = PaddingValues(vertical = 2.dp)
                             ) {
-                                items(exams) { ex ->
+                                items(exams, key = { it.id }) { ex ->
                                     val isSelected = ex.id == selectedExamId
                                     Surface(
                                         modifier = Modifier

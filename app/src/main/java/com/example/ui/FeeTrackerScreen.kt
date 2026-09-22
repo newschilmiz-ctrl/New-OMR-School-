@@ -52,9 +52,13 @@ fun FeeTrackerScreen(
     val totalRecordsCount = remember(fees) { fees.size }
 
     // Map each student's paid vs total fee
-    val studentFeeMap = remember(students, fees) {
+    val feesByRoll = remember(fees) {
+        fees.groupBy { it.studentRollNo.lowercase().trim() }
+    }
+
+    val studentFeeMap = remember(students, feesByRoll) {
         students.associate { st ->
-            val stFees = fees.filter { it.studentRollNo.equals(st.rollNo, ignoreCase = true) }
+            val stFees = feesByRoll[st.rollNo.lowercase().trim()] ?: emptyList()
             val paid = stFees.sumOf { it.amountPaid }
             val totalAssigned = stFees.maxOfOrNull { it.totalFee } ?: 10000.0
             val balance = (totalAssigned - paid).coerceAtLeast(0.0)
@@ -276,9 +280,9 @@ fun FeeTrackerScreen(
                     }
                 }
             } else {
-                items(filteredStudents) { student ->
+                items(filteredStudents, key = { it.rollNo }) { student ->
                     val (paid, total, balance) = studentFeeMap[student.rollNo] ?: Triple(0.0, 10000.0, 10000.0)
-                    val studentReceipts = fees.filter { it.studentRollNo.equals(student.rollNo, ignoreCase = true) }
+                    val studentReceipts = feesByRoll[student.rollNo.lowercase().trim()] ?: emptyList()
 
                     StudentFeeCard(
                         student = student,

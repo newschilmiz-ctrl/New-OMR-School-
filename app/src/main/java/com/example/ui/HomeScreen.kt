@@ -66,7 +66,15 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
     var currentInstitution by remember { mutableStateOf("St. Xavier's Academy • Grade 10-A") }
     var currentBannerIndex by remember { mutableStateOf(0) }
 
-    val categoryTabs = listOf("ALL", "COACHING", "ID & ADMIT", "FEES", "ATTENDANCE", "OMR STUDIO", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
+    val categoryTabs = remember {
+        listOf("ALL", "COACHING", "ID & ADMIT", "FEES", "ATTENDANCE", "OMR STUDIO", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
+    }
+
+    val subjects = remember(exams, coachingSubjects) {
+        val examSubjects = exams.map { it.subject }.filter { it.isNotBlank() }
+        val coachingNames = coachingSubjects.map { it.name }
+        listOf("All") + (examSubjects + coachingNames).distinct()
+    }
 
     // Filter exams based on search query, category, and subject
     val filteredExams = remember(exams, searchQuery, selectedCategoryTab, selectedSubjectFilter) {
@@ -1003,15 +1011,10 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val subjects = remember(exams, coachingSubjects) {
-                        val examSubjects = exams.map { it.subject }.filter { it.isNotBlank() }
-                        val coachingNames = coachingSubjects.map { it.name }
-                        listOf("All") + (examSubjects + coachingNames).distinct()
-                    }
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        items(subjects) { subj ->
+                        items(subjects, key = { it }) { subj ->
                             val isSelected = selectedSubjectFilter == subj
                             Surface(
                                 shape = RoundedCornerShape(14.dp),
@@ -1096,7 +1099,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                     }
                 }
             } else {
-                items(filteredExams) { exam ->
+                items(filteredExams, key = { it.id }) { exam ->
                     ModernExamItemCard(
                         exam = exam,
                         onScanClick = {
@@ -1225,9 +1228,11 @@ fun ModernExamItemCard(
                                 )
                             }
                             Spacer(modifier = Modifier.width(5.dp))
-                            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                            val formattedDate = remember(exam.timestamp) {
+                                SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(exam.timestamp))
+                            }
                             Text(
-                                text = sdf.format(Date(exam.timestamp)),
+                                text = formattedDate,
                                 fontSize = 10.sp,
                                 color = Color(0xFF94A3B8)
                             )

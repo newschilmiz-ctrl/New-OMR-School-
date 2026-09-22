@@ -150,3 +150,54 @@ data class AttendanceRecord(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+data class NoticeRecord(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val title: String,
+    val content: String,
+    val category: String = "GENERAL", // GENERAL, EXAM_ALERT, HOLIDAY, FEE_ALERT, URGENT
+    val targetBatch: String = "All Batches",
+    val postedBy: String = "Director Office",
+    val date: String,
+    val isPinned: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class TimetablePeriod(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val batchId: String = "",
+    val batchName: String,
+    val dayOfWeek: String, // MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+    val startTime: String, // e.g. "07:00 AM"
+    val endTime: String,   // e.g. "08:15 AM"
+    val subject: String,
+    val teacherName: String,
+    val roomNumber: String = "Hall A",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class FacultyMember(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String,
+    val subject: String,
+    val qualification: String = "M.Sc, B.Ed",
+    val phone: String = "",
+    val email: String = "",
+    val salaryType: String = "Monthly", // Monthly, Per Lecture, Contract
+    val assignedBatches: String = "All Batches",
+    val status: String = "Active", // Active, On Leave
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class StudyMaterial(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val title: String,
+    val type: String = "DPP", // DPP, NOTES, FORMULA_BOOK, ASSIGNMENT, SOLUTION
+    val subject: String,
+    val batchName: String = "All Batches",
+    val chapter: String = "",
+    val fileUrlOrInfo: String = "",
+    val dueDate: String = "",
+    val totalProblems: Int = 15,
+    val timestamp: Long = System.currentTimeMillis()
+)
+

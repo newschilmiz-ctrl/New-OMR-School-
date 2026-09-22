@@ -21,4 +21,7 @@ sealed class Screen(val route: String) {
     }
     object FeeTracker : Screen("fee_tracker")
     object AttendanceRegister : Screen("attendance_register")
+    object CoachingHub : Screen("coaching_hub?tab={tab}") {
+        fun createRoute(tab: Int = 0) = "coaching_hub?tab=$tab"
+    }
 }
