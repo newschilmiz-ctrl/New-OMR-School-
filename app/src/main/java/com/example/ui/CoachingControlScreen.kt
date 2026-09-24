@@ -355,14 +355,14 @@ fun CoachingControlScreen(navController: NavController, viewModel: OmrViewModel)
         )
     }
 
-    // 4. Reset / Remove Demo Subjects Confirmation
+    // 4. Reset / Remove Demo Data Confirmation
     if (showResetConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showResetConfirmDialog = false },
-            title = { Text("Update & Clean Subjects", fontWeight = FontWeight.Bold) },
+            title = { Text("Remove All Demo Data", fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "This will remove any obsolete demo subjects and keep only your customized coaching curriculum subjects.",
+                    "This will remove any sample/demo data (notices, routine, demo subjects, sample fees) and keep your app completely clean for your actual coaching institute.",
                     fontSize = 13.5.sp,
                     color = Color(0xFF475569)
                 )
@@ -370,14 +370,14 @@ fun CoachingControlScreen(navController: NavController, viewModel: OmrViewModel)
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.clearDemoSubjects {
-                            Toast.makeText(context, "Demo subjects cleaned and updated", Toast.LENGTH_SHORT).show()
+                        viewModel.clearAllDemoData {
+                            Toast.makeText(context, "All demo data removed successfully", Toast.LENGTH_SHORT).show()
                         }
                         showResetConfirmDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48))
                 ) {
-                    Text("Clean & Update")
+                    Text("Remove Demo Data")
                 }
             },
             dismissButton = {
@@ -844,7 +844,7 @@ fun SubjectsTab(
                     )
 
                     Text(
-                        "Clean / Update",
+                        "Purge Demo Data",
                         fontSize = 10.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFE11D48),

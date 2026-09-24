@@ -1,6 +1,6 @@
 {
   "name": "OMR Scanner",
-  "description": "Generate, scan, and grade OMR sheets.",
+  "description": "Coaching Institute Management System with OMR scanning, admissions, student ID cards, fee tracking, attendance register, notices, timetable, and faculty directory.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

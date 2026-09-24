@@ -24,32 +24,26 @@ object FeeAndAttendanceManager {
     @Volatile
     private var cachedAttendance: List<AttendanceRecord>? = null
 
+    private const val KEY_DEMO_REMOVED = "demo_data_removed_v2"
+
     fun init(context: Context) {
         if (prefs == null) {
             prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            seedDefaultDataIfEmpty()
+            cleanDemoDataIfPresent()
         }
     }
 
-    private fun seedDefaultDataIfEmpty() {
+    private fun cleanDemoDataIfPresent() {
         val p = prefs ?: return
-        if (!p.contains(KEY_FEES)) {
-            // Seed sample fee records if needed
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            val sampleFees = listOf(
-                FeeRecord(
-                    studentRollNo = "240001",
-                    studentName = "Rahul Sharma",
-                    amountPaid = 3500.0,
-                    totalFee = 12000.0,
-                    paymentDate = today,
-                    paymentMode = "UPI",
-                    receiptNo = "REC-2401",
-                    monthOrInstallment = "1st Installment",
-                    remarks = "Enrolled in Science Batch"
-                )
-            )
-            saveFees(sampleFees)
+        if (!p.getBoolean(KEY_DEMO_REMOVED, false)) {
+            // Remove demo fee records (like Rahul Sharma 240001)
+            val current = getFees().filterNot { 
+                it.studentRollNo == "240001" || 
+                it.studentName.contains("Rahul Sharma", ignoreCase = true) || 
+                it.receiptNo == "REC-2401"
+            }
+            saveFees(current)
+            p.edit().putBoolean(KEY_DEMO_REMOVED, true).apply()
         }
     }
 
@@ -206,6 +200,14 @@ object FeeAndAttendanceManager {
 
     fun getAttendanceForStudent(rollNo: String): List<AttendanceRecord> {
         return getAttendance().filter { it.studentRollNo.equals(rollNo, ignoreCase = true) }
+    }
+
+    fun clearAllFees() {
+        saveFees(emptyList())
+    }
+
+    fun clearAllAttendance() {
+        saveAttendance(emptyList())
     }
 
     private fun saveAttendance(list: List<AttendanceRecord>) {

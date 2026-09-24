@@ -2,6 +2,7 @@ package com.example.ui
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
@@ -10,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -32,6 +35,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -63,11 +67,22 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
     var selectedCategoryTab by remember { mutableStateOf(0) }
     var selectedSubjectFilter by remember { mutableStateOf("All") }
     var showInstitutionDialog by remember { mutableStateOf(false) }
-    var currentInstitution by remember { mutableStateOf("St. Xavier's Academy • Grade 10-A") }
+    val instPrefs = remember { context.getSharedPreferences("home_institution_prefs", android.content.Context.MODE_PRIVATE) }
+    var currentInstitution by remember {
+        val saved = instPrefs.getString("institution_name", "")
+        mutableStateOf(
+            if (!saved.isNullOrBlank() && !saved.contains("St. Xavier", ignoreCase = true) && !saved.contains("Mock Batch", ignoreCase = true)) {
+                saved
+            } else {
+                "Coaching & Evaluation Center"
+            }
+        )
+    }
     var currentBannerIndex by remember { mutableStateOf(0) }
+    var customInstText by remember { mutableStateOf("") }
 
     val categoryTabs = remember {
-        listOf("ALL", "COACHING", "ID & ADMIT", "FEES", "ATTENDANCE", "OMR STUDIO", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
+        listOf("ALL", "COACHING", "NOTICES", "ROUTINE", "FACULTY", "DPP & NOTES", "ID & ADMIT", "FEES", "ATTENDANCE", "OMR STUDIO", "EXAMS", "LIVE SCAN", "STUDENTS", "ANSWER KEYS", "REPORTS")
     }
 
     val subjects = remember(exams, coachingSubjects) {
@@ -95,47 +110,63 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
             onDismissRequest = { showInstitutionDialog = false },
             title = {
                 Text(
-                    text = "Select Institution / Batch",
+                    text = "Institution / Coaching Center",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(
-                        "St. Xavier's Academy • Grade 10-A",
-                        "Delhi Public School • Grade 12-B",
-                        "Kendriya Vidyalaya • Mock Batch",
-                        "Allen Career Institute • NEET-01"
-                    ).forEach { inst ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    currentInstitution = inst
-                                    showInstitutionDialog = false
-                                    Toast.makeText(context, "Switched to $inst", Toast.LENGTH_SHORT).show()
-                                }
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = currentInstitution == inst,
-                                onClick = {
-                                    currentInstitution = inst
-                                    showInstitutionDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(inst, fontSize = 14.sp)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = customInstText.ifEmpty { currentInstitution },
+                        onValueChange = { customInstText = it },
+                        label = { Text("Center / School / Academy Name", fontSize = 12.sp) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    val availableBatches = (coachingClasses.map { it.name } + coachingSessions.map { it.title }).filter { it.isNotBlank() }
+                    if (availableBatches.isNotEmpty()) {
+                        Text("Or select active batch:", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF64748B))
+                        availableBatches.distinct().take(4).forEach { batch ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable {
+                                        customInstText = batch
+                                    }
+                                    .padding(vertical = 4.dp, horizontal = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = (customInstText.ifEmpty { currentInstitution }) == batch,
+                                    onClick = { customInstText = batch }
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(batch, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
             },
             confirmButton = {
+                Button(
+                    onClick = {
+                        val toSave = customInstText.trim().ifEmpty { currentInstitution }
+                        currentInstitution = toSave
+                        instPrefs.edit().putString("institution_name", toSave).apply()
+                        showInstitutionDialog = false
+                        Toast.makeText(context, "Updated to $toSave", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48))
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
                 TextButton(onClick = { showInstitutionDialog = false }) {
-                    Text("Done")
+                    Text("Cancel")
                 }
             }
         )
@@ -156,14 +187,14 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                        .padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Left: Location / Institution Selector
                     Row(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .clickable { showInstitutionDialog = true }
                             .padding(vertical = 2.dp, horizontal = 2.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -172,53 +203,53 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             Icons.Default.LocationOn,
                             contentDescription = "Institution",
                             tint = Color(0xFF0F172A),
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(13.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
                         Text(
                             text = currentInstitution,
                             style = TextStyle(
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 color = Color(0xFF0F172A)
                             ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 200.dp)
+                            modifier = Modifier.widthIn(max = 160.dp)
                         )
                         Icon(
                             Icons.Default.KeyboardArrowDown,
                             contentDescription = "Dropdown",
                             tint = Color(0xFF64748B),
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(13.dp)
                         )
                     }
 
                     // Right: Cloud & MySQL Status Pill badge
                     Surface(
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = Color(0xFFEFF6FF),
                         border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .clickable { navController.navigate(Screen.SyncSettings.route) }
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(5.dp)
+                                    .size(4.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFF2563EB))
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "☁️ Cloud & MySQL",
+                                text = "☁️ MySQL",
                                 style = TextStyle(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 10.5.sp,
+                                    fontSize = 9.sp,
                                     color = Color(0xFF1D4ED8)
                                 )
                             )
@@ -232,7 +263,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                        .padding(horizontal = 12.dp, vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Stylized App Emblem / Brand Icon
@@ -240,41 +271,41 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                         painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.ic_sp_logo),
                         contentDescription = "SP App Logo",
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(9.dp))
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(7.dp))
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
                     // Pill Search Input with Mic and Camera scanner inside
                     Surface(
                         modifier = Modifier
                             .weight(1f)
-                            .height(36.dp),
-                        shape = RoundedCornerShape(18.dp),
+                            .height(32.dp),
+                        shape = RoundedCornerShape(16.dp),
                         color = Color(0xFFF1F5F9),
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 10.dp),
+                                .padding(horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = "Search",
                                 tint = Color(0xFF94A3B8),
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Box(modifier = Modifier.weight(1f)) {
                                 if (searchQuery.isEmpty()) {
                                     Text(
                                         text = "Search exams, subjects...",
                                         style = TextStyle(
                                             color = Color(0xFF94A3B8),
-                                            fontSize = 11.5.sp
+                                            fontSize = 10.5.sp
                                         )
                                     )
                                 }
@@ -284,7 +315,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                     singleLine = true,
                                     textStyle = TextStyle(
                                         color = Color(0xFF0F172A),
-                                        fontSize = 11.5.sp,
+                                        fontSize = 10.5.sp,
                                         fontWeight = FontWeight.Medium
                                     ),
                                     cursorBrush = SolidColor(Color(0xFFE11D48)),
@@ -299,13 +330,13 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 onClick = {
                                     Toast.makeText(context, "Voice search listening...", Toast.LENGTH_SHORT).show()
                                 },
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(22.dp)
                             ) {
                                 Icon(
                                     Icons.Default.Mic,
                                     contentDescription = "Voice Search",
                                     tint = Color(0xFF64748B),
-                                    modifier = Modifier.size(15.dp)
+                                    modifier = Modifier.size(13.dp)
                                 )
                             }
                             // Camera scan icon
@@ -317,19 +348,19 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                         Toast.makeText(context, "Create an exam first to scan sheets", Toast.LENGTH_SHORT).show()
                                     }
                                 },
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(22.dp)
                             ) {
                                 Icon(
                                     Icons.Default.CameraAlt,
                                     contentDescription = "Scan OMR",
                                     tint = Color(0xFF64748B),
-                                    modifier = Modifier.size(15.dp)
+                                    modifier = Modifier.size(13.dp)
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
                     // Right Actions: Notification & Profile
                     Box(contentAlignment = Alignment.TopEnd) {
@@ -337,19 +368,19 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             onClick = {
                                 Toast.makeText(context, "No new notifications", Toast.LENGTH_SHORT).show()
                             },
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(26.dp)
                         ) {
                             Icon(
                                 Icons.Outlined.Notifications,
                                 contentDescription = "Notifications",
                                 tint = Color(0xFF334155),
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                         Box(
                             modifier = Modifier
-                                .padding(top = 4.dp, end = 4.dp)
-                                .size(6.dp)
+                                .padding(top = 3.dp, end = 3.dp)
+                                .size(5.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFFE11D48))
                         )
@@ -357,7 +388,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
 
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(24.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFE2E8F0))
                             .clickable {
@@ -369,7 +400,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             Icons.Default.Person,
                             contentDescription = "Profile",
                             tint = Color(0xFF475569),
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
@@ -382,7 +413,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                     selectedTabIndex = selectedCategoryTab,
                     containerColor = Color(0xFFFAFBFD),
                     contentColor = Color(0xFFE11D48),
-                    edgePadding = 12.dp,
+                    edgePadding = 10.dp,
                     divider = { },
                     indicator = { tabPositions ->
                         if (selectedCategoryTab < tabPositions.size) {
@@ -393,7 +424,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                     .offset(x = currentPos.left)
                                     .width(currentPos.width)
                                     .height(2.dp)
-                                    .padding(horizontal = 10.dp)
+                                    .padding(horizontal = 8.dp)
                                     .clip(RoundedCornerShape(2.dp))
                                     .background(Color(0xFFE11D48))
                             )
@@ -407,6 +438,10 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 selectedCategoryTab = index
                                 when (tabTitle) {
                                     "COACHING" -> navController.navigate(Screen.CoachingControl.route)
+                                    "NOTICES" -> navController.navigate(Screen.CoachingHub.createRoute(0))
+                                    "ROUTINE" -> navController.navigate(Screen.DynamicTimetable.createRoute("ALL"))
+                                    "FACULTY" -> navController.navigate(Screen.CoachingHub.createRoute(2))
+                                    "DPP & NOTES" -> navController.navigate(Screen.CoachingHub.createRoute(3))
                                     "ID & ADMIT" -> navController.navigate(Screen.StudentCards.createRoute("ALL"))
                                     "FEES" -> navController.navigate(Screen.FeeTracker.route)
                                     "ATTENDANCE" -> navController.navigate(Screen.AttendanceRegister.route)
@@ -436,7 +471,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 Text(
                                     text = tabTitle,
                                     style = TextStyle(
-                                        fontSize = 10.5.sp,
+                                        fontSize = 9.sp,
                                         fontWeight = if (selectedCategoryTab == index) FontWeight.Bold else FontWeight.Medium,
                                         color = if (selectedCategoryTab == index) Color(0xFFE11D48) else Color(0xFF64748B)
                                     )
@@ -494,6 +529,46 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             iconTint = Color(0xFFD97706)
                         ) {
                             navController.navigate(Screen.AttendanceRegister.route)
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.Campaign,
+                            title = "Notices",
+                            bgGradient = listOf(Color(0xFFFFF1F2), Color(0xFFFFCCD5)),
+                            iconTint = Color(0xFFE11D48)
+                        ) {
+                            navController.navigate(Screen.CoachingHub.createRoute(0))
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.Schedule,
+                            title = "Routine",
+                            bgGradient = listOf(Color(0xFFF0FDF4), Color(0xFFBBF7D0)),
+                            iconTint = Color(0xFF16A34A)
+                        ) {
+                            navController.navigate(Screen.DynamicTimetable.createRoute("ALL"))
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.SupervisedUserCircle,
+                            title = "Faculty",
+                            bgGradient = listOf(Color(0xFFF5F3FF), Color(0xFFDDD6FE)),
+                            iconTint = Color(0xFF7C3AED)
+                        ) {
+                            navController.navigate(Screen.CoachingHub.createRoute(2))
+                        }
+                    }
+                    item {
+                        SquircleCategoryItem(
+                            icon = Icons.Default.MenuBook,
+                            title = "DPP/Notes",
+                            bgGradient = listOf(Color(0xFFFFFBEB), Color(0xFFFDE68A)),
+                            iconTint = Color(0xFFD97706)
+                        ) {
+                            navController.navigate(Screen.CoachingHub.createRoute(3))
                         }
                     }
                     item {
@@ -601,7 +676,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 3.dp),
+                        .padding(horizontal = 12.dp, vertical = 2.5.dp),
                     shape = RoundedCornerShape(10.dp),
                     color = Color(0xFFFFF1F2),
                     border = BorderStroke(1.dp, Color(0xFFFECDD3))
@@ -609,7 +684,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -618,7 +693,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 Text(
                                     text = "Instant 0.5s Scan",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.5.sp,
                                     color = Color(0xFFE11D48)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -626,23 +701,23 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(3.dp))
                                         .background(Color(0xFFFFE4E6))
-                                        .padding(horizontal = 3.dp, vertical = 1.dp)
+                                        .padding(horizontal = 3.dp, vertical = 0.5.dp)
                                 ) {
-                                    Text("PRO", fontSize = 8.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFE11D48))
+                                    Text("PRO", fontSize = 7.5.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFE11D48))
                                 }
                             }
                             Text(
                                 text = "Auto-aligns corner markers & evaluates Sets A-D",
-                                fontSize = 10.sp,
+                                fontSize = 9.sp,
                                 color = Color(0xFF881337)
                             )
                         }
 
                         Surface(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(14.dp),
                             color = Color(0xFFE11D48),
                             modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(14.dp))
                                 .clickable {
                                     if (exams.isNotEmpty()) {
                                         navController.navigate(Screen.ScanOmr.createRoute(exams.first().id))
@@ -655,13 +730,13 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 text = "Scan Now",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                fontSize = 9.5.sp,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // 5B. PROMO: CUSTOM OMR STUDIO (DRAG & DROP DESIGNER)
@@ -669,7 +744,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 2.dp),
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
                     shape = RoundedCornerShape(10.dp),
                     color = Color(0xFFF5F3FF),
                     border = BorderStroke(1.dp, Color(0xFFDDD6FE))
@@ -677,52 +752,52 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(32.dp)
-                                    .background(Color(0xFF7C3AED), RoundedCornerShape(8.dp)),
+                                    .size(28.dp)
+                                    .background(Color(0xFF7C3AED), RoundedCornerShape(7.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.DesignServices, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.DesignServices, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = "Custom OMR Studio",
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
+                                        fontSize = 11.5.sp,
                                         color = Color(0xFF4C1D95)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Surface(shape = RoundedCornerShape(3.dp), color = Color(0xFFEDE9FE)) {
                                         Text(
                                             "NEW",
-                                            fontSize = 8.sp,
+                                            fontSize = 7.5.sp,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = Color(0xFF6D28D9),
-                                            modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp)
+                                            modifier = Modifier.padding(horizontal = 3.dp, vertical = 0.5.dp)
                                         )
                                     }
                                 }
                                 Text(
                                     text = "Drag & drop, custom labels, bubble sizes & print",
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     color = Color(0xFF6D28D9)
                                 )
                             }
                         }
 
                         Surface(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(14.dp),
                             color = Color(0xFF7C3AED),
                             modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(14.dp))
                                 .clickable {
                                     navController.navigate(Screen.CustomOmrDesigner.route)
                                 }
@@ -731,13 +806,13 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 text = "Design",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
-                                modifier = Modifier.padding(horizontal = 11.dp, vertical = 5.dp)
+                                fontSize = 9.5.sp,
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // 5C. COACHING MAIN CONTROL BANNER
@@ -745,62 +820,62 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 2.dp),
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
                     shape = RoundedCornerShape(10.dp),
                     color = Color(0xFF0F172A),
-                    shadowElevation = 2.dp
+                    shadowElevation = 1.dp
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                            .padding(horizontal = 10.dp, vertical = 7.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(34.dp)
-                                    .background(Color(0xFFE11D48), RoundedCornerShape(8.dp)),
+                                    .size(28.dp)
+                                    .background(Color(0xFFE11D48), RoundedCornerShape(7.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.School, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.School, contentDescription = null, tint = Color.White, modifier = Modifier.size(15.dp))
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(7.dp))
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Coaching Main Control", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
-                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text("Coaching Control", fontWeight = FontWeight.Bold, fontSize = 11.5.sp, color = Color.White)
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Surface(shape = RoundedCornerShape(3.dp), color = Color(0xFFE11D48)) {
-                                        Text("NEW", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                                        Text("NEW", fontSize = 7.5.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(horizontal = 3.dp, vertical = 0.5.dp))
                                     }
                                 }
                                 Text(
                                     "${coachingClasses.size} Classes • ${coachingSubjects.size} Subjects • ${coachingSessions.size} Sessions",
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     color = Color(0xFF94A3B8)
                                 )
                             }
                         }
 
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(12.dp),
                             color = Color(0xFFE11D48),
                             modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .clickable { navController.navigate(Screen.CoachingControl.route) }
                         ) {
                             Text(
                                 text = "Open Hub",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                fontSize = 9.5.sp,
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
             }
 
             // 6. HERO BANNER CAROUSEL
@@ -808,8 +883,8 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(14.dp),
+                        .padding(horizontal = 12.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = Color(0xFF0F172A),
                     border = BorderStroke(1.dp, Color(0xFF334155))
                 ) {
@@ -821,7 +896,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                     colors = listOf(Color(0xFF1E293B), Color(0xFF0F172A))
                                 )
                             )
-                            .padding(14.dp)
+                            .padding(11.dp)
                     ) {
                         Column {
                             // Top Row: Tag & Badge
@@ -831,56 +906,56 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(5.dp),
+                                    shape = RoundedCornerShape(4.dp),
                                     color = Color(0xFF334155)
                                 ) {
                                     Text(
                                         text = "SMART OMR ENGINE",
                                         color = Color(0xFF94A3B8),
-                                        fontSize = 9.sp,
+                                        fontSize = 8.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
                                     )
                                 }
 
                                 Surface(
-                                    shape = RoundedCornerShape(5.dp),
+                                    shape = RoundedCornerShape(4.dp),
                                     color = Color(0x33FFFFFF)
                                 ) {
                                     Text(
                                         text = "99.8% ACCURACY",
                                         color = Color(0xFF38BDF8),
-                                        fontSize = 9.sp,
+                                        fontSize = 8.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(7.dp))
 
                             Text(
                                 text = "Automated Exam\nGrading & Reports",
                                 style = TextStyle(
-                                    fontSize = 18.sp,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color.White,
-                                    lineHeight = 22.sp
+                                    lineHeight = 18.sp
                                 )
                             )
 
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "Grade hundreds of physical answer sheets in minutes with real-time bubble analysis & QR student ID reading.",
+                                text = "Grade physical answer sheets in seconds with real-time bubble analysis & QR student ID reading.",
                                 style = TextStyle(
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     color = Color(0xFF94A3B8),
-                                    lineHeight = 15.sp
+                                    lineHeight = 13.5.sp
                                 )
                             )
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             // Bottom row: Action button & Circular Indicator
                             Row(
@@ -890,7 +965,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                             ) {
                                 Row(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(20.dp))
+                                        .clip(RoundedCornerShape(16.dp))
                                         .background(Color.White)
                                         .clickable {
                                             if (exams.isNotEmpty()) {
@@ -899,21 +974,21 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                                 navController.navigate(Screen.CreateExam.route)
                                             }
                                         }
-                                        .padding(horizontal = 14.dp, vertical = 7.dp),
+                                        .padding(horizontal = 11.dp, vertical = 5.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = if (exams.isNotEmpty()) "Open Live Scanner" else "Create First Exam",
+                                        text = if (exams.isNotEmpty()) "Open Scanner" else "Create First Exam",
                                         color = Color(0xFF0F172A),
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 11.5.sp
+                                        fontSize = 10.5.sp
                                     )
-                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowForward,
                                         contentDescription = null,
                                         tint = Color(0xFF0F172A),
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.size(12.dp)
                                     )
                                 }
 
@@ -922,7 +997,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                     repeat(4) { idx ->
                                         Box(
                                             modifier = Modifier
-                                                .size(if (idx == 0) 7.dp else 5.dp)
+                                                .size(if (idx == 0) 6.dp else 4.dp)
                                                 .clip(CircleShape)
                                                 .background(if (idx == 0) Color.White else Color(0xFF475569))
                                         )
@@ -932,7 +1007,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // 7. QUICK STATS & TIPS STRIP
@@ -940,7 +1015,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 12.dp),
                     shape = RoundedCornerShape(10.dp),
                     color = Color.White,
                     border = BorderStroke(1.dp, Color(0xFFE2E8F0))
@@ -948,13 +1023,13 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp),
+                            .padding(horizontal = 9.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(7.dp))
+                                .size(26.dp)
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(Color(0xFFFEF3C7)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -962,33 +1037,33 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                                 Icons.Default.Lightbulb,
                                 contentDescription = null,
                                 tint = Color(0xFFD97706),
-                                modifier = Modifier.size(17.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Pro Tip: Keep Timing Marks In View",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 11.5.sp,
+                                fontSize = 10.5.sp,
                                 color = Color(0xFF1E293B)
                             )
                             Text(
-                                text = "Ensure the black edge bars are visible for automatic 100% calibration.",
-                                fontSize = 10.sp,
+                                text = "Ensure black corner bars are visible for instant calibration.",
+                                fontSize = 9.sp,
                                 color = Color(0xFF64748B)
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
             // 8. HORIZONTAL QUICK FILTERS
             item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -996,46 +1071,46 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                     ) {
                         Text(
                             text = "Exam Directory",
-                            fontSize = 14.sp,
+                            fontSize = 12.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF0F172A)
                         )
 
                         Text(
                             text = "${filteredExams.size} Found",
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF64748B)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         items(subjects, key = { it }) { subj ->
                             val isSelected = selectedSubjectFilter == subj
                             Surface(
-                                shape = RoundedCornerShape(14.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 color = if (isSelected) Color(0xFF0F172A) else Color.White,
                                 border = BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFCBD5E1)),
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(14.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .clickable { selectedSubjectFilter = subj }
                             ) {
                                 Text(
                                     text = subj,
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) Color.White else Color(0xFF334155),
-                                    modifier = Modifier.padding(horizontal = 11.dp, vertical = 5.dp)
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.5.dp)
                                 )
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // 9. EXAM CATALOG FEED (Mobile-friendly modern cards)
@@ -1126,32 +1201,50 @@ fun SquircleCategoryItem(
     iconTint: Color,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "squircle_scale"
+    )
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .width(56.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
+            .width(50.dp)
+            .graphicsLayer {
+                scaleX = animatedScale
+                scaleY = animatedScale
+            }
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
     ) {
         Box(
             modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .size(38.dp)
+                .clip(RoundedCornerShape(10.dp))
                 .background(Brush.linearGradient(bgGradient))
-                .border(1.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(12.dp)),
+                .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 icon,
                 contentDescription = title,
                 tint = iconTint,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(18.dp)
             )
         }
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(2.5.dp))
         Text(
             text = title,
-            fontSize = 9.5.sp,
+            fontSize = 8.5.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFF1E293B),
             textAlign = TextAlign.Center,
@@ -1170,17 +1263,32 @@ fun ModernExamItemCard(
     onScanClick: () -> Unit,
     onManageClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val cardScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium),
+        label = "card_scale"
+    )
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onManageClick() },
-        shape = RoundedCornerShape(12.dp),
+            .padding(horizontal = 12.dp, vertical = 3.5.dp)
+            .graphicsLayer {
+                scaleX = cardScale
+                scaleY = cardScale
+            }
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onManageClick() },
+        shape = RoundedCornerShape(10.dp),
         color = Color.White,
         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
@@ -1189,8 +1297,8 @@ fun ModernExamItemCard(
                 Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(7.dp))
                             .background(Color(0xFFF1F5F9)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1198,22 +1306,22 @@ fun ModernExamItemCard(
                             Icons.AutoMirrored.Filled.Assignment,
                             contentDescription = null,
                             tint = Color(0xFF0F172A),
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Column {
                         Text(
                             text = exam.name,
-                            fontSize = 13.5.sp,
+                            fontSize = 12.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF0F172A),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(1.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
                                 shape = RoundedCornerShape(3.dp),
@@ -1221,19 +1329,19 @@ fun ModernExamItemCard(
                             ) {
                                 Text(
                                     text = exam.subject.uppercase(),
-                                    fontSize = 9.sp,
+                                    fontSize = 8.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF475569),
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             val formattedDate = remember(exam.timestamp) {
                                 SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(exam.timestamp))
                             }
                             Text(
                                 text = formattedDate,
-                                fontSize = 10.sp,
+                                fontSize = 9.sp,
                                 color = Color(0xFF94A3B8)
                             )
                         }
@@ -1241,23 +1349,23 @@ fun ModernExamItemCard(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = Color(0xFFECFDF5),
                     border = BorderStroke(1.dp, Color(0xFFA7F3D0))
                 ) {
                     Text(
                         text = "ACTIVE",
-                        fontSize = 9.sp,
+                        fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF047857),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Info tags & Buttons Row
             Row(
@@ -1266,43 +1374,43 @@ fun ModernExamItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Pass: ${exam.passMarks}",
-                        fontSize = 10.5.sp,
+                        fontSize = 9.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF64748B)
                     )
-                    Text("•", color = Color(0xFFCBD5E1), fontSize = 10.sp)
+                    Text("•", color = Color(0xFFCBD5E1), fontSize = 9.sp)
                     Text(
                         text = "Sets: A-D",
-                        fontSize = 10.5.sp,
+                        fontSize = 9.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF64748B)
                     )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     PremiumOutlinedButton(
                         onClick = onManageClick,
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier.height(30.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                        modifier = Modifier.height(26.dp)
                     ) {
-                        Text("Manage", fontSize = 11.sp)
+                        Text("Manage", fontSize = 10.sp)
                     }
 
                     PremiumButton(
                         onClick = onScanClick,
                         containerColor = Color(0xFFE11D48),
                         borderColor = Color(0xFFBE123C),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(30.dp)
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                        modifier = Modifier.height(26.dp)
                     ) {
-                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(12.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Scan", fontSize = 11.sp)
+                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(11.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("Scan", fontSize = 10.sp)
                     }
                 }
             }

@@ -35,101 +35,48 @@ object CoachingFeaturesManager {
     @Volatile
     private var cachedMaterials: List<StudyMaterial>? = null
 
+    private const val KEY_DEMO_CLEANED_V2 = "coaching_demo_cleaned_v2"
+
     fun init(context: Context) {
         if (prefs == null) {
             prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            seedDefaultsIfEmpty()
+            cleanDemoDataIfPresent()
         }
     }
 
-    private fun seedDefaultsIfEmpty() {
+    private fun cleanDemoDataIfPresent() {
         val p = prefs ?: return
-        if (!p.getBoolean(KEY_INIT, false)) {
-            val today = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
-
-            // Seed Notices
-            val notices = listOf(
-                NoticeRecord(
-                    title = "Grand Monthly Mock Test (OMR Sheet Based)",
-                    content = "All students of Class 11th & 12th (Science & Commerce) must be present in full uniform with admit card on Sunday at 08:30 AM for the Full Syllabus OMR Simulation test.",
-                    category = "EXAM_ALERT",
-                    targetBatch = "All Batches",
-                    postedBy = "Director Office",
-                    date = today,
-                    isPinned = true
-                ),
-                NoticeRecord(
-                    title = "Diwali & Chhath Puja Holiday Schedule",
-                    content = "Coaching classes will remain closed from Oct 28th to Nov 4th. Daily Practice Problem (DPP) assignments have been distributed and must be submitted on reopening day.",
-                    category = "HOLIDAY",
-                    targetBatch = "All Batches",
-                    postedBy = "Administration",
-                    date = today,
-                    isPinned = false
-                ),
-                NoticeRecord(
-                    title = "2nd Installment Tuition Fee Reminder",
-                    content = "Kindly clear pending 2nd installment fees by the 10th of this month to avoid late administrative fee penalty. Collect payment receipt from the accounts counter.",
-                    category = "FEE_ALERT",
-                    targetBatch = "Morning Science Batch",
-                    postedBy = "Accounts Dept",
-                    date = today,
-                    isPinned = false
-                ),
-                NoticeRecord(
-                    title = "Special Doubt Clearing Session with Er. Verma",
-                    content = "Extra 2-hour doubt clearing class on Rotational Motion & Calculus will be conducted this Saturday from 04:00 PM to 06:00 PM in Lecture Hall 2.",
-                    category = "URGENT",
-                    targetBatch = "Morning Science Batch",
-                    postedBy = "Prof. R.K. Verma",
-                    date = today,
-                    isPinned = true
-                )
-            )
-            saveNotices(notices)
-
-            // Seed Timetable
-            val timetable = listOf(
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "MONDAY", startTime = "07:00 AM", endTime = "08:15 AM", subject = "Physics", teacherName = "Er. R.K. Verma", roomNumber = "Hall 101"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "MONDAY", startTime = "08:20 AM", endTime = "09:35 AM", subject = "Mathematics", teacherName = "Prof. S.N. Mishra", roomNumber = "Hall 101"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "MONDAY", startTime = "09:45 AM", endTime = "11:00 AM", subject = "Chemistry", teacherName = "Dr. Anita Gupta", roomNumber = "Lab 2"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "TUESDAY", startTime = "07:00 AM", endTime = "08:15 AM", subject = "Biology", teacherName = "Dr. Neha Sharma", roomNumber = "Bio Lab"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "TUESDAY", startTime = "08:20 AM", endTime = "09:35 AM", subject = "Physics", teacherName = "Er. R.K. Verma", roomNumber = "Hall 101"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "WEDNESDAY", startTime = "07:00 AM", endTime = "08:15 AM", subject = "Chemistry", teacherName = "Dr. Anita Gupta", roomNumber = "Lab 2"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "WEDNESDAY", startTime = "08:20 AM", endTime = "09:35 AM", subject = "Mathematics", teacherName = "Prof. S.N. Mishra", roomNumber = "Hall 101"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "THURSDAY", startTime = "07:00 AM", endTime = "08:15 AM", subject = "Physics", teacherName = "Er. R.K. Verma", roomNumber = "Hall 101"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "FRIDAY", startTime = "07:00 AM", endTime = "08:15 AM", subject = "Chemistry", teacherName = "Dr. Anita Gupta", roomNumber = "Lab 2"),
-                TimetablePeriod(batchName = "Morning Science Batch", dayOfWeek = "SATURDAY", startTime = "07:00 AM", endTime = "09:00 AM", subject = "Full Test OMR Simulation", teacherName = "Exam Invigilator", roomNumber = "Auditorium"),
-
-                TimetablePeriod(batchName = "Commerce Prime Batch", dayOfWeek = "MONDAY", startTime = "09:00 AM", endTime = "10:15 AM", subject = "Accountancy", teacherName = "CA Manish Aggarwal", roomNumber = "Room 201"),
-                TimetablePeriod(batchName = "Commerce Prime Batch", dayOfWeek = "MONDAY", startTime = "10:20 AM", endTime = "11:35 AM", subject = "Economics", teacherName = "Prof. Priya Sinha", roomNumber = "Room 201"),
-                TimetablePeriod(batchName = "Commerce Prime Batch", dayOfWeek = "TUESDAY", startTime = "09:00 AM", endTime = "10:15 AM", subject = "Business Studies", teacherName = "Dr. K.P. Thakur", roomNumber = "Room 201")
-            )
-            saveTimetable(timetable)
-
-            // Seed Faculty
-            val faculties = listOf(
-                FacultyMember(name = "Er. R.K. Verma", subject = "Physics", qualification = "B.Tech IIT Kanpur (12 yrs exp)", phone = "+91 98765 43210", email = "rkverma@coaching.com", salaryType = "Monthly", assignedBatches = "Morning Science Batch, JEE Target", status = "Active"),
-                FacultyMember(name = "Dr. Anita Gupta", subject = "Chemistry", qualification = "Ph.D Organic Chemistry (9 yrs exp)", phone = "+91 98765 43211", email = "anita.gupta@coaching.com", salaryType = "Monthly", assignedBatches = "Morning Science Batch, NEET Focus", status = "Active"),
-                FacultyMember(name = "Prof. S.N. Mishra", subject = "Mathematics", qualification = "M.Sc Mathematics, Gold Medalist", phone = "+91 98765 43212", email = "snmishra@coaching.com", salaryType = "Monthly", assignedBatches = "Morning Science Batch, 10th Foundation", status = "Active"),
-                FacultyMember(name = "Dr. Neha Sharma", subject = "Biology (Botany & Zoology)", qualification = "MBBS, M.S (AIIMS)", phone = "+91 98765 43213", email = "neha.bio@coaching.com", salaryType = "Per Lecture", assignedBatches = "NEET Target Batch", status = "Active"),
-                FacultyMember(name = "CA Manish Aggarwal", subject = "Accountancy & Taxation", qualification = "FCA, B.Com (Hons)", phone = "+91 98765 43214", email = "manish.ca@coaching.com", salaryType = "Monthly", assignedBatches = "Commerce Prime Batch", status = "Active"),
-                FacultyMember(name = "Prof. Priya Sinha", subject = "Economics & Statistics", qualification = "M.A Economics (DSE)", phone = "+91 98765 43215", email = "priya.eco@coaching.com", salaryType = "Per Lecture", assignedBatches = "Commerce Prime Batch, Arts Evening", status = "Active")
-            )
-            saveFaculty(faculties)
-
-            // Seed Study Material / DPP
-            val materials = listOf(
-                StudyMaterial(title = "DPP-04: Laws of Motion & Friction", type = "DPP", subject = "Physics", batchName = "Morning Science Batch", chapter = "Newton's Laws of Motion", fileUrlOrInfo = "physics_dpp_04_friction.pdf", dueDate = "Tomorrow 08:00 AM", totalProblems = 20),
-                StudyMaterial(title = "Formula Handbook: Integration & Differential Calculus", type = "FORMULA_BOOK", subject = "Mathematics", batchName = "Morning Science Batch", chapter = "Calculus & Limits", fileUrlOrInfo = "math_formula_sheet_v2.pdf", dueDate = "Permanent Reference", totalProblems = 65),
-                StudyMaterial(title = "Comprehensive Notes: Chemical Bonding & Molecular Structure", type = "NOTES", subject = "Chemistry", batchName = "Morning Science Batch", chapter = "Inorganic Chemistry", fileUrlOrInfo = "chem_bonding_notes_2024.pdf", dueDate = "Exam Preparation", totalProblems = 35),
-                StudyMaterial(title = "DPP-02: Partnership Deeds & GoodWill Valuation", type = "DPP", subject = "Accountancy", batchName = "Commerce Prime Batch", chapter = "Partnership Accounts", fileUrlOrInfo = "acc_partnership_dpp2.pdf", dueDate = "Friday 09:00 AM", totalProblems = 15),
-                StudyMaterial(title = "OMR Mock Test 1 Answer Key & Solutions", type = "SOLUTION", subject = "Physics", batchName = "All Batches", chapter = "Full Term 1 Review", fileUrlOrInfo = "omr_mock_1_solutions.pdf", dueDate = "Self Review", totalProblems = 50)
-            )
-            saveMaterials(materials)
-
-            p.edit().putBoolean(KEY_INIT, true).apply()
+        if (!p.getBoolean(KEY_DEMO_CLEANED_V2, false)) {
+            // Purge demo seeded records
+            p.edit()
+                .putString(KEY_NOTICES, "[]")
+                .putString(KEY_TIMETABLE, "[]")
+                .putString(KEY_FACULTY, "[]")
+                .putString(KEY_MATERIALS, "[]")
+                .putBoolean(KEY_INIT, true)
+                .putBoolean(KEY_DEMO_CLEANED_V2, true)
+                .apply()
+            cachedNotices = emptyList()
+            cachedTimetable = emptyList()
+            cachedFaculty = emptyList()
+            cachedMaterials = emptyList()
         }
+    }
+
+    fun clearAllNotices() {
+        saveNotices(emptyList())
+    }
+
+    fun clearAllTimetable() {
+        saveTimetable(emptyList())
+    }
+
+    fun clearAllFaculty() {
+        saveFaculty(emptyList())
+    }
+
+    fun clearAllMaterials() {
+        saveMaterials(emptyList())
     }
 
     // ==================== NOTICES ====================
@@ -242,9 +189,33 @@ object CoachingFeaturesManager {
         saveTimetable(current)
     }
 
+    fun addTimetablePeriods(periods: List<TimetablePeriod>) {
+        val current = getTimetable().toMutableList()
+        current.addAll(periods)
+        saveTimetable(current)
+    }
+
+    fun updateTimetablePeriod(period: TimetablePeriod) {
+        val current = getTimetable().toMutableList()
+        val index = current.indexOfFirst { it.id == period.id }
+        if (index != -1) {
+            current[index] = period
+            saveTimetable(current)
+        }
+    }
+
     fun deleteTimetablePeriod(id: String) {
         val current = getTimetable().filterNot { it.id == id }
         saveTimetable(current)
+    }
+
+    fun clearTimetableForBatch(batchName: String) {
+        val current = getTimetable().filterNot { it.batchName.equals(batchName, ignoreCase = true) }
+        saveTimetable(current)
+    }
+
+    fun replaceTimetable(list: List<TimetablePeriod>) {
+        saveTimetable(list)
     }
 
     private fun saveTimetable(list: List<TimetablePeriod>) {

@@ -1042,13 +1042,13 @@ fun CustomOmrDesignerScreen(navController: NavController, viewModel: OmrViewMode
                                 elements = OmrTemplatePresets.createNeet100()
                                 selectedElementId = null
                                 showPresetsDialog = false
-                                Toast.makeText(context, "NEET / Mock 100 Questions Loaded", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "NEET / Standard 100 Questions Loaded", Toast.LENGTH_SHORT).show()
                             },
                         color = Color(0xFFF8FAFC),
                         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
-                            Text("Mock / NEET 100 Questions", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                            Text("Standard / NEET 100 Questions", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
                             Text("4 Columns of 25 • 7-Digit Roll Matrix • QR Code • Instructions", fontSize = 10.5.sp, color = Color(0xFF64748B))
                         }
                     }

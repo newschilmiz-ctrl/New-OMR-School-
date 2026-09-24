@@ -24,4 +24,7 @@ sealed class Screen(val route: String) {
     object CoachingHub : Screen("coaching_hub?tab={tab}") {
         fun createRoute(tab: Int = 0) = "coaching_hub?tab=$tab"
     }
+    object DynamicTimetable : Screen("dynamic_timetable?batch={batch}") {
+        fun createRoute(batch: String = "ALL") = "dynamic_timetable?batch=$batch"
+    }
 }

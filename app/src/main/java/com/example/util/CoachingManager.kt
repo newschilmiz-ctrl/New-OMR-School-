@@ -227,7 +227,9 @@ object CoachingManager {
 
     suspend fun clearDemoSubjectsAndReset() {
         val current = getSubjects().filter { 
-            !it.name.equals("Demo Subject", ignoreCase = true) 
+            !it.name.contains("Demo", ignoreCase = true) &&
+            !it.name.contains("Sample", ignoreCase = true) &&
+            !it.name.contains("Mock", ignoreCase = true)
         }
         saveSubjectsLocal(current)
         syncSubjectsToCloud(current)

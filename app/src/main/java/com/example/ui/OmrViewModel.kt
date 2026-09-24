@@ -182,6 +182,21 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun clearAllDemoData(onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            CoachingManager.clearDemoSubjectsAndReset()
+            com.example.util.CoachingFeaturesManager.clearAllNotices()
+            com.example.util.CoachingFeaturesManager.clearAllTimetable()
+            com.example.util.CoachingFeaturesManager.clearAllFaculty()
+            com.example.util.CoachingFeaturesManager.clearAllMaterials()
+            com.example.util.FeeAndAttendanceManager.clearAllFees()
+            com.example.util.FeeAndAttendanceManager.clearAllAttendance()
+            loadFeesAndAttendance()
+            loadCoachingData()
+            onDone()
+        }
+    }
+
     fun createSession(
         title: String,
         classId: String,

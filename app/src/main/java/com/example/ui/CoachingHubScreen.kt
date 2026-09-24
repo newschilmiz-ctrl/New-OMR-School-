@@ -213,6 +213,9 @@ fun CoachingHubScreen(
                         CoachingFeaturesManager.deleteTimetablePeriod(it)
                         refreshAll()
                         Toast.makeText(context, "Period removed", Toast.LENGTH_SHORT).show()
+                    },
+                    onOpenDynamicStudio = {
+                        navController.navigate(Screen.DynamicTimetable.createRoute("ALL"))
                     }
                 )
                 2 -> FacultyDirectoryTab(
@@ -535,7 +538,8 @@ fun NoticeItemCard(
 fun TimetableTab(
     periods: List<TimetablePeriod>,
     onAddPeriod: () -> Unit,
-    onDeletePeriod: (String) -> Unit
+    onDeletePeriod: (String) -> Unit,
+    onOpenDynamicStudio: () -> Unit = {}
 ) {
     val days = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
     val todayName = remember {
@@ -560,6 +564,53 @@ fun TimetableTab(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        // Hero Dynamic Timetable Studio Banner
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A))
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFE11D48)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.AutoFixHigh, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Dynamic Timetable Studio",
+                            fontSize = 14.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Auto-generate clash-free routine based on subjects, rooms & teachers",
+                            fontSize = 11.sp,
+                            color = Color(0xFF94A3B8)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onOpenDynamicStudio,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48)),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Text("Open", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
         item {
             // Day selector
             LazyRow(

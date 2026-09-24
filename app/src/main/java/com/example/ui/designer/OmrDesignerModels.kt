@@ -189,7 +189,7 @@ object OmrTemplatePresets {
                 y = 45f,
                 width = 800f,
                 height = 45f,
-                text = "NATIONAL ENTRANCE MOCK TEST",
+                text = "ANNUAL EXAMINATION ASSESSMENT",
                 fontSize = 26f,
                 isBold = true,
                 alignment = TextAlignment.CENTER
@@ -237,7 +237,7 @@ object OmrTemplatePresets {
                 width = 240f,
                 height = 145f,
                 barcodeFormat = "QR",
-                barcodeContent = "EXAM-100-MOCK"
+                barcodeContent = "EXAM-100-STANDARD"
             ),
             OmrElement(
                 type = ElementType.INSTRUCTIONS_BOX,

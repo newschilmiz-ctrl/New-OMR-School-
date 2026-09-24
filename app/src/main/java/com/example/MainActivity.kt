@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -98,12 +100,32 @@ fun MainAppScreen() {
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
+                val infiniteTransition = rememberInfiniteTransition(label = "bottom_scan_pulse")
+                val pulseScale by infiniteTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 1.08f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(900, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "scan_scale"
+                )
+                val haloAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0.25f,
+                    targetValue = 0.55f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(900, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "scan_halo"
+                )
+
                 NavigationBar(
                     containerColor = Color.White,
-                    tonalElevation = 6.dp,
+                    tonalElevation = 4.dp,
                     modifier = Modifier
                         .windowInsetsPadding(WindowInsets.navigationBars)
-                        .height(54.dp)
+                        .height(48.dp)
                         .border(width = 1.dp, color = Color(0xFFF1F5F9))
                 ) {
                     // 1. HOME
@@ -113,13 +135,13 @@ fun MainAppScreen() {
                             Icon(
                                 if (isHome) Icons.Filled.Home else Icons.Outlined.Home,
                                 contentDescription = "Home",
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         },
                         label = {
                             Text(
                                 "Home",
-                                fontSize = 9.5.sp,
+                                fontSize = 8.5.sp,
                                 fontWeight = if (isHome) FontWeight.Bold else FontWeight.Medium
                             )
                         },
@@ -147,13 +169,13 @@ fun MainAppScreen() {
                             Icon(
                                 if (isCreate) Icons.Filled.PostAdd else Icons.Outlined.PostAdd,
                                 contentDescription = "New Exam",
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         },
                         label = {
                             Text(
                                 "New Exam",
-                                fontSize = 9.5.sp,
+                                fontSize = 8.5.sp,
                                 fontWeight = if (isCreate) FontWeight.Bold else FontWeight.Medium
                             )
                         },
@@ -174,28 +196,38 @@ fun MainAppScreen() {
                         )
                     )
 
-                    // 3. LIVE SCAN (CENTER HERO ACTION)
+                    // 3. LIVE SCAN (CENTER HERO ACTION WITH PULSE ANIMATION)
                     NavigationBarItem(
                         icon = {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFE11D48)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Filled.DocumentScanner,
-                                    contentDescription = "Scan",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
+                            Box(contentAlignment = Alignment.Center) {
+                                // Animated glowing halo
+                                Box(
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .graphicsLayer(scaleX = pulseScale, scaleY = pulseScale)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFE11D48).copy(alpha = haloAlpha))
                                 )
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFE11D48)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Filled.DocumentScanner,
+                                        contentDescription = "Scan",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
                             }
                         },
                         label = {
                             Text(
                                 "Live Scan",
-                                fontSize = 9.5.sp,
+                                fontSize = 8.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFE11D48)
                             )
@@ -222,13 +254,13 @@ fun MainAppScreen() {
                             Icon(
                                 if (isStudents) Icons.Filled.People else Icons.Outlined.People,
                                 contentDescription = "Students",
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         },
                         label = {
                             Text(
                                 "Students",
-                                fontSize = 9.5.sp,
+                                fontSize = 8.5.sp,
                                 fontWeight = if (isStudents) FontWeight.Bold else FontWeight.Medium
                             )
                         },
@@ -327,6 +359,30 @@ fun MainAppScreen() {
             }
             composable(Screen.AttendanceRegister.route) {
                 AttendanceRegisterScreen(navController, viewModel)
+            }
+            composable(
+                route = Screen.CoachingHub.route,
+                arguments = listOf(
+                    navArgument("tab") {
+                        type = NavType.IntType
+                        defaultValue = 0
+                    }
+                )
+            ) { backStackEntry ->
+                val tab = backStackEntry.arguments?.getInt("tab") ?: 0
+                CoachingHubScreen(navController, viewModel, initialTab = tab)
+            }
+            composable(
+                route = Screen.DynamicTimetable.route,
+                arguments = listOf(
+                    navArgument("batch") {
+                        type = NavType.StringType
+                        defaultValue = "ALL"
+                    }
+                )
+            ) { backStackEntry ->
+                val batch = backStackEntry.arguments?.getString("batch") ?: "ALL"
+                DynamicTimetableScreen(navController, initialBatch = batch)
             }
         }
     }
