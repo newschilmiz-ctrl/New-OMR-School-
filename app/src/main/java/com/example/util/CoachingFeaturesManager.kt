@@ -180,7 +180,96 @@ object CoachingFeaturesManager {
             e.printStackTrace()
         }
         cachedTimetable = list
+        if (list.isEmpty()) {
+            val defaults = generateStarterTimetable()
+            saveTimetable(defaults)
+            return defaults
+        }
         return list
+    }
+
+    private fun generateStarterTimetable(): List<TimetablePeriod> {
+        val days = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY")
+        val periods = mutableListOf<TimetablePeriod>()
+        val slots = listOf(
+            Triple("08:00 AM", "08:50 AM", "Period 1"),
+            Triple("08:55 AM", "09:45 AM", "Period 2"),
+            Triple("09:50 AM", "10:40 AM", "Period 3"),
+            Triple("11:00 AM", "11:50 AM", "Period 4"),
+            Triple("11:55 AM", "12:45 PM", "Period 5")
+        )
+
+        // Class 12th Schedule
+        val c12Subjects = listOf(
+            Triple("Physics", "Dr. R.K. Verma", "Room 101 (Smart Hall)"),
+            Triple("Chemistry", "Prof. Ananya Sen", "Room 101 (Smart Hall)"),
+            Triple("Mathematics", "Er. S.K. Jha", "Room 101 (Smart Hall)"),
+            Triple("Biology", "Dr. Preeti Mishra", "Lab 2 (Bio/Computer)"),
+            Triple("Advanced Problem Solving", "Dr. R.K. Verma", "Room 101 (Smart Hall)")
+        )
+
+        // Class 11th Schedule
+        val c11Subjects = listOf(
+            Triple("Chemistry", "Prof. Ananya Sen", "Room 102 (Theory)"),
+            Triple("Physics", "Dr. R.K. Verma", "Room 102 (Theory)"),
+            Triple("Biology", "Dr. Preeti Mishra", "Room 102 (Theory)"),
+            Triple("Mathematics", "Er. S.K. Jha", "Room 102 (Theory)"),
+            Triple("Concepts & DPP", "Prof. Ananya Sen", "Room 102 (Theory)")
+        )
+
+        // Class 10th Schedule
+        val c10Subjects = listOf(
+            Triple("Mathematics", "Er. S.K. Jha", "Room 103 (Interactive)"),
+            Triple("Science Core", "Dr. Preeti Mishra", "Room 103 (Interactive)"),
+            Triple("English Literature", "Mrs. Sunita Roy", "Room 103 (Interactive)"),
+            Triple("Social Science", "Prof. Amit Saxena", "Room 103 (Interactive)"),
+            Triple("Foundation Math", "Er. S.K. Jha", "Room 103 (Interactive)")
+        )
+
+        days.forEachIndexed { dIndex, day ->
+            // Class 12th
+            slots.forEachIndexed { sIndex, slot ->
+                val sub = c12Subjects[(dIndex + sIndex) % c12Subjects.size]
+                periods.add(
+                    TimetablePeriod(
+                        batchName = "Class 12th",
+                        dayOfWeek = day,
+                        startTime = slot.first,
+                        endTime = slot.second,
+                        subject = sub.first,
+                        teacherName = sub.second,
+                        roomNumber = sub.third
+                    )
+                )
+            }
+            // Class 10th
+            slots.forEachIndexed { sIndex, slot ->
+                val sub = c10Subjects[(dIndex + sIndex + 1) % c10Subjects.size]
+                periods.add(
+                    TimetablePeriod(
+                        batchName = "Class 10th",
+                        dayOfWeek = day,
+                        startTime = slot.first,
+                        endTime = slot.second,
+                        subject = sub.first,
+                        teacherName = sub.second,
+                        roomNumber = sub.third
+                    )
+                )
+            }
+        }
+        return periods
+    }
+
+    fun getTimetableForStudent(className: String, sessionName: String = ""): List<TimetablePeriod> {
+        val all = getTimetable()
+        val cleanClass = className.trim()
+        val cleanSession = sessionName.trim()
+        val matched = all.filter { p ->
+            (cleanClass.isNotBlank() && (p.batchName.equals(cleanClass, ignoreCase = true) || p.batchName.contains(cleanClass, ignoreCase = true))) ||
+            (cleanSession.isNotBlank() && (p.batchName.equals(cleanSession, ignoreCase = true) || p.batchName.contains(cleanSession, ignoreCase = true)))
+        }
+        return if (matched.isNotEmpty()) matched else all.filter { it.batchName.contains("12", ignoreCase = true) }.ifEmpty { all.take(15) }
     }
 
     fun addTimetablePeriod(period: TimetablePeriod) {
@@ -261,6 +350,14 @@ object CoachingFeaturesManager {
                         salaryType = obj.optString("salaryType", "Monthly"),
                         assignedBatches = obj.optString("assignedBatches"),
                         status = obj.optString("status", "Active"),
+                        classId = obj.optString("classId", ""),
+                        className = obj.optString("className", ""),
+                        dob = obj.optString("dob", ""),
+                        gender = obj.optString("gender", "Male"),
+                        experience = obj.optString("experience", ""),
+                        idProofName = obj.optString("idProofName", ""),
+                        idNumber = obj.optString("idNumber", ""),
+                        photoPath = obj.optString("photoPath", ""),
                         timestamp = obj.optLong("timestamp", System.currentTimeMillis())
                     )
                 )
@@ -269,12 +366,29 @@ object CoachingFeaturesManager {
             e.printStackTrace()
         }
         cachedFaculty = list
+        if (list.isEmpty()) {
+            val defaults = listOf(
+                FacultyMember(name = "Dr. R.K. Verma", subject = "Physics", qualification = "Ph.D, M.Sc (Gold Medalist)", phone = "+91 98350 12345", assignedBatches = "Class 11th, Class 12th"),
+                FacultyMember(name = "Prof. Ananya Sen", subject = "Chemistry", qualification = "M.Sc, CSIR-NET", phone = "+91 94310 67890", assignedBatches = "Class 11th, Class 12th"),
+                FacultyMember(name = "Er. S.K. Jha", subject = "Mathematics", qualification = "B.Tech (IIT-KGP)", phone = "+91 91220 54321", assignedBatches = "Class 10th, Class 12th"),
+                FacultyMember(name = "Dr. Preeti Mishra", subject = "Biology", qualification = "MBBS, M.Sc", phone = "+91 99340 98765", assignedBatches = "Class 11th, Class 12th"),
+                FacultyMember(name = "Mrs. Sunita Roy", subject = "English Literature", qualification = "M.A. (English), B.Ed", phone = "+91 97710 11223", assignedBatches = "Class 10th"),
+                FacultyMember(name = "Prof. Amit Saxena", subject = "Social Science", qualification = "M.A. (History), UGC-NET", phone = "+91 93040 33445", assignedBatches = "Class 10th")
+            )
+            saveFaculty(defaults)
+            return defaults
+        }
         return list
     }
 
     fun addFaculty(faculty: FacultyMember) {
         val current = getFaculty().toMutableList()
-        current.add(faculty)
+        val index = current.indexOfFirst { it.id == faculty.id }
+        if (index != -1) {
+            current[index] = faculty
+        } else {
+            current.add(faculty)
+        }
         saveFaculty(current)
     }
 
@@ -298,6 +412,14 @@ object CoachingFeaturesManager {
                 put("salaryType", f.salaryType)
                 put("assignedBatches", f.assignedBatches)
                 put("status", f.status)
+                put("classId", f.classId)
+                put("className", f.className)
+                put("dob", f.dob)
+                put("gender", f.gender)
+                put("experience", f.experience)
+                put("idProofName", f.idProofName)
+                put("idNumber", f.idNumber)
+                put("photoPath", f.photoPath)
                 put("timestamp", f.timestamp)
             }
             arr.put(obj)
@@ -371,4 +493,174 @@ object CoachingFeaturesManager {
         }
         p.edit().putString(KEY_MATERIALS, arr.toString()).apply()
     }
+
+    // ==================== SUBJECTIVE MARKS PERSISTENCE ====================
+    private const val KEY_SUBJECTIVE_MARKS = "subjective_marks_json"
+
+    fun getAllSubjectiveMarks(): List<com.example.data.SubjectiveMarksRecord> {
+        val p = prefs ?: return emptyList()
+        val jsonStr = p.getString(KEY_SUBJECTIVE_MARKS, "[]") ?: "[]"
+        val list = mutableListOf<com.example.data.SubjectiveMarksRecord>()
+        try {
+            val arr = JSONArray(jsonStr)
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    com.example.data.SubjectiveMarksRecord(
+                        id = obj.optString("id"),
+                        examId = obj.optInt("examId"),
+                        studentRoll = obj.optString("studentRoll"),
+                        studentName = obj.optString("studentName"),
+                        subjectName = obj.optString("subjectName"),
+                        marksObtained = obj.optDouble("marksObtained", 0.0).toFloat(),
+                        maxMarks = obj.optDouble("maxMarks", 50.0).toFloat(),
+                        checkedBy = obj.optString("checkedBy", "Teacher"),
+                        originalMarks = obj.optDouble("originalMarks", obj.optDouble("marksObtained", 0.0)).toFloat(),
+                        finalMarks = obj.optDouble("finalMarks", obj.optDouble("marksObtained", 0.0)).toFloat(),
+                        correctedBy = obj.optString("correctedBy", ""),
+                        correctionReason = obj.optString("correctionReason", ""),
+                        correctedAt = obj.optLong("correctedAt", 0L),
+                        isVerified = obj.optBoolean("isVerified", true),
+                        timestamp = obj.optLong("timestamp", System.currentTimeMillis())
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
+    }
+
+    fun getSubjectiveMarksForExam(examId: Int): List<com.example.data.SubjectiveMarksRecord> {
+        return getAllSubjectiveMarks().filter { it.examId == examId }
+    }
+
+    fun saveSubjectiveMarks(record: com.example.data.SubjectiveMarksRecord) {
+        val current = getAllSubjectiveMarks().toMutableList()
+        // Unique composite key: examId + studentRoll (case-insensitive) + subjectName
+        val existingIndex = current.indexOfFirst {
+            it.examId == record.examId &&
+            it.studentRoll.trim().equals(record.studentRoll.trim(), ignoreCase = true) &&
+            it.subjectName.trim().equals(record.subjectName.trim(), ignoreCase = true)
+        }
+
+        if (existingIndex >= 0) {
+            val old = current[existingIndex]
+            val updated = record.copy(
+                id = old.id,
+                originalMarks = old.originalMarks,
+                finalMarks = record.marksObtained,
+                correctedBy = if (record.correctedBy.isNotBlank()) record.correctedBy else "Teacher",
+                correctedAt = if (record.marksObtained != old.marksObtained) System.currentTimeMillis() else old.correctedAt,
+                correctionReason = if (record.correctionReason.isNotBlank()) record.correctionReason else (if (record.marksObtained != old.marksObtained) "Marks revised by teacher" else old.correctionReason)
+            )
+            current[existingIndex] = updated
+        } else {
+            current.add(record)
+        }
+
+        val p = prefs ?: return
+        val arr = JSONArray()
+        for (r in current) {
+            val obj = JSONObject().apply {
+                put("id", r.id)
+                put("examId", r.examId)
+                put("studentRoll", r.studentRoll)
+                put("studentName", r.studentName)
+                put("subjectName", r.subjectName)
+                put("marksObtained", r.marksObtained.toDouble())
+                put("maxMarks", r.maxMarks.toDouble())
+                put("checkedBy", r.checkedBy)
+                put("originalMarks", r.originalMarks.toDouble())
+                put("finalMarks", r.finalMarks.toDouble())
+                put("correctedBy", r.correctedBy)
+                put("correctionReason", r.correctionReason)
+                put("correctedAt", r.correctedAt)
+                put("isVerified", r.isVerified)
+                put("timestamp", r.timestamp)
+            }
+            arr.put(obj)
+        }
+        p.edit().putString(KEY_SUBJECTIVE_MARKS, arr.toString()).apply()
+    }
+
+    // ==================== ADMISSION FEE SETTINGS ====================
+    private const val KEY_ADMISSION_FEES = "admission_fee_settings_json"
+
+    fun getAdmissionFeeSettings(): List<com.example.data.AdmissionFeeSetting> {
+        val p = prefs ?: return emptyList()
+        val jsonStr = p.getString(KEY_ADMISSION_FEES, "[]") ?: "[]"
+        val list = mutableListOf<com.example.data.AdmissionFeeSetting>()
+        try {
+            val arr = JSONArray(jsonStr)
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    com.example.data.AdmissionFeeSetting(
+                        id = obj.optString("id"),
+                        sessionOrBatchId = obj.optString("sessionOrBatchId"),
+                        sessionOrBatchName = obj.optString("sessionOrBatchName"),
+                        classId = obj.optString("classId"),
+                        className = obj.optString("className"),
+                        admissionFee = obj.optDouble("admissionFee", 0.0),
+                        totalFee = obj.optDouble("totalFee", 0.0),
+                        timestamp = obj.optLong("timestamp", System.currentTimeMillis())
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
+    }
+
+    fun saveAdmissionFeeSetting(setting: com.example.data.AdmissionFeeSetting) {
+        val current = getAdmissionFeeSettings().toMutableList()
+        val idx = current.indexOfFirst {
+            it.classId == setting.classId && it.sessionOrBatchId == setting.sessionOrBatchId
+        }
+        if (idx >= 0) {
+            current[idx] = setting
+        } else {
+            current.add(setting)
+        }
+
+        val p = prefs ?: return
+        val arr = JSONArray()
+        for (s in current) {
+            val obj = JSONObject().apply {
+                put("id", s.id)
+                put("sessionOrBatchId", s.sessionOrBatchId)
+                put("sessionOrBatchName", s.sessionOrBatchName)
+                put("classId", s.classId)
+                put("className", s.className)
+                put("admissionFee", s.admissionFee)
+                put("totalFee", s.totalFee)
+                put("timestamp", s.timestamp)
+            }
+            arr.put(obj)
+        }
+        p.edit().putString(KEY_ADMISSION_FEES, arr.toString()).apply()
+    }
+
+    fun deleteAdmissionFeeSetting(id: String) {
+        val current = getAdmissionFeeSettings().filter { it.id != id }
+        val p = prefs ?: return
+        val arr = JSONArray()
+        for (s in current) {
+            val obj = JSONObject().apply {
+                put("id", s.id)
+                put("sessionOrBatchId", s.sessionOrBatchId)
+                put("sessionOrBatchName", s.sessionOrBatchName)
+                put("classId", s.classId)
+                put("className", s.className)
+                put("admissionFee", s.admissionFee)
+                put("totalFee", s.totalFee)
+                put("timestamp", s.timestamp)
+            }
+            arr.put(obj)
+        }
+        p.edit().putString(KEY_ADMISSION_FEES, arr.toString()).apply()
+    }
 }
+

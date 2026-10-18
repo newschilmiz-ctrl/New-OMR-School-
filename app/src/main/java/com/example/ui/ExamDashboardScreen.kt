@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DesignServices
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import com.example.ui.components.PremiumButton
 import com.example.ui.components.PremiumOutlinedButton
@@ -207,7 +209,10 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                     Triple("Questions", Icons.Default.Assignment, 1),
                     Triple("Scanner", Icons.Default.CameraAlt, 2),
                     Triple("Exam Day", Icons.Default.Event, 3),
-                    Triple("Reports", Icons.Default.Assessment, 4)
+                    Triple("Reports", Icons.Default.Assessment, 4),
+                    Triple("Subjective", Icons.Default.Edit, 5),
+                    Triple("Admit Cards", Icons.Default.Person, 6),
+                    Triple("Verification", Icons.Default.Check, 7)
                 )
                 tabs.forEach { (label, icon, index) ->
                     val isSelected = selectedTab == index
@@ -239,6 +244,18 @@ fun ExamDashboardScreen(navController: NavController, viewModel: OmrViewModel, e
                 2 -> ScannerTab(navController, viewModel, examId)
                 3 -> if (exam != null) ExamDayTab(navController, viewModel, examId, exam!!)
                 4 -> if (exam != null) ReportsTab(viewModel, examId, exam!!)
+                5 -> if (exam != null) {
+                    val studentsList by viewModel.students.collectAsStateWithLifecycle()
+                    SubjectiveTab(exam = exam!!, students = studentsList, viewModel = viewModel)
+                }
+                6 -> if (exam != null) {
+                    val studentsList by viewModel.students.collectAsStateWithLifecycle()
+                    AdmitCardsTab(exam = exam!!, students = studentsList)
+                }
+                7 -> if (exam != null) {
+                    val studentsList by viewModel.students.collectAsStateWithLifecycle()
+                    ResultVerificationTab(exam = exam!!, students = studentsList, viewModel = viewModel)
+                }
             }
         }
     }

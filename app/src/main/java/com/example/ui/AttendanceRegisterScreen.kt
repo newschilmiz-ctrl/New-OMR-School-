@@ -29,6 +29,8 @@ import androidx.navigation.NavController
 import com.example.data.AttendanceRecord
 import com.example.data.CoachingSession
 import com.example.data.Student
+import com.example.ui.Screen
+import com.example.ui.components.Student360Dialog
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -50,6 +52,7 @@ fun AttendanceRegisterScreen(
     var selectedSessionId by remember { mutableStateOf("ALL") }
     var showScanPromptDialog by remember { mutableStateOf(false) }
     var quickRollInput by remember { mutableStateOf("") }
+    var studentFor360 by remember { mutableStateOf<Student?>(null) }
 
     val activeSession = sessions.find { it.id == selectedSessionId }
 
@@ -288,6 +291,7 @@ fun AttendanceRegisterScreen(
                         student = student,
                         currentStatus = currentStatus,
                         inTime = record?.inTime.orEmpty(),
+                        onOpen360 = { studentFor360 = student },
                         onStatusChange = { newStatus ->
                             val now = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
                             viewModel.markAttendance(
@@ -304,6 +308,24 @@ fun AttendanceRegisterScreen(
                 }
             }
         }
+    }
+
+    if (studentFor360 != null) {
+        Student360Dialog(
+            student = studentFor360!!,
+            viewModel = viewModel,
+            onDismiss = { studentFor360 = null },
+            onNavigateToTimetable = { batch ->
+                navController.navigate(Screen.DynamicTimetable.createRoute(batch))
+            },
+            onNavigateToAttendance = { },
+            onNavigateToFees = {
+                navController.navigate(Screen.FeeTracker.route)
+            },
+            onNavigateToIdCard = { roll ->
+                navController.navigate(Screen.StudentCards.createRoute(roll))
+            }
+        )
     }
 
     // DIALOG: FAST SCANNER / ROLL LOOKUP
@@ -409,6 +431,7 @@ fun AttendanceStudentRow(
     student: Student,
     currentStatus: String,
     inTime: String,
+    onOpen360: () -> Unit = {},
     onStatusChange: (String) -> Unit
 ) {
     Surface(
@@ -426,9 +449,12 @@ fun AttendanceStudentRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Student identity
+            // Student identity - clickable for 360 profile
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onOpen360() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(

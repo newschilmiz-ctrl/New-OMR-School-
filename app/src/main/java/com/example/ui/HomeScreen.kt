@@ -50,6 +50,7 @@ import androidx.navigation.NavController
 import com.example.data.Exam
 import com.example.ui.components.PremiumButton
 import com.example.ui.components.PremiumOutlinedButton
+import com.example.util.CoachingFeaturesManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -62,6 +63,25 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
     val coachingClasses by viewModel.classes.collectAsStateWithLifecycle()
     val coachingSubjects by viewModel.subjects.collectAsStateWithLifecycle()
     val coachingSessions by viewModel.sessions.collectAsStateWithLifecycle()
+    val students by viewModel.students.collectAsStateWithLifecycle()
+    val fees by viewModel.fees.collectAsStateWithLifecycle()
+    val attendance by viewModel.attendance.collectAsStateWithLifecycle()
+
+    val todayDayName = remember {
+        SimpleDateFormat("EEEE", Locale.ENGLISH).format(Date()).uppercase(Locale.ENGLISH)
+    }
+    val todayDateStr = remember {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    }
+    val todayPeriodsCount = remember(todayDayName) {
+        CoachingFeaturesManager.getTimetable().count { it.dayOfWeek.equals(todayDayName, ignoreCase = true) }
+    }
+    val todayPresentCount = remember(attendance, todayDateStr) {
+        attendance.count { it.date == todayDateStr && it.status == "PRESENT" }
+    }
+    val totalFeesPaid = remember(fees) {
+        fees.sumOf { it.amountPaid }
+    }
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryTab by remember { mutableStateOf(0) }
@@ -668,7 +688,147 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(6.dp))
+            }
+
+            // 4.5. INTERCONNECTED COACHING ECOSYSTEM PULSE
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(26.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFEFF6FF)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Hub, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(15.dp))
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "Connected Coaching Ecosystem",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                    Text(
+                                        text = "Routine • Students • Attendance • Fees Synced",
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                }
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Color(0xFFF0FDF4)
+                            ) {
+                                Text(
+                                    text = "LIVE SYNC",
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF16A34A),
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // 4 Interactive Ecosystem Quick Tiles
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            // Students Tile
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { navController.navigate(Screen.Students.route) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.People, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text("${students.size}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                    Text("Students", fontSize = 9.sp, color = Color(0xFF64748B))
+                                }
+                            }
+
+                            // Routine Tile
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { navController.navigate(Screen.DynamicTimetable.createRoute("ALL")) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.Schedule, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text("${todayPeriodsCount}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                    Text("Today Cls", fontSize = 9.sp, color = Color(0xFF64748B))
+                                }
+                            }
+
+                            // Attendance Tile
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { navController.navigate(Screen.AttendanceRegister.route) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.FactCheck, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text("${todayPresentCount}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                    Text("Present", fontSize = 9.sp, color = Color(0xFF64748B))
+                                }
+                            }
+
+                            // Fees Tile
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { navController.navigate(Screen.FeeTracker.route) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.Payments, contentDescription = null, tint = Color(0xFF059669), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text("₹${(totalFeesPaid / 1000).toInt()}k", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                    Text("Fees Paid", fontSize = 9.sp, color = Color(0xFF64748B))
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // 5. PROMO / HIGHLIGHT STRIP
@@ -878,137 +1038,7 @@ fun HomeScreen(navController: NavController, viewModel: OmrViewModel) {
                 Spacer(modifier = Modifier.height(6.dp))
             }
 
-            // 6. HERO BANNER CAROUSEL
-            item {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF0F172A),
-                    border = BorderStroke(1.dp, Color(0xFF334155))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color(0xFF1E293B), Color(0xFF0F172A))
-                                )
-                            )
-                            .padding(11.dp)
-                    ) {
-                        Column {
-                            // Top Row: Tag & Badge
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = Color(0xFF334155)
-                                ) {
-                                    Text(
-                                        text = "SMART OMR ENGINE",
-                                        color = Color(0xFF94A3B8),
-                                        fontSize = 8.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
-                                    )
-                                }
 
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = Color(0x33FFFFFF)
-                                ) {
-                                    Text(
-                                        text = "99.8% ACCURACY",
-                                        color = Color(0xFF38BDF8),
-                                        fontSize = 8.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(7.dp))
-
-                            Text(
-                                text = "Automated Exam\nGrading & Reports",
-                                style = TextStyle(
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
-                                    lineHeight = 18.sp
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            Text(
-                                text = "Grade physical answer sheets in seconds with real-time bubble analysis & QR student ID reading.",
-                                style = TextStyle(
-                                    fontSize = 10.sp,
-                                    color = Color(0xFF94A3B8),
-                                    lineHeight = 13.5.sp
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            // Bottom row: Action button & Circular Indicator
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(Color.White)
-                                        .clickable {
-                                            if (exams.isNotEmpty()) {
-                                                navController.navigate(Screen.ScanOmr.createRoute(exams.first().id))
-                                            } else {
-                                                navController.navigate(Screen.CreateExam.route)
-                                            }
-                                        }
-                                        .padding(horizontal = 11.dp, vertical = 5.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = if (exams.isNotEmpty()) "Open Scanner" else "Create First Exam",
-                                        color = Color(0xFF0F172A),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 10.5.sp
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = Color(0xFF0F172A),
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                }
-
-                                // Carousel dots indicator
-                                Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    repeat(4) { idx ->
-                                        Box(
-                                            modifier = Modifier
-                                                .size(if (idx == 0) 6.dp else 4.dp)
-                                                .clip(CircleShape)
-                                                .background(if (idx == 0) Color.White else Color(0xFF475569))
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
 
             // 7. QUICK STATS & TIPS STRIP
             item {

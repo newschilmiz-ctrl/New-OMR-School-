@@ -47,14 +47,79 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     private val _attendance = kotlinx.coroutines.flow.MutableStateFlow<List<com.example.data.AttendanceRecord>>(emptyList())
     val attendance: StateFlow<List<com.example.data.AttendanceRecord>> = _attendance
 
+    private val _faculty = kotlinx.coroutines.flow.MutableStateFlow<List<com.example.data.FacultyMember>>(emptyList())
+    val faculty: StateFlow<List<com.example.data.FacultyMember>> = _faculty
+
+    private val _admissionFeeSettings = kotlinx.coroutines.flow.MutableStateFlow<List<com.example.data.AdmissionFeeSetting>>(emptyList())
+    val admissionFeeSettings: StateFlow<List<com.example.data.AdmissionFeeSetting>> = _admissionFeeSettings
+
+    private val _subjectiveMarks = kotlinx.coroutines.flow.MutableStateFlow<List<com.example.data.SubjectiveMarksRecord>>(emptyList())
+    val subjectiveMarks: StateFlow<List<com.example.data.SubjectiveMarksRecord>> = _subjectiveMarks
+
     init {
         com.example.util.CloudSyncManager.init(application)
         CoachingManager.init(application)
         com.example.util.FeeAndAttendanceManager.init(application)
+        com.example.util.CoachingFeaturesManager.init(application)
         loadCoachingData()
         loadFeesAndAttendance()
+        loadFaculty()
+        loadAdmissionFeeSettings()
+        loadSubjectiveMarks()
         fetchStudents()
         fetchExams()
+    }
+
+    fun loadFaculty() {
+        _faculty.value = com.example.util.CoachingFeaturesManager.getFaculty()
+    }
+
+    fun saveFacultyMember(member: com.example.data.FacultyMember, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.CoachingFeaturesManager.addFaculty(member)
+            loadFaculty()
+            onDone()
+        }
+    }
+
+    fun deleteFacultyMember(id: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.CoachingFeaturesManager.deleteFaculty(id)
+            loadFaculty()
+            onDone()
+        }
+    }
+
+    fun loadAdmissionFeeSettings() {
+        _admissionFeeSettings.value = com.example.util.CoachingFeaturesManager.getAdmissionFeeSettings()
+    }
+
+    fun saveAdmissionFeeSetting(setting: com.example.data.AdmissionFeeSetting, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.CoachingFeaturesManager.saveAdmissionFeeSetting(setting)
+            loadAdmissionFeeSettings()
+            onDone()
+        }
+    }
+
+    fun deleteAdmissionFeeSetting(id: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.CoachingFeaturesManager.deleteAdmissionFeeSetting(id)
+            loadAdmissionFeeSettings()
+            onDone()
+        }
+    }
+
+    fun loadSubjectiveMarks() {
+        _subjectiveMarks.value = com.example.util.CoachingFeaturesManager.getAllSubjectiveMarks()
+    }
+
+    fun saveSubjectiveMarks(record: com.example.data.SubjectiveMarksRecord, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            com.example.util.CoachingFeaturesManager.saveSubjectiveMarks(record)
+            loadSubjectiveMarks()
+            onDone()
+        }
     }
 
     fun loadFeesAndAttendance() {
@@ -271,7 +336,12 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
         sessionId: String = "",
         sessionName: String = "",
         className: String = "",
-        onDone: () -> Unit
+        idProofName: String = "",
+        idProofNumber: String = "",
+        idProofPath: String = "",
+        admissionFeePaid: Double = 0.0,
+        totalFee: Double = 0.0,
+        onDone: (Student) -> Unit = {}
     ) {
         viewModelScope.launch {
             val currentStudents = students.value
@@ -299,8 +369,31 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
                 imagePath = imagePath,
                 sessionId = sessionId,
                 sessionName = sessionName,
-                className = className
+                className = className,
+                idProofName = idProofName,
+                idProofNumber = idProofNumber,
+                idProofPath = idProofPath,
+                admissionFeePaid = admissionFeePaid,
+                totalFee = totalFee
             )
+            
+            // Automatically log admission fee in the central Fee Ledger
+            if (admissionFeePaid > 0 || totalFee > 0) {
+                val receiptNo = "REC-ADM-${System.currentTimeMillis().toString().takeLast(6)}"
+                val feeRecord = com.example.data.FeeRecord(
+                    studentRollNo = rollNo,
+                    studentName = name,
+                    amountPaid = admissionFeePaid,
+                    totalFee = if (totalFee > 0) totalFee else admissionFeePaid,
+                    paymentDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+                    paymentMode = "Cash",
+                    receiptNo = receiptNo,
+                    monthOrInstallment = "Admission Fee Payment",
+                    remarks = "Auto-generated at admission time"
+                )
+                com.example.util.FeeAndAttendanceManager.addFeeRecord(feeRecord)
+                _fees.value = com.example.util.FeeAndAttendanceManager.getFees()
+            }
             
             // Upload to Firebase & Cloudinary
             launch {
@@ -308,7 +401,7 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
                 fetchStudents() // Refresh list
             }
             
-            onDone()
+            onDone(student)
         }
     }
 
@@ -413,9 +506,48 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
         return com.example.util.CloudSyncManager.fetchAnswerKey(examId, setName)
     }
 
-    fun createExam(name: String, subject: String, date: String, title: String = "बिहार विद्यालय परीक्षा , समिति", logoUrl: String = "", logoOpacity: Float = 0.2f, logoSize: Float = 100f, logoPosition: String = "Left", marksPerQuestion: Float = 1f, negativeMarks: Float = 0f, passMarks: Float = 30f, bonusMarks: Float = 0f, templateType: String = "Standard", onDone: (Int) -> Unit) {
+    fun createExam(
+        name: String, 
+        subject: String, 
+        date: String, 
+        title: String = "बिहार विद्यालय परीक्षा , समिति", 
+        logoUrl: String = "", 
+        logoOpacity: Float = 0.2f, 
+        logoSize: Float = 100f, 
+        logoPosition: String = "Left", 
+        marksPerQuestion: Float = 1f, 
+        negativeMarks: Float = 0f, 
+        passMarks: Float = 30f, 
+        bonusMarks: Float = 0f, 
+        templateType: String = "Standard", 
+        hasSubjective: Boolean = false,
+        subjectiveMaxMarks: Float = 50f,
+        generateAdmitCard: Boolean = true,
+        examSchedule: String = "",
+        onDone: (Int) -> Unit
+    ) {
         viewModelScope.launch {
-            val examId = com.example.util.CloudSyncManager.uploadExam(Exam(name = name, subject = subject, date = date, title = title, logoUrl = logoUrl, logoOpacity = logoOpacity, logoSize = logoSize, logoPosition = logoPosition, marksPerQuestion = marksPerQuestion, negativeMarks = negativeMarks, passMarks = passMarks, bonusMarks = bonusMarks, templateType = templateType))
+            val examId = com.example.util.CloudSyncManager.uploadExam(
+                Exam(
+                    name = name, 
+                    subject = subject, 
+                    date = date, 
+                    title = title, 
+                    logoUrl = logoUrl, 
+                    logoOpacity = logoOpacity, 
+                    logoSize = logoSize, 
+                    logoPosition = logoPosition, 
+                    marksPerQuestion = marksPerQuestion, 
+                    negativeMarks = negativeMarks, 
+                    passMarks = passMarks, 
+                    bonusMarks = bonusMarks, 
+                    templateType = templateType,
+                    hasSubjective = hasSubjective,
+                    subjectiveMaxMarks = subjectiveMaxMarks,
+                    generateAdmitCard = generateAdmitCard,
+                    examSchedule = examSchedule
+                )
+            )
             fetchExams()
             onDone(examId)
         }

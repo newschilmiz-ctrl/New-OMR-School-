@@ -29,6 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.data.FeeRecord
 import com.example.data.Student
+import com.example.ui.Screen
+import com.example.ui.components.Student360Dialog
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,6 +48,7 @@ fun FeeTrackerScreen(
     var selectedFilter by remember { mutableStateOf("ALL") } // ALL, PAID, DUE
     var showAddFeeDialog by remember { mutableStateOf(false) }
     var showReceiptDialog by remember { mutableStateOf<FeeRecord?>(null) }
+    var studentFor360 by remember { mutableStateOf<Student?>(null) }
 
     // Aggregate Fee Metrics
     val totalCollected = remember(fees) { fees.sumOf { it.amountPaid } }
@@ -290,6 +293,7 @@ fun FeeTrackerScreen(
                         total = total,
                         balance = balance,
                         receipts = studentReceipts,
+                        onOpen360 = { studentFor360 = student },
                         onCollectMore = {
                             showAddFeeDialog = true
                         },
@@ -300,6 +304,24 @@ fun FeeTrackerScreen(
                 }
             }
         }
+    }
+
+    if (studentFor360 != null) {
+        Student360Dialog(
+            student = studentFor360!!,
+            viewModel = viewModel,
+            onDismiss = { studentFor360 = null },
+            onNavigateToTimetable = { batch ->
+                navController.navigate(Screen.DynamicTimetable.createRoute(batch))
+            },
+            onNavigateToAttendance = {
+                navController.navigate(Screen.AttendanceRegister.route)
+            },
+            onNavigateToFees = { },
+            onNavigateToIdCard = { roll ->
+                navController.navigate(Screen.StudentCards.createRoute(roll))
+            }
+        )
     }
 
     // DIALOG: COLLECT FEE
@@ -334,6 +356,7 @@ fun StudentFeeCard(
     total: Double,
     balance: Double,
     receipts: List<FeeRecord>,
+    onOpen360: () -> Unit = {},
     onCollectMore: () -> Unit,
     onViewReceipt: (FeeRecord) -> Unit
 ) {
@@ -354,7 +377,13 @@ fun StudentFeeCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Clickable student identity to open 360 profile
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onOpen360() },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .size(34.dp)

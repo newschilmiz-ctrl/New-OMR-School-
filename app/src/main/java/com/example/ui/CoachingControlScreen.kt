@@ -44,20 +44,26 @@ fun CoachingControlScreen(navController: NavController, viewModel: OmrViewModel)
     val subjects by viewModel.subjects.collectAsStateWithLifecycle()
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
     val students by viewModel.students.collectAsStateWithLifecycle()
+    val faculty by viewModel.faculty.collectAsStateWithLifecycle()
+    val feeSettings by viewModel.admissionFeeSettings.collectAsStateWithLifecycle()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabTitles = listOf("Classes", "Subjects", "Sessions", "Overview")
+    val tabTitles = listOf("Classes", "Teachers", "Sessions / Batches", "Fee Setting", "Subjects", "Overview")
 
     // Dialog States
     var showCreateClassDialog by remember { mutableStateOf(false) }
     var editingClass by remember { mutableStateOf<CoachingClass?>(null) }
+
+    var showCreateTeacherDialog by remember { mutableStateOf(false) }
 
     var showAddSubjectDialog by remember { mutableStateOf(false) }
     var editingSubject by remember { mutableStateOf<CoachingSubject?>(null) }
 
     var showCreateSessionDialog by remember { mutableStateOf(false) }
     var editingSession by remember { mutableStateOf<CoachingSession?>(null) }
+    var isBatchCreationMode by remember { mutableStateOf(false) }
 
+    var showAdmissionFeeDialog by remember { mutableStateOf(false) }
     var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     // Filters for Subjects tab

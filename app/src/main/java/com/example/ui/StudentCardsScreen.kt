@@ -42,6 +42,8 @@ import coil.request.ImageRequest
 import com.example.R
 import com.example.data.Exam
 import com.example.data.Student
+import com.example.ui.Screen
+import com.example.ui.components.Student360Dialog
 import com.example.util.CodeGenerator
 import java.text.SimpleDateFormat
 import java.util.*
@@ -62,6 +64,7 @@ fun StudentCardsScreen(
         mutableStateOf(if (initialRollNo != "ALL" && initialRollNo.isNotEmpty()) initialRollNo else "")
     }
     var selectedExamId by remember { mutableIntStateOf(exams.firstOrNull()?.id ?: 0) }
+    var showStudent360 by remember { mutableStateOf(false) }
 
     LaunchedEffect(students) {
         if (selectedStudentRoll.isEmpty() && students.isNotEmpty()) {
@@ -415,8 +418,40 @@ fun StudentCardsScreen(
                         Text("Print Card", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334155))
                     }
                 }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                FilledTonalButton(
+                    onClick = { showStudent360 = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.Hub, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF0284C7))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Connected 360° Profile (Routine, Fees, Attendance)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0369A1))
+                }
             }
         }
+    }
+
+    if (showStudent360 && activeStudent != null) {
+        Student360Dialog(
+            student = activeStudent,
+            viewModel = viewModel,
+            onDismiss = { showStudent360 = false },
+            onNavigateToTimetable = { batch ->
+                navController.navigate(Screen.DynamicTimetable.createRoute(batch))
+            },
+            onNavigateToAttendance = {
+                navController.navigate(Screen.AttendanceRegister.route)
+            },
+            onNavigateToFees = {
+                navController.navigate(Screen.FeeTracker.route)
+            },
+            onNavigateToIdCard = { }
+        )
     }
 }
 

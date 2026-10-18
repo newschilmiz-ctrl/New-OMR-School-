@@ -76,6 +76,20 @@ object CoachingManager {
         }
     }
 
+    // ==================== UNIFIED INTERCONNECTED HELPERS ====================
+    fun getAllBatchNames(): List<String> {
+        val classNames = getClasses().map { it.name.trim() }.filter { it.isNotBlank() }
+        val sessionNames = getSessions().map { (if (it.title.isNotBlank()) it.title else it.className).trim() }.filter { it.isNotBlank() }
+        val defaultBatches = listOf("Class 10th", "Class 11th", "Class 12th", "Morning Science Batch", "Commerce Prime Batch", "Arts Evening Session")
+        return (classNames + sessionNames + defaultBatches).distinct()
+    }
+
+    fun getAllSubjectNames(): List<String> {
+        val subjects = getSubjects().map { it.name.trim() }.filter { it.isNotBlank() }
+        val defaultSubjects = listOf("Physics", "Chemistry", "Mathematics", "Biology", "English Literature", "History", "Geography", "Political Science", "Accountancy", "Economics")
+        return (subjects + defaultSubjects).distinct()
+    }
+
     // ==================== CLASSES ====================
     fun getClasses(): List<CoachingClass> {
         val p = prefs ?: return emptyList()

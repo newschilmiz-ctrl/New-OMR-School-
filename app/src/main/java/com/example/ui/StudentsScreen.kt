@@ -7,10 +7,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -38,6 +40,8 @@ import androidx.navigation.NavController
 import com.example.data.Student
 import com.example.ui.components.PremiumButton
 import com.example.ui.components.PremiumOutlinedButton
+import com.example.ui.components.Student360Dialog
+import com.example.util.CoachingManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,10 +52,16 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedGenderFilter by remember { mutableStateOf("All") }
+    var selectedBatchFilter by remember { mutableStateOf("All") }
     var showDeleteConfirmDialog by remember { mutableStateOf<Student?>(null) }
+    var studentFor360 by remember { mutableStateOf<Student?>(null) }
+
+    val allBatches = remember(students) {
+        listOf("All") + (CoachingManager.getAllBatchNames() + students.mapNotNull { it.className.takeIf { c -> c.isNotBlank() } }).distinct()
+    }
 
     // Filter students
-    val filteredStudents = remember(students, searchQuery, selectedGenderFilter) {
+    val filteredStudents = remember(students, searchQuery, selectedGenderFilter, selectedBatchFilter) {
         students.filter { student ->
             val matchesSearch = searchQuery.isBlank() ||
                     student.name.contains(searchQuery, ignoreCase = true) ||
@@ -61,7 +71,11 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
             val matchesGender = selectedGenderFilter == "All" ||
                     student.gender.equals(selectedGenderFilter, ignoreCase = true)
 
-            matchesSearch && matchesGender
+            val matchesBatch = selectedBatchFilter == "All" ||
+                    student.className.equals(selectedBatchFilter, ignoreCase = true) ||
+                    student.sessionName.equals(selectedBatchFilter, ignoreCase = true)
+
+            matchesSearch && matchesGender && matchesBatch
         }
     }
 
@@ -346,8 +360,12 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Gender filter chips
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Gender and Batch filter chips
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         listOf("All", "Male", "Female").forEach { filter ->
                             val isSelected = selectedGenderFilter == filter
                             Surface(
@@ -363,7 +381,39 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                                     fontSize = 10.5.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) Color.White else Color(0xFF334155),
-                                    modifier = Modifier.padding(horizontal = 11.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Batch filter horizontal chips
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Batch:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
+                        allBatches.forEach { batch ->
+                            val isSelected = selectedBatchFilter == batch
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) Color(0xFFE11D48) else Color(0xFFF1F5F9),
+                                border = BorderStroke(1.dp, if (isSelected) Color(0xFFBE123C) else Color(0xFFE2E8F0)),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { selectedBatchFilter = batch }
+                            ) {
+                                Text(
+                                    text = batch,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) Color.White else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
                                 )
                             }
                         }
@@ -436,6 +486,7 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
                 items(filteredStudents, key = { it.rollNo }) { student ->
                     ModernStudentCard(
                         student = student,
+                        onOpen360 = { studentFor360 = student },
                         onGenerateCard = {
                             navController.navigate(Screen.StudentCards.createRoute(student.rollNo))
                         },
@@ -445,18 +496,41 @@ fun StudentsScreen(navController: NavController, viewModel: OmrViewModel) {
             }
         }
     }
+
+    if (studentFor360 != null) {
+        Student360Dialog(
+            student = studentFor360!!,
+            viewModel = viewModel,
+            onDismiss = { studentFor360 = null },
+            onNavigateToTimetable = { batch ->
+                navController.navigate(Screen.DynamicTimetable.createRoute(batch))
+            },
+            onNavigateToAttendance = {
+                navController.navigate(Screen.AttendanceRegister.route)
+            },
+            onNavigateToFees = {
+                navController.navigate(Screen.FeeTracker.route)
+            },
+            onNavigateToIdCard = { roll ->
+                navController.navigate(Screen.StudentCards.createRoute(roll))
+            }
+        )
+    }
 }
 
 @Composable
 fun ModernStudentCard(
     student: Student,
+    onOpen360: () -> Unit = {},
     onGenerateCard: () -> Unit = {},
     onDelete: () -> Unit
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 3.5.dp),
+            .padding(horizontal = 16.dp, vertical = 3.5.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onOpen360() },
         shape = RoundedCornerShape(12.dp),
         color = Color.White,
         border = BorderStroke(1.dp, Color(0xFFE2E8F0))
@@ -559,6 +633,18 @@ fun ModernStudentCard(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onOpen360,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Hub,
+                            contentDescription = "360 Profile",
+                            tint = Color(0xFF0284C7),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+
                     IconButton(
                         onClick = onGenerateCard,
                         modifier = Modifier.size(28.dp)

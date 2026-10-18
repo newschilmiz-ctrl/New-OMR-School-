@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
@@ -36,9 +37,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.data.Student
 import com.example.data.TimetablePeriod
+import com.example.ui.Screen
+import com.example.ui.components.Student360Dialog
 import com.example.util.CoachingFeaturesManager
+import com.example.util.CoachingManager
 import com.example.util.DynamicTimetableEngine
 import com.example.util.GenerationResult
 import com.example.util.ScheduleClash
@@ -52,26 +58,44 @@ import java.util.UUID
 @Composable
 fun DynamicTimetableScreen(
     navController: NavController,
+    viewModel: OmrViewModel? = null,
     initialBatch: String = "ALL"
 ) {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         CoachingFeaturesManager.init(context)
+        CoachingManager.init(context)
     }
 
     // Master state
     var timetable by remember { mutableStateOf(CoachingFeaturesManager.getTimetable()) }
 
+    // Interconnected Student State
+    val students = viewModel?.students?.collectAsStateWithLifecycle()?.value ?: emptyList()
+    var studentFor360 by remember { mutableStateOf<Student?>(null) }
+    var showBatchRosterSheet by remember { mutableStateOf(false) }
+    var showBatchMaterialsSheet by remember { mutableStateOf(false) }
+
     // Active View Tab: 0 = Daily Routine, 1 = Weekly Matrix, 2 = Room Occupancy, 3 = Teacher Workload
     var selectedViewTab by remember { mutableIntStateOf(0) }
     val viewTabs = listOf("Daily Cards", "Weekly Matrix", "Room Tracker", "Faculty Load")
 
-    // Filter states
+    // Filter states - dynamically unified from CoachingManager & Timetable
     val allBatches = remember(timetable) {
-        (listOf("ALL") + timetable.map { it.batchName }.distinct()).distinct()
+        (listOf("ALL") + CoachingManager.getAllBatchNames() + timetable.map { it.batchName }).map { it.trim() }.filter { it.isNotBlank() }.distinct()
     }
     var selectedBatch by remember { mutableStateOf(if (initialBatch in allBatches) initialBatch else "ALL") }
+
+    val availableTeachers = remember {
+        (CoachingFeaturesManager.getFaculty().map { it.name } + DynamicTimetableEngine.DEFAULT_TEACHERS).distinct()
+    }
+    val availableSubjects = remember {
+        CoachingManager.getAllSubjectNames()
+    }
+    val availableRooms = remember(timetable) {
+        (DynamicTimetableEngine.DEFAULT_ROOMS + timetable.map { it.roomNumber }).distinct()
+    }
 
     // Day selection for Daily View
     val days = DynamicTimetableEngine.DAYS
@@ -99,6 +123,25 @@ fun DynamicTimetableScreen(
     // Detected Clashes
     val conflicts = remember(timetable) {
         DynamicTimetableEngine.findConflicts(timetable)
+    }
+
+    // Interconnected Batch Analytics
+    val batchStudents = remember(students, selectedBatch) {
+        if (selectedBatch == "ALL") students else students.filter {
+            it.className.equals(selectedBatch, ignoreCase = true) || it.sessionName.equals(selectedBatch, ignoreCase = true)
+        }
+    }
+    val batchPeriods = remember(timetable, selectedBatch) {
+        if (selectedBatch == "ALL") timetable else timetable.filter { it.batchName.equals(selectedBatch, ignoreCase = true) }
+    }
+    val batchTeachers = remember(batchPeriods) {
+        batchPeriods.map { it.teacherName.trim() }.filter { it.isNotBlank() }.distinct()
+    }
+    val batchMaterials = remember(selectedBatch) {
+        val allM = CoachingFeaturesManager.getStudyMaterials()
+        if (selectedBatch == "ALL") allM else allM.filter {
+            it.batchName.equals(selectedBatch, ignoreCase = true) || it.batchName.equals("All Batches", ignoreCase = true)
+        }
     }
 
     Scaffold(
@@ -339,6 +382,151 @@ fun DynamicTimetableScreen(
                 }
             }
 
+            // Connected System Quick-Bar: Interlinking Students, Faculty, Materials & Planner
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFF8FAFC),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFEFF6FF),
+                            border = BorderStroke(1.dp, Color(0xFFDBEAFE)),
+                            modifier = Modifier.clickable { showBatchRosterSheet = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.People, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${batchStudents.size} Students",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1D4ED8)
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF0FDF4),
+                            border = BorderStroke(1.dp, Color(0xFFDCFCE7)),
+                            modifier = Modifier.clickable { selectedViewTab = 3 }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.School, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${batchTeachers.size} Active Faculty",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF15803D)
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFEF3C7),
+                            border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                            modifier = Modifier.clickable { showBatchMaterialsSheet = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.MenuBook, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${batchMaterials.size} Study Notes",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFB45309)
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFAF5FF),
+                            border = BorderStroke(1.dp, Color(0xFFF3E8FF)),
+                            modifier = Modifier.clickable { showGeneratorDialog = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFF9333EA), modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Auto-Schedule",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF7E22CE)
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFFF1F2),
+                            border = BorderStroke(1.dp, Color(0xFFFFE4E6)),
+                            modifier = Modifier.clickable {
+                                periodToEdit = TimetablePeriod(
+                                    id = "",
+                                    batchName = if (selectedBatch != "ALL") selectedBatch else (allBatches.firstOrNull { it != "ALL" } ?: "Class 12th"),
+                                    dayOfWeek = selectedDay,
+                                    startTime = "09:00 AM",
+                                    endTime = "09:50 AM",
+                                    subject = availableSubjects.firstOrNull() ?: "Physics",
+                                    teacherName = availableTeachers.firstOrNull() ?: "Prof. Sharma",
+                                    roomNumber = availableRooms.firstOrNull() ?: "Room 101"
+                                )
+                                showManualPeriodDialog = true
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFFE11D48), modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Add Period",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFE11D48)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Content according to selected tab
             when (selectedViewTab) {
                 0 -> DailyRoutineView(
@@ -360,7 +548,10 @@ fun DynamicTimetableScreen(
                         refreshTimetable()
                         Toast.makeText(context, "Period removed", Toast.LENGTH_SHORT).show()
                     },
-                    onOpenGenerator = { showGeneratorDialog = true }
+                    onOpenGenerator = { showGeneratorDialog = true },
+                    onNavigateToStudents = { navController.navigate(Screen.Students.route) },
+                    onNavigateToAttendance = { navController.navigate(Screen.AttendanceRegister.route) },
+                    onNavigateToFees = { navController.navigate(Screen.FeeTracker.route) }
                 )
                 1 -> WeeklyMatrixView(
                     timetable = timetable,
@@ -382,7 +573,21 @@ fun DynamicTimetableScreen(
                     onSelectDay = { selectedDay = it }
                 )
                 3 -> TeacherWorkloadView(
-                    timetable = timetable
+                    timetable = timetable,
+                    onScheduleForTeacher = { teacherName ->
+                        val teacherSubject = CoachingFeaturesManager.getFaculty().find { it.name.equals(teacherName, ignoreCase = true) }?.subject ?: "Physics"
+                        periodToEdit = TimetablePeriod(
+                            id = "",
+                            batchName = if (selectedBatch != "ALL") selectedBatch else (allBatches.firstOrNull { it != "ALL" } ?: "Class 12th"),
+                            dayOfWeek = selectedDay,
+                            startTime = "09:00 AM",
+                            endTime = "09:50 AM",
+                            subject = teacherSubject,
+                            teacherName = teacherName,
+                            roomNumber = "Room 101"
+                        )
+                        showManualPeriodDialog = true
+                    }
                 )
             }
         }
@@ -394,6 +599,7 @@ fun DynamicTimetableScreen(
     if (showGeneratorDialog) {
         ScheduleGeneratorWizardDialog(
             existingPeriods = timetable,
+            availableBatches = allBatches.filter { it != "ALL" },
             onDismiss = { showGeneratorDialog = false },
             onApplyGeneratedSchedule = { result, replaceExisting ->
                 if (replaceExisting && result.periods.isNotEmpty()) {
@@ -416,14 +622,19 @@ fun DynamicTimetableScreen(
         ManualPeriodDialog(
             period = periodToEdit,
             existingPeriods = timetable,
-            defaultBatch = if (selectedBatch != "ALL") selectedBatch else "Class 12 - JEE Advanced",
+            defaultBatch = if (selectedBatch != "ALL") selectedBatch else (allBatches.firstOrNull { it != "ALL" } ?: "Class 12th"),
             defaultDay = selectedDay,
+            availableBatches = allBatches.filter { it != "ALL" },
+            availableSubjects = availableSubjects,
+            availableTeachers = availableTeachers,
+            availableRooms = availableRooms,
             onDismiss = {
                 showManualPeriodDialog = false
                 periodToEdit = null
             },
             onSave = { updated ->
-                if (periodToEdit != null) {
+                val isExisting = periodToEdit != null && periodToEdit?.id?.isNotBlank() == true && timetable.any { it.id == periodToEdit?.id }
+                if (isExisting) {
                     CoachingFeaturesManager.updateTimetablePeriod(updated)
                     Toast.makeText(context, "Period updated", Toast.LENGTH_SHORT).show()
                 } else {
@@ -576,6 +787,290 @@ fun DynamicTimetableScreen(
             }
         )
     }
+
+    // =========================================================================
+    // DIALOG 5: CONNECTED BATCH ROSTER SHEET
+    // =========================================================================
+    if (showBatchRosterSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBatchRosterSheet = false },
+            containerColor = Color.White
+        ) {
+            var searchRoster by remember { mutableStateOf("") }
+            val filteredRoster = remember(batchStudents, searchRoster) {
+                if (searchRoster.isBlank()) batchStudents
+                else batchStudents.filter {
+                    it.name.contains(searchRoster, ignoreCase = true) || it.rollNo.contains(searchRoster, ignoreCase = true)
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.People, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (selectedBatch == "ALL") "All Enrolled Students" else "Students in $selectedBatch",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F172A)
+                        )
+                        Text(
+                            text = "${filteredRoster.size} of ${batchStudents.size} students found",
+                            fontSize = 11.5.sp,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                    if (viewModel != null) {
+                        TextButton(
+                            onClick = {
+                                showBatchRosterSheet = false
+                                navController.navigate(Screen.AttendanceRegister.route)
+                            }
+                        ) {
+                            Text("Mark Attendance", fontSize = 11.5.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = searchRoster,
+                    onValueChange = { searchRoster = it },
+                    placeholder = { Text("Search by name or roll number...", fontSize = 12.sp) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+                if (filteredRoster.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No students found for this batch", color = Color(0xFF94A3B8), fontSize = 12.5.sp)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 400.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredRoster, key = { it.rollNo }) { s ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        if (viewModel != null) {
+                                            studentFor360 = s
+                                        }
+                                    },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFEFF6FF)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = s.name.take(1).uppercase(),
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = Color(0xFF2563EB)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(s.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                        Text(
+                                            "Roll: ${s.rollNo} • ${s.className.ifBlank { s.sessionName }}",
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF64748B)
+                                        )
+                                    }
+                                    if (viewModel != null) {
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = Color(0xFFEFF6FF),
+                                            border = BorderStroke(1.dp, Color(0xFFDBEAFE))
+                                        ) {
+                                            Text(
+                                                "360 Profile",
+                                                fontSize = 10.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF2563EB),
+                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+        }
+    }
+
+    // =========================================================================
+    // DIALOG 6: CONNECTED BATCH MATERIALS SHEET
+    // =========================================================================
+    if (showBatchMaterialsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBatchMaterialsSheet = false },
+            containerColor = Color.White
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.MenuBook, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (selectedBatch == "ALL") "All DPPs & Study Materials" else "Materials for $selectedBatch",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F172A)
+                        )
+                        Text(
+                            text = "${batchMaterials.size} study files & assignments available",
+                            fontSize = 11.5.sp,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                    TextButton(
+                        onClick = {
+                            showBatchMaterialsSheet = false
+                            navController.navigate(Screen.CoachingHub.createRoute(3))
+                        }
+                    ) {
+                        Text("Open Hub", fontSize = 11.5.sp, color = Color(0xFFD97706), fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                if (batchMaterials.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No materials uploaded for this batch yet", color = Color(0xFF94A3B8), fontSize = 12.5.sp)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 380.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(batchMaterials, key = { it.id }) { m ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        if (m.type == "DPP") Icons.Default.Assignment else Icons.Default.Description,
+                                        contentDescription = null,
+                                        tint = if (m.type == "DPP") Color(0xFF7C3AED) else Color(0xFF0284C7),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(m.title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                        Text(
+                                            "${m.subject} • ${m.batchName} • ${if (m.chapter.isNotBlank()) m.chapter else m.type}",
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF64748B)
+                                        )
+                                    }
+                                    if (m.fileUrlOrInfo.isNotBlank()) {
+                                        IconButton(
+                                            onClick = {
+                                                try {
+                                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                        data = Uri.parse(m.fileUrlOrInfo)
+                                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                    }
+                                                    context.startActivity(intent)
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(context, "Cannot open file: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        ) {
+                                            Icon(Icons.Default.Download, contentDescription = "Download", tint = Color(0xFF2563EB), modifier = Modifier.size(20.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+        }
+    }
+
+    // =========================================================================
+    // DIALOG 7: STUDENT 360 COMPREHENSIVE VIEW
+    // =========================================================================
+    if (studentFor360 != null && viewModel != null) {
+        Student360Dialog(
+            student = studentFor360!!,
+            viewModel = viewModel,
+            onDismiss = { studentFor360 = null },
+            onNavigateToTimetable = { batch ->
+                selectedBatch = batch
+            },
+            onNavigateToAttendance = {
+                navController.navigate(Screen.AttendanceRegister.route)
+            },
+            onNavigateToFees = {
+                navController.navigate(Screen.FeeTracker.route)
+            },
+            onNavigateToIdCard = { roll ->
+                navController.navigate(Screen.StudentCards.createRoute(roll))
+            }
+        )
+    }
 }
 
 // =============================================================================
@@ -594,7 +1089,10 @@ fun DailyRoutineView(
     onSubjectFilterChange: (String) -> Unit,
     onEditPeriod: (TimetablePeriod) -> Unit,
     onDeletePeriod: (String) -> Unit,
-    onOpenGenerator: () -> Unit
+    onOpenGenerator: () -> Unit,
+    onNavigateToStudents: () -> Unit = {},
+    onNavigateToAttendance: () -> Unit = {},
+    onNavigateToFees: () -> Unit = {}
 ) {
     val days = DynamicTimetableEngine.DAYS
 
@@ -767,6 +1265,76 @@ fun DailyRoutineView(
                         Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Auto", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // Interconnected System Bar
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFEFF6FF),
+                    border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onNavigateToStudents() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Default.School, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Students", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1D4ED8))
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFFEF3C7),
+                    border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onNavigateToAttendance() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Default.FactCheck, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Attendance", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFECFDF5),
+                    border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onNavigateToFees() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Default.Payments, contentDescription = null, tint = Color(0xFF059669), modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Fee Tracker", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF065F46))
                     }
                 }
             }
@@ -1430,10 +1998,31 @@ fun RoomTrackerView(
 // =============================================================================
 @Composable
 fun TeacherWorkloadView(
-    timetable: List<TimetablePeriod>
+    timetable: List<TimetablePeriod>,
+    onScheduleForTeacher: (String) -> Unit = {}
 ) {
-    val workloadList = remember(timetable) {
+    val allFaculty = remember { CoachingFeaturesManager.getFaculty() }
+    val calculatedWorkloads = remember(timetable) {
         DynamicTimetableEngine.calculateTeacherWorkload(timetable)
+    }
+
+    // Merge registered faculty with calculated workload
+    val workloadList = remember(calculatedWorkloads, allFaculty) {
+        val list = calculatedWorkloads.toMutableList()
+        val calculatedNames = calculatedWorkloads.map { it.teacherName.lowercase().trim() }.toSet()
+        for (f in allFaculty) {
+            if (f.name.lowercase().trim() !in calculatedNames) {
+                list.add(
+                    com.example.util.TeacherWorkload(
+                        teacherName = f.name,
+                        totalPeriods = 0,
+                        subjects = listOf(f.subject),
+                        daysActive = emptySet()
+                    )
+                )
+            }
+        }
+        list.sortedByDescending { it.totalPeriods }
     }
 
     LazyColumn(
@@ -1544,6 +2133,41 @@ fun TeacherWorkloadView(
                             color = statusColor,
                             trackColor = Color(0xFFF1F5F9)
                         )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (teacher.totalPeriods == 0) Color(0xFFF0FDF4) else Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, if (teacher.totalPeriods == 0) Color(0xFFDCFCE7) else Color(0xFFE2E8F0))
+                            ) {
+                                Text(
+                                    text = if (teacher.totalPeriods == 0) "🟢 Available (0 Periods)" else "⚡ Active in ${teacher.daysActive.size} Days",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (teacher.totalPeriods == 0) Color(0xFF16A34A) else Color(0xFF475569),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+
+                            FilledTonalButton(
+                                onClick = { onScheduleForTeacher(teacher.teacherName) },
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = Color(0xFFFFF1F2),
+                                    contentColor = Color(0xFFE11D48)
+                                )
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Assign Class", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
             }
@@ -1557,6 +2181,7 @@ fun TeacherWorkloadView(
 @Composable
 fun ScheduleGeneratorWizardDialog(
     existingPeriods: List<TimetablePeriod>,
+    availableBatches: List<String> = emptyList(),
     onDismiss: () -> Unit,
     onApplyGeneratedSchedule: (GenerationResult, Boolean) -> Unit
 ) {
@@ -1637,6 +2262,34 @@ fun ScheduleGeneratorWizardDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (availableBatches.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        availableBatches.forEach { b ->
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (batchName == b) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                                border = BorderStroke(1.dp, if (batchName == b) Color(0xFF0F172A) else Color(0xFFE2E8F0)),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { batchName = b }
+                            ) {
+                                Text(
+                                    text = b,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = if (batchName == b) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (batchName == b) Color.White else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+                }
 
                 // 3. Subject Allocations Preview
                 Text(
@@ -1801,6 +2454,10 @@ fun ManualPeriodDialog(
     existingPeriods: List<TimetablePeriod>,
     defaultBatch: String,
     defaultDay: String,
+    availableBatches: List<String> = emptyList(),
+    availableSubjects: List<String> = emptyList(),
+    availableTeachers: List<String> = emptyList(),
+    availableRooms: List<String> = emptyList(),
     onDismiss: () -> Unit,
     onSave: (TimetablePeriod) -> Unit
 ) {
@@ -1892,6 +2549,33 @@ fun ManualPeriodDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                if (availableBatches.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        availableBatches.forEach { b ->
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (batchName == b) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { batchName = b }
+                            ) {
+                                Text(
+                                    text = b,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (batchName == b) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (batchName == b) Color.White else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Day Selector Chips
                 Text("Day of Week:", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569))
                 Row(
@@ -1939,6 +2623,33 @@ fun ManualPeriodDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                if (availableSubjects.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        availableSubjects.forEach { s ->
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (subject == s) Color(0xFFE11D48) else Color(0xFFF1F5F9),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { subject = s }
+                            ) {
+                                Text(
+                                    text = s,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (subject == s) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (subject == s) Color.White else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Teacher
                 OutlinedTextField(
                     value = teacherName,
@@ -1948,6 +2659,39 @@ fun ManualPeriodDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                if (availableTeachers.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        availableTeachers.forEach { t ->
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (teacherName == t) Color(0xFF2563EB) else Color(0xFFF1F5F9),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable {
+                                        teacherName = t
+                                        val facultyObj = CoachingFeaturesManager.getFaculty().find { it.name.equals(t, ignoreCase = true) }
+                                        if (facultyObj != null && facultyObj.subject.isNotBlank()) {
+                                            subject = facultyObj.subject
+                                        }
+                                    }
+                            ) {
+                                Text(
+                                    text = t,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (teacherName == t) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (teacherName == t) Color.White else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Room
                 OutlinedTextField(
                     value = roomNumber,
@@ -1956,6 +2700,33 @@ fun ManualPeriodDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (availableRooms.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        availableRooms.forEach { r ->
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (roomNumber == r) Color(0xFF059669) else Color(0xFFF1F5F9),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { roomNumber = r }
+                            ) {
+                                Text(
+                                    text = r,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (roomNumber == r) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (roomNumber == r) Color.White else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {

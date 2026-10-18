@@ -382,7 +382,7 @@ fun MainAppScreen() {
                 )
             ) { backStackEntry ->
                 val batch = backStackEntry.arguments?.getString("batch") ?: "ALL"
-                DynamicTimetableScreen(navController, initialBatch = batch)
+                DynamicTimetableScreen(navController, viewModel = viewModel, initialBatch = batch)
             }
         }
     }

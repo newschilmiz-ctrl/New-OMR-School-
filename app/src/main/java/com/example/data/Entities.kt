@@ -22,6 +22,11 @@ data class Exam(
     val passMarks: Float = 30f,
     val bonusMarks: Float = 0f,
     val templateType: String = "Standard",
+    val hasSubjective: Boolean = false,
+    val subjectiveMaxMarks: Float = 50f,
+    val generateAdmitCard: Boolean = true,
+    val isResultPublished: Boolean = false,
+    val examSchedule: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -52,6 +57,11 @@ data class Student(
     val sessionId: String = "",
     val sessionName: String = "",
     val className: String = "",
+    val idProofName: String = "",
+    val idProofNumber: String = "",
+    val idProofPath: String = "",
+    val admissionFeePaid: Double = 0.0,
+    val totalFee: Double = 0.0,
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -121,6 +131,7 @@ data class CoachingSession(
     val endTime: String = "08:30 AM",
     val days: String = "Mon - Sat",
     val academicYear: String = "2024-2025",
+    val isBatch: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -185,6 +196,14 @@ data class FacultyMember(
     val salaryType: String = "Monthly", // Monthly, Per Lecture, Contract
     val assignedBatches: String = "All Batches",
     val status: String = "Active", // Active, On Leave
+    val classId: String = "",
+    val className: String = "",
+    val dob: String = "",
+    val gender: String = "Male",
+    val experience: String = "",
+    val idProofName: String = "",
+    val idNumber: String = "",
+    val photoPath: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -200,4 +219,34 @@ data class StudyMaterial(
     val totalProblems: Int = 15,
     val timestamp: Long = System.currentTimeMillis()
 )
+
+data class SubjectiveMarksRecord(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val examId: Int,
+    val studentRoll: String,
+    val studentName: String,
+    val subjectName: String,
+    val marksObtained: Float,
+    val maxMarks: Float = 50f,
+    val checkedBy: String = "Teacher",
+    val originalMarks: Float = marksObtained,
+    val finalMarks: Float = marksObtained,
+    val correctedBy: String = "",
+    val correctionReason: String = "",
+    val correctedAt: Long = 0L,
+    val isVerified: Boolean = true,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class AdmissionFeeSetting(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val sessionOrBatchId: String = "",
+    val sessionOrBatchName: String = "",
+    val classId: String = "",
+    val className: String = "",
+    val admissionFee: Double = 0.0,
+    val totalFee: Double = 0.0,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 

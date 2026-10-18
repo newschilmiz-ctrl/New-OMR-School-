@@ -63,6 +63,10 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
     var passMarks by remember { mutableStateOf("30") }
     var bonusMarks by remember { mutableStateOf("0") }
     var templateType by remember { mutableStateOf("Standard") }
+    var examSchedule by remember { mutableStateOf("10:00 AM - 01:00 PM") }
+    var hasSubjective by remember { mutableStateOf(false) }
+    var subjectiveMaxMarks by remember { mutableStateOf("50") }
+    var generateAdmitCard by remember { mutableStateOf(true) }
 
     val coachingSubjects by viewModel.subjects.collectAsStateWithLifecycle()
     val availableSubjects = remember(coachingSubjects) {
@@ -276,6 +280,24 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                             )
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = examSchedule,
+                        onValueChange = { examSchedule = it },
+                        label = { Text("Exam Schedule / Timing (e.g. 10:00 AM - 01:00 PM)", fontSize = 11.5.sp) },
+                        textStyle = TextStyle(fontSize = 12.5.sp),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color(0xFFF8FAFC),
+                            focusedContainerColor = Color.White,
+                            unfocusedBorderColor = Color(0xFFE2E8F0),
+                            focusedBorderColor = Color(0xFF0F172A)
+                        )
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -632,6 +654,80 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                 }
             }
 
+            // 5b. EXAMINATION SETTINGS & ADMIT CARD
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("5. Admit Card & Subjective Exam Features", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Admit Card Required Checkbox (Checked by default)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { generateAdmitCard = !generateAdmitCard }
+                            .background(if (generateAdmitCard) Color(0xFFF0FDF4) else Color(0xFFF8FAFC))
+                            .border(1.dp, if (generateAdmitCard) Color(0xFF86EFAC) else Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = generateAdmitCard,
+                            onCheckedChange = { generateAdmitCard = it },
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF16A34A))
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Generate Admit Cards Required", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                            Text("Default enabled. Generates 2 Admit Cards horizontally on A4 Landscape to save paper.", fontSize = 10.sp, color = Color(0xFF64748B))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Subjective Exam Checkbox
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { hasSubjective = !hasSubjective }
+                            .background(if (hasSubjective) Color(0xFFFFF1F2) else Color(0xFFF8FAFC))
+                            .border(1.dp, if (hasSubjective) Color(0xFFFECDD3) else Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = hasSubjective,
+                            onCheckedChange = { hasSubjective = it },
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFFE11D48))
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Include Subjective Exam", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                            Text("Generates subjective copy sheets with student photo, QR code for Roll No, and teacher marks entry box.", fontSize = 10.sp, color = Color(0xFF64748B))
+                        }
+                    }
+
+                    if (hasSubjective) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedTextField(
+                            value = subjectiveMaxMarks,
+                            onValueChange = { subjectiveMaxMarks = it },
+                            label = { Text("Subjective Max Marks (e.g. 50)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+                }
+            }
+
             // 6. ACTION BUTTONS
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -653,11 +749,13 @@ fun CreateExamScreen(navController: NavController, viewModel: OmrViewModel) {
                         val neg = negativeMarks.toFloatOrNull() ?: 0f
                         val ps = passMarks.toFloatOrNull() ?: 30f
                         val bns = bonusMarks.toFloatOrNull() ?: 0f
+                        val subjMax = subjectiveMaxMarks.toFloatOrNull() ?: 50f
 
                         viewModel.createExam(
                             examName, selectedSubject, examDate, examTitle,
                             logoPath, logoOpacity, logoSize, logoPosition,
-                            mk, neg, ps, bns, templateType
+                            mk, neg, ps, bns, templateType,
+                            hasSubjective, subjMax, generateAdmitCard, examSchedule
                         ) { examId ->
                             navController.popBackStack()
                             navController.navigate(Screen.ExamDashboard.createRoute(examId))

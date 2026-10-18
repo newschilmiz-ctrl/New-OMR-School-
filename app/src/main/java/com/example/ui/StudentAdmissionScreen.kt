@@ -66,8 +66,15 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
     val coachingSessions by viewModel.sessions.collectAsStateWithLifecycle()
     val coachingClasses by viewModel.classes.collectAsStateWithLifecycle()
     val coachingSubjects by viewModel.subjects.collectAsStateWithLifecycle()
+    val admissionFeeSettings by viewModel.admissionFeeSettings.collectAsStateWithLifecycle()
 
     var selectedSessionId by remember { mutableStateOf("") }
+    var idProofName by remember { mutableStateOf("Aadhaar Card") }
+    var idProofNumber by remember { mutableStateOf("") }
+    var idProofPath by remember { mutableStateOf("") }
+    var admissionFee by remember { mutableStateOf("") }
+    var totalFee by remember { mutableStateOf("") }
+    var admittedStudentForSlip by remember { mutableStateOf<com.example.data.Student?>(null) }
 
     LaunchedEffect(coachingSessions) {
         if (selectedSessionId.isEmpty() && coachingSessions.isNotEmpty()) {
@@ -76,6 +83,22 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
     }
 
     val selectedSession = coachingSessions.find { it.id == selectedSessionId }
+
+    LaunchedEffect(selectedSessionId, admissionFeeSettings) {
+        if (selectedSession != null) {
+            val matching = admissionFeeSettings.find {
+                it.sessionOrBatchId == selectedSession.id || (it.classId.isNotBlank() && it.classId == selectedSession.classId)
+            }
+            if (matching != null) {
+                if (admissionFee.isBlank() && matching.admissionFee > 0) {
+                    admissionFee = matching.admissionFee.toInt().toString()
+                }
+                if (totalFee.isBlank() && matching.totalFee > 0) {
+                    totalFee = matching.totalFee.toInt().toString()
+                }
+            }
+        }
+    }
 
     // Dynamic subjects filtered by the selected session and stream
     val sessionSubjects: List<com.example.data.CoachingSubject> = remember(coachingSubjects, selectedSession, stream) {
@@ -150,6 +173,16 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                 imageSizeBytes = bytes.size
                 compressedBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 imagePath = com.example.util.PhotoCompressor.saveBytesToInternalStorage(context, bytes)
+            }
+        }
+    }
+
+    val idProofPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            val bytes = com.example.util.PhotoCompressor.compressTo20Kb(context, it)
+            if (bytes.isNotEmpty()) {
+                idProofPath = com.example.util.PhotoCompressor.saveBytesToInternalStorage(context, bytes)
+                Toast.makeText(context, "ID Document Uploaded", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -851,14 +884,213 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                 }
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 6. PROOF OF IDENTIFICATION CARD
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        text = "Proof of Identification (ID)",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("Select ID Document Type *", fontSize = 11.sp, color = Color(0xFF475569), fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(listOf("Aadhaar Card", "School ID", "PAN Card", "Birth Certificate", "Voter ID")) { idType ->
+                            val isSelected = idProofName == idType
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                                border = BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0)),
+                                modifier = Modifier.clickable { idProofName = idType }
+                            ) {
+                                Text(
+                                    text = idType,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) Color.White else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = idProofNumber,
+                        onValueChange = { idProofNumber = it },
+                        label = { Text("ID Proof Number *", fontSize = 11.5.sp) },
+                        placeholder = { Text("e.g. 1234 5678 9012") },
+                        singleLine = true,
+                        textStyle = TextStyle(fontSize = 12.5.sp),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // ID Proof Upload
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (idProofPath.isNotBlank()) Color(0xFFF0FDF4) else Color(0xFFF8FAFC),
+                        border = BorderStroke(1.dp, if (idProofPath.isNotBlank()) Color(0xFFBBF7D0) else Color(0xFFE2E8F0))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (idProofPath.isNotBlank()) "ID Document Attached ✓" else "Upload ID Proof Document",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (idProofPath.isNotBlank()) Color(0xFF15803D) else Color(0xFF334155)
+                                )
+                                Text(
+                                    text = "Upload scanned copy or photo of the ID card",
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+
+                            Button(
+                                onClick = { idProofPicker.launch("image/*") },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (idProofPath.isNotBlank()) Color(0xFF15803D) else Color(0xFF0F172A)
+                                ),
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(if (idProofPath.isNotBlank()) "Change" else "Upload", fontSize = 10.5.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 7. ADMISSION FEE SETTING & PAYMENT CARD
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Admission Fee & Financial Ledger",
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F172A)
+                        )
+                        Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFF1F5F9)) {
+                            Text(
+                                "Auto-logs to Fee Ledger",
+                                fontSize = 9.sp,
+                                color = Color(0xFF475569),
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = admissionFee,
+                            onValueChange = { admissionFee = it },
+                            label = { Text("Admission Fee (₹) *", fontSize = 11.sp) },
+                            placeholder = { Text("e.g. 2000") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            textStyle = TextStyle(fontSize = 12.5.sp),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = totalFee,
+                            onValueChange = { totalFee = it },
+                            label = { Text("Total Course Fee (₹)", fontSize = 11.sp) },
+                            placeholder = { Text("e.g. 10000") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            textStyle = TextStyle(fontSize = 12.5.sp),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+
+                    val paidAmt = admissionFee.toDoubleOrNull() ?: 0.0
+                    val totAmt = totalFee.toDoubleOrNull() ?: paidAmt
+                    val dueAmt = (totAmt - paidAmt).coerceAtLeast(0.0)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFFF8FAFC),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Initial Paid: ₹${paidAmt.toInt()}", fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D))
+                            Text("Total: ₹${totAmt.toInt()}", fontSize = 10.5.sp, color = Color(0xFF475569))
+                            Text(
+                                "Due: ₹${dueAmt.toInt()}",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (dueAmt > 0) Color(0xFFB91C1C) else Color(0xFF15803D)
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 6. SUBMIT BUTTON
+            // 8. SUBMIT BUTTON
             PremiumButton(
                 onClick = {
                     val assignedSessionId = selectedSession?.id ?: ""
                     val assignedSessionName = selectedSession?.title ?: (if (coachingSessions.isEmpty()) "General Batch" else "")
                     val assignedClassName = selectedSession?.className ?: ""
+
+                    val paidVal = admissionFee.toDoubleOrNull() ?: 0.0
+                    val totalVal = totalFee.toDoubleOrNull() ?: paidVal
 
                     viewModel.addStudent(
                         name = name.trim(),
@@ -873,14 +1105,19 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
                         imagePath = imagePath,
                         sessionId = assignedSessionId,
                         sessionName = assignedSessionName,
-                        className = assignedClassName
-                    ) {
+                        className = assignedClassName,
+                        idProofName = idProofName.trim(),
+                        idProofNumber = idProofNumber.trim(),
+                        idProofPath = idProofPath,
+                        admissionFeePaid = paidVal,
+                        totalFee = totalVal
+                    ) { student ->
                         Toast.makeText(
                             context,
                             "Student admitted successfully in ${assignedSessionName.ifEmpty { "Session" }}!",
                             Toast.LENGTH_SHORT
                         ).show()
-                        navController.popBackStack()
+                        admittedStudentForSlip = student
                     }
                 },
                 modifier = Modifier
@@ -892,11 +1129,22 @@ fun StudentAdmissionScreen(navController: NavController, viewModel: OmrViewModel
             ) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Complete Student Admission", fontSize = 12.5.sp)
+                Text("Complete Student Admission & Generate Slip", fontSize = 12.5.sp)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    // Modal: A4 Admission Slip
+    if (admittedStudentForSlip != null) {
+        AdmissionSlipDialog(
+            student = admittedStudentForSlip!!,
+            onDismiss = {
+                admittedStudentForSlip = null
+                navController.popBackStack()
+            }
+        )
     }
 }
 
