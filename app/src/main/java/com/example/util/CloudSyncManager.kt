@@ -79,7 +79,10 @@ object CloudSyncManager {
                 }
 
                 val url = URL("$FIREBASE_DB_URL/students/${finalStudent.rollNo}.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "PUT"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
@@ -115,7 +118,10 @@ object CloudSyncManager {
 
                 // Push to results node (unique ID using timestamp)
                 val url = URL("$FIREBASE_DB_URL/scan_results/${result.examId}/${result.studentId}.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "PUT"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
@@ -168,7 +174,10 @@ object CloudSyncManager {
                 }
 
                 val url = URL("$FIREBASE_DB_URL/exams/$idToUse.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "PUT"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
@@ -197,7 +206,10 @@ object CloudSyncManager {
             val list = mutableListOf<com.example.data.Exam>()
             try {
                 val url = URL("$FIREBASE_DB_URL/exams.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "GET"
                 
                 if (conn.responseCode == HttpURLConnection.HTTP_OK) {
@@ -265,7 +277,10 @@ object CloudSyncManager {
         withContext(Dispatchers.IO) {
             try {
                 val url = URL("$FIREBASE_DB_URL/exams/$id.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "DELETE"
                 conn.responseCode
                 conn.disconnect()
@@ -294,7 +309,10 @@ object CloudSyncManager {
                 }
 
                 val url = URL("$FIREBASE_DB_URL/answer_keys/${key.examId}/${key.setName}.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "PUT"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
@@ -317,7 +335,10 @@ object CloudSyncManager {
         return withContext(Dispatchers.IO) {
             try {
                 val url = URL("$FIREBASE_DB_URL/answer_keys/$examId/$setName.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "GET"
                 
                 if (conn.responseCode == HttpURLConnection.HTTP_OK) {
@@ -348,7 +369,10 @@ object CloudSyncManager {
             val list = mutableListOf<com.example.data.AnswerKey>()
             try {
                 val url = URL("$FIREBASE_DB_URL/answer_keys/$examId.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "GET"
 
                 if (conn.responseCode == HttpURLConnection.HTTP_OK) {
@@ -390,7 +414,10 @@ object CloudSyncManager {
             val list = mutableListOf<Student>()
             try {
                 val url = URL("$FIREBASE_DB_URL/students.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "GET"
                 
                 if (conn.responseCode == HttpURLConnection.HTTP_OK) {
@@ -464,7 +491,10 @@ object CloudSyncManager {
             val list = mutableListOf<com.example.data.ScanResult>()
             try {
                 val url = URL("$FIREBASE_DB_URL/scan_results/$examId.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "GET"
                 
                 if (conn.responseCode == HttpURLConnection.HTTP_OK) {
@@ -522,7 +552,10 @@ object CloudSyncManager {
         withContext(Dispatchers.IO) {
             try {
                 val url = URL("$FIREBASE_DB_URL/students/$rollNo.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "DELETE"
                 conn.responseCode
                 conn.disconnect()
@@ -538,7 +571,13 @@ object CloudSyncManager {
 
     suspend fun uploadQuestions(questions: List<com.example.data.QuestionEntity>) {
         withContext(Dispatchers.IO) {
-            questions.forEach { q -> uploadQuestion(q) }
+            try {
+                for (q in questions) {
+                    uploadQuestion(q)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -558,7 +597,12 @@ object CloudSyncManager {
                 }
 
                 val url = URL("$FIREBASE_DB_URL/questions/${q.examId}/$idToUse.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
+                conn.connectTimeout = 3000
+                conn.readTimeout = 3000
                 conn.requestMethod = "PUT"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
@@ -581,7 +625,10 @@ object CloudSyncManager {
             val list = mutableListOf<com.example.data.QuestionEntity>()
             try {
                 val url = URL("$FIREBASE_DB_URL/questions/$examId.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "GET"
                 
                 if (conn.responseCode == HttpURLConnection.HTTP_OK) {
@@ -637,7 +684,10 @@ object CloudSyncManager {
         withContext(Dispatchers.IO) {
             try {
                 val url = URL("$FIREBASE_DB_URL/questions/$examId/$id.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "DELETE"
                 conn.responseCode
                 conn.disconnect()
@@ -655,7 +705,10 @@ object CloudSyncManager {
         withContext(Dispatchers.IO) {
             try {
                 val url = URL("$FIREBASE_DB_URL/questions/$examId.json")
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
                 conn.requestMethod = "DELETE"
                 conn.responseCode
                 conn.disconnect()

@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.DesignServices
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import com.example.ui.components.PremiumButton
 import com.example.ui.components.PremiumOutlinedButton
@@ -269,9 +271,15 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
     var isGeneratingFemale by remember { mutableStateOf(false) }
     var pendingAction by remember { mutableStateOf<String?>(null) }
 
-    val enrolledStudents = students.filter { exam?.subject != null && it.subjects.contains(exam.subject, ignoreCase = true) }
-    val males = enrolledStudents.filter { it.gender.equals("Male", ignoreCase = true) }
-    val females = enrolledStudents.filter { it.gender.equals("Female", ignoreCase = true) }
+    val enrolledStudents = remember(students, exam?.subject) {
+        students.filter { exam?.subject != null && it.subjects.contains(exam.subject, ignoreCase = true) }
+    }
+    val males = remember(enrolledStudents) {
+        enrolledStudents.filter { it.gender.equals("Male", ignoreCase = true) }
+    }
+    val females = remember(enrolledStudents) {
+        enrolledStudents.filter { it.gender.equals("Female", ignoreCase = true) }
+    }
 
     val createDocumentLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/pdf")
@@ -561,6 +569,89 @@ fun GenerateTab(navController: NavController, viewModel: OmrViewModel, examId: I
     }
 }
 
+fun parseQuestionsJson(jsonStr: String, examId: Int): List<QuestionEntity> {
+    val trimmed = jsonStr.trim()
+    if (trimmed.isEmpty()) return emptyList()
+    val list = mutableListOf<QuestionEntity>()
+    try {
+        val root = org.json.JSONTokener(trimmed).nextValue()
+        val jsonArray = when (root) {
+            is org.json.JSONArray -> root
+            is org.json.JSONObject -> org.json.JSONArray().put(root)
+            else -> return emptyList()
+        }
+        val baseId = ((System.currentTimeMillis() % 1000000) * 100).toInt()
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.optJSONObject(i) ?: continue
+            val text = obj.optString("text").ifBlank { 
+                obj.optString("question").ifBlank { 
+                    obj.optString("q").ifBlank { 
+                        obj.optString("title") 
+                    } 
+                } 
+            }
+            
+            var optA = ""
+            var optB = ""
+            var optC = ""
+            var optD = ""
+            
+            val optionsArr = obj.optJSONArray("options")
+            if (optionsArr != null) {
+                optA = optionsArr.optString(0, "")
+                optB = optionsArr.optString(1, "")
+                optC = optionsArr.optString(2, "")
+                optD = optionsArr.optString(3, "")
+            } else {
+                optA = obj.optString("optionA").ifBlank { obj.optString("a").ifBlank { obj.optString("A") } }
+                optB = obj.optString("optionB").ifBlank { obj.optString("b").ifBlank { obj.optString("B") } }
+                optC = obj.optString("optionC").ifBlank { obj.optString("c").ifBlank { obj.optString("C") } }
+                optD = obj.optString("optionD").ifBlank { obj.optString("d").ifBlank { obj.optString("D") } }
+            }
+
+            var correctIndex = 0
+            if (obj.has("correctIndex")) {
+                correctIndex = obj.optInt("correctIndex", 0)
+            } else if (obj.has("answer")) {
+                val ansStr = obj.optString("answer", "A").trim().uppercase()
+                correctIndex = when (ansStr) {
+                    "A", "1", "OPT_A" -> 0
+                    "B", "2", "OPT_B" -> 1
+                    "C", "3", "OPT_C" -> 2
+                    "D", "4", "OPT_D" -> 3
+                    else -> 0
+                }
+            } else if (obj.has("correct")) {
+                val ansStr = obj.optString("correct", "A").trim().uppercase()
+                correctIndex = when (ansStr) {
+                    "A", "1" -> 0
+                    "B", "2" -> 1
+                    "C", "3" -> 2
+                    "D", "4" -> 3
+                    else -> 0
+                }
+            }
+
+            val uniqueId = baseId + i + 1
+            list.add(
+                QuestionEntity(
+                    id = uniqueId,
+                    examId = examId,
+                    text = text,
+                    optionA = optA,
+                    optionB = optB,
+                    optionC = optC,
+                    optionD = optD,
+                    correctIndex = correctIndex.coerceIn(0, 3)
+                )
+            )
+        }
+    } catch (e: Exception) {
+        return emptyList()
+    }
+    return list
+}
+
 @Composable
 fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
     val context = LocalContext.current
@@ -570,19 +661,10 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
     var isInitialized by remember { mutableStateOf(false) }
 
     LaunchedEffect(dbQuestions) {
-        if (!isInitialized) {
+        if (!isInitialized || questions.size != dbQuestions.size || questions.map { it.id } != dbQuestions.map { it.id }) {
             questions.clear()
             questions.addAll(dbQuestions)
             isInitialized = true
-        } else {
-            val dbIds = dbQuestions.map { it.id }.toSet()
-            val qIds = questions.map { it.id }.toSet()
-            
-            if (dbIds != qIds) {
-                questions.removeAll { it.id !in dbIds }
-                val newItems = dbQuestions.filter { it.id !in qIds }
-                questions.addAll(newItems)
-            }
         }
         
         if (dbQuestions.isNotEmpty()) {
@@ -602,7 +684,6 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
     var addressText by remember { mutableStateOf("★  ALL THE BEST  ★") }
     var showPreviewDialog by remember { mutableStateOf(false) }
     var previewBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-
 
     val coroutineScope = rememberCoroutineScope()
     val createDocumentLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -626,6 +707,13 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
 
     var showJsonDialog by remember { mutableStateOf(false) }
     var jsonInput by remember { mutableStateOf("") }
+    var isImportingJson by remember { mutableStateOf(false) }
+    var replaceExistingQuestions by remember { mutableStateOf(true) }
+    var showClearAllDialog by remember { mutableStateOf(false) }
+
+    val parsedQuestions = remember(jsonInput, exam.id) {
+        parseQuestionsJson(jsonInput, exam.id)
+    }
 
     if (showSettingsDialog) {
         AlertDialog(
@@ -745,89 +833,321 @@ fun CreateQuestionPaperTabInternal(viewModel: OmrViewModel, exam: Exam) {
 
     if (showJsonDialog) {
         androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showJsonDialog = false },
-            title = { Text("Import Questions (JSON)") },
+            onDismissRequest = { if (!isImportingJson) showJsonDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Download, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Import Questions (JSON)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+            },
             text = {
-                Column {
-                    Text("Paste JSON array format:\n[\n  {\"text\": \"...\", \"options\": [\"A\", \"B\", \"C\", \"D\"], \"correctIndex\": 0}\n]")
-                    Spacer(modifier = Modifier.height(8.dp))
+                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    Text(
+                        "Paste your JSON questions array below. It automatically detects questions, options, and answer keys.",
+                        fontSize = 11.5.sp,
+                        color = Color(0xFF64748B)
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                jsonInput = """[
+  {
+    "text": "What is the capital of India?",
+    "options": ["Mumbai", "New Delhi", "Kolkata", "Chennai"],
+    "correctIndex": 1
+  },
+  {
+    "text": "Which planet is known as the Red Planet?",
+    "options": ["Earth", "Mars", "Jupiter", "Venus"],
+    "correctIndex": 1
+  }
+]"""
+                            },
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text("💡 Load Sample", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.SemiBold)
+                        }
+
+                        if (jsonInput.isNotBlank()) {
+                            TextButton(
+                                onClick = { jsonInput = "" },
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                            ) {
+                                Text("Clear Text", fontSize = 11.sp, color = Color(0xFFEF4444))
+                            }
+                        }
+                    }
+
                     OutlinedTextField(
                         value = jsonInput,
                         onValueChange = { jsonInput = it },
-                        modifier = Modifier.fillMaxWidth().height(200.dp),
-                        label = { Text("JSON Data") }
+                        modifier = Modifier.fillMaxWidth().height(160.dp),
+                        placeholder = { Text("Paste JSON array here...", fontSize = 12.sp) },
+                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
+                        shape = RoundedCornerShape(8.dp)
                     )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Live Detection Feedback Card
+                    if (jsonInput.isNotBlank()) {
+                        if (parsedQuestions.isNotEmpty()) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFECFDF5),
+                                border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF059669), modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Column {
+                                        Text(
+                                            "✅ ${parsedQuestions.size} Questions detected successfully!",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF065F46)
+                                        )
+                                        Text("Ready to import without duplicates.", fontSize = 10.sp, color = Color(0xFF047857))
+                                    }
+                                }
+                            }
+                        } else {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFFEF2F2),
+                                border = BorderStroke(1.dp, Color(0xFFFECACA)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        "Invalid JSON format. Please verify brackets and commas.",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF991B1B)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Import Mode: Replace vs Append
+                    if (questions.isNotEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF8FAFC),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("Import Mode:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334155))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth().clickable { replaceExistingQuestions = true }
+                                ) {
+                                    RadioButton(
+                                        selected = replaceExistingQuestions,
+                                        onClick = { replaceExistingQuestions = true }
+                                    )
+                                    Column(modifier = Modifier.padding(start = 4.dp)) {
+                                        Text("Replace existing questions", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold)
+                                        Text("Clears old ${questions.size} questions to prevent duplicates", fontSize = 10.sp, color = Color(0xFF64748B))
+                                    }
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth().clickable { replaceExistingQuestions = false }
+                                ) {
+                                    RadioButton(
+                                        selected = !replaceExistingQuestions,
+                                        onClick = { replaceExistingQuestions = false }
+                                    )
+                                    Column(modifier = Modifier.padding(start = 4.dp)) {
+                                        Text("Append to existing questions", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold)
+                                        Text("Adds to current ${questions.size} questions", fontSize = 10.sp, color = Color(0xFF64748B))
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    try {
-                        val moshi = com.squareup.moshi.Moshi.Builder().add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory()).build()
-                        val type = com.squareup.moshi.Types.newParameterizedType(List::class.java, Map::class.java)
-                        val adapter = moshi.adapter<List<Map<String, Any>>>(type)
-                        val parsed = adapter.fromJson(jsonInput)
-                        if (parsed != null) {
-                            val entities = parsed.map { map ->
-                                val text = map["text"] as? String ?: ""
-                                val options = map["options"] as? List<String> ?: listOf("", "", "", "")
-                                val correctIndex = (map["correctIndex"] as? Double)?.toInt() ?: 0
-                                QuestionEntity(
-                                    examId = exam.id,
-                                    text = text,
-                                    optionA = options.getOrNull(0) ?: "",
-                                    optionB = options.getOrNull(1) ?: "",
-                                    optionC = options.getOrNull(2) ?: "",
-                                    optionD = options.getOrNull(3) ?: "",
-                                    correctIndex = correctIndex
-                                )
-                            }
-                            viewModel.saveQuestions(entities) {
+                Button(
+                    onClick = {
+                        if (parsedQuestions.isNotEmpty() && !isImportingJson) {
+                            isImportingJson = true
+                            val count = parsedQuestions.size
+                            viewModel.saveQuestions(parsedQuestions, replaceAll = (replaceExistingQuestions && questions.isNotEmpty())) {
+                                isImportingJson = false
                                 showJsonDialog = false
+                                jsonInput = ""
+                                Toast.makeText(context, "✅ $count Questions successfully imported!", Toast.LENGTH_LONG).show()
                             }
                         }
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Invalid JSON format", Toast.LENGTH_SHORT).show()
+                    },
+                    enabled = parsedQuestions.isNotEmpty() && !isImportingJson,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    if (isImportingJson) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Importing...", fontSize = 12.sp)
+                    } else {
+                        Text(
+                            if (parsedQuestions.isNotEmpty()) "Import ${parsedQuestions.size} Questions" else "Import",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                }) { Text("Import") }
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showJsonDialog = false }) { Text("Cancel") }
+                TextButton(
+                    onClick = { showJsonDialog = false },
+                    enabled = !isImportingJson
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showClearAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearAllDialog = false },
+            title = { Text("Clear All Questions?", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+            text = {
+                Text(
+                    "Are you sure you want to delete all ${questions.size} questions from this exam? This will remove all questions and duplicate entries.",
+                    fontSize = 13.sp,
+                    color = Color(0xFF475569)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteQuestionsForExam(exam.id) {
+                            questions.clear()
+                            showClearAllDialog = false
+                            Toast.makeText(context, "All questions deleted from exam", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Delete All", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearAllDialog = false }) {
+                    Text("Cancel")
+                }
             }
         )
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Questions (${questions.size}/100)", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-            IconButton(onClick = { showSettingsDialog = true }, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings", modifier = Modifier.size(17.dp))
+        Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Color.White,
+            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (questions.isNotEmpty()) Color(0xFF2563EB) else Color(0xFF64748B)
+                    ) {
+                        Text(
+                            "${questions.size} / 100",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Exam Questions",
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A)
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (questions.isNotEmpty()) {
+                        IconButton(
+                            onClick = { showClearAllDialog = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = "Clear All Questions", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
+                        }
+                    }
+                    IconButton(onClick = { showSettingsDialog = true }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings", modifier = Modifier.size(18.dp))
+                    }
+                }
             }
         }
+
         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             PremiumOutlinedButton(
                 onClick = { pendingAction = "downloadAnswerKey"; createDocumentLauncher.launch("${exam.subject}_AnswerKey.pdf") },
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
             ) {
-                Text(if (isGenerating && pendingAction == "downloadAnswerKey") "Key" else "Ans Key", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                Text(if (isGenerating && pendingAction == "downloadAnswerKey") "Generating..." else "Ans Key PDF", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
             PremiumOutlinedButton(
                 onClick = { showJsonDialog = true },
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
             ) {
-                Text("Import JSON", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Import JSON", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
             PremiumButton(
                 onClick = {
                     if (questions.size < 100) {
-                        viewModel.saveQuestion(QuestionEntity(examId = exam.id, text = "", optionA = "", optionB = "", optionC = "", optionD = "", correctIndex = 0)) {}
+                        val newId = ((System.currentTimeMillis() % 1000000) * 100).toInt() + questions.size + 1
+                        viewModel.saveQuestion(QuestionEntity(id = newId, examId = exam.id, text = "", optionA = "", optionB = "", optionC = "", optionD = "", correctIndex = 0)) {}
                     }
                 },
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
             ) {
-                Text("Add Question", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Q", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
 

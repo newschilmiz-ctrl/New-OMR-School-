@@ -452,12 +452,21 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveQuestions(questions: List<QuestionEntity>, onDone: () -> Unit) {
+    fun saveQuestions(questions: List<QuestionEntity>, replaceAll: Boolean = false, onDone: () -> Unit) {
         viewModelScope.launch {
-            com.example.util.CloudSyncManager.uploadQuestions(questions)
             if (questions.isNotEmpty()) {
                 val examId = questions.first().examId
-                _questionsCache[examId]?.value = questions
+                val flow = _questionsCache.getOrPut(examId) {
+                    kotlinx.coroutines.flow.MutableStateFlow(emptyList())
+                }
+                if (replaceAll) {
+                    com.example.util.CloudSyncManager.deleteQuestionsForExam(examId)
+                    flow.value = questions
+                } else {
+                    val current = flow.value
+                    flow.value = current + questions
+                }
+                com.example.util.CloudSyncManager.uploadQuestions(questions)
             }
             onDone()
         }
@@ -472,12 +481,23 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateQuestion(question: QuestionEntity, onDone: () -> Unit) {
-        viewModelScope.launch {
-            com.example.util.CloudSyncManager.uploadQuestion(question)
-            val current = _questionsCache[question.examId]?.value.orEmpty()
-            _questionsCache[question.examId]?.value = current.map { if (it.id == question.id) question else it }
-            onDone()
+    private var updateQuestionJob: kotlinx.coroutines.Job? = null
+    fun updateQuestion(question: QuestionEntity, syncImmediate: Boolean = false, onDone: () -> Unit = {}) {
+        val current = _questionsCache[question.examId]?.value.orEmpty()
+        _questionsCache[question.examId]?.value = current.map { if (it.id == question.id) question else it }
+        
+        updateQuestionJob?.cancel()
+        if (syncImmediate) {
+            viewModelScope.launch {
+                com.example.util.CloudSyncManager.uploadQuestion(question)
+                onDone()
+            }
+        } else {
+            updateQuestionJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(600)
+                com.example.util.CloudSyncManager.uploadQuestion(question)
+                onDone()
+            }
         }
     }
 

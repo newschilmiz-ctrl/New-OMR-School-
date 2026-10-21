@@ -204,9 +204,13 @@ fun MainAppScreen() {
                                 Box(
                                     modifier = Modifier
                                         .size(30.dp)
-                                        .graphicsLayer(scaleX = pulseScale, scaleY = pulseScale)
+                                        .graphicsLayer {
+                                            scaleX = pulseScale
+                                            scaleY = pulseScale
+                                            alpha = haloAlpha
+                                        }
                                         .clip(CircleShape)
-                                        .background(Color(0xFFE11D48).copy(alpha = haloAlpha))
+                                        .background(Color(0xFFE11D48))
                                 )
                                 Box(
                                     modifier = Modifier
