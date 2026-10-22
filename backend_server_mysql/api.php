@@ -45,8 +45,16 @@ function saveBase64Image($base64Data, $rollNo) {
     return '';
 }
 
-// Check API Key security if configured in db_config.php
-if (defined('API_SECRET_KEY') && API_SECRET_KEY !== '') {
+// Check API Key security if configured in db_config.php (allow public read actions for Student Result Portal)
+$publicActions = ['get_result', 'check_result', 'get_exams', 'ping', 'test_connection'];
+$reqAction = $_GET['action'] ?? '';
+if (empty($reqAction)) {
+    $rawInput = @file_get_contents('php://input');
+    $tempData = @json_decode($rawInput, true);
+    $reqAction = $tempData['action'] ?? '';
+}
+
+if (defined('API_SECRET_KEY') && API_SECRET_KEY !== '' && !in_array($reqAction, $publicActions)) {
     $headers = getallheaders();
     $providedKey = '';
     if (isset($headers['X-API-KEY'])) {
@@ -387,6 +395,84 @@ try {
             ]);
 
             echo json_encode(['status' => 'success', 'message' => 'Scan result synced successfully']);
+            break;
+
+        // ----------------------------------------------------
+        // 6b. GET EXAMS LIST (For Public Web Result Portal)
+        // ----------------------------------------------------
+        case 'get_exams':
+            $stmt = $pdo->query("SELECT id, name, subject, date, marks_per_question, pass_marks, bonus_marks, title FROM exams ORDER BY id DESC");
+            $exams = $stmt->fetchAll();
+            echo json_encode(['status' => 'success', 'exams' => $exams]);
+            break;
+
+        // ----------------------------------------------------
+        // 6c. GET STUDENT RESULT (For Public Web Result Portal)
+        // ----------------------------------------------------
+        case 'get_result':
+        case 'check_result':
+            $rollNo = trim($d['roll_no'] ?? ($_GET['roll_no'] ?? ''));
+            $examId = intval($d['exam_id'] ?? ($_GET['exam_id'] ?? 0));
+            if (empty($rollNo)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Roll number is required']);
+                exit;
+            }
+
+            // Find student
+            $stStmt = $pdo->prepare("SELECT * FROM students WHERE roll_no = :roll OR registration_no = :reg LIMIT 1");
+            $stStmt->execute([':roll' => $rollNo, ':reg' => $rollNo]);
+            $student = $stStmt->fetch();
+
+            if (!$student) {
+                // Check scan_results directly if student not found in students table
+                $stStmt = $pdo->prepare("SELECT * FROM scan_results WHERE student_id = :roll LIMIT 1");
+                $stStmt->execute([':roll' => $rollNo]);
+                $fallbackScan = $stStmt->fetch();
+                if (!$fallbackScan) {
+                    echo json_encode(['status' => 'error', 'message' => "Roll No / Registration No '$rollNo' not found."]);
+                    exit;
+                }
+                $student = [
+                    'roll_no' => $fallbackScan['student_id'],
+                    'name' => 'Candidate ' . $fallbackScan['student_id'],
+                    'father_name' => '',
+                    'mother_name' => '',
+                    'gender' => '',
+                    'registration_no' => '',
+                    'image_url' => '',
+                    'stream' => '',
+                    'subjects' => ''
+                ];
+            }
+
+            // Find scan results
+            $sql = "SELECT r.*, e.name as exam_name, e.subject as exam_subject, e.date as exam_date, 
+                           e.pass_marks, e.marks_per_question, e.title as exam_title
+                    FROM scan_results r 
+                    LEFT JOIN exams e ON r.exam_id = e.id 
+                    WHERE r.student_id = :roll";
+            $params = [':roll' => $student['roll_no']];
+            if ($examId > 0) {
+                $sql .= " AND r.exam_id = :exam_id";
+                $params[':exam_id'] = $examId;
+            }
+            $sql .= " ORDER BY r.timestamp DESC";
+
+            $resStmt = $pdo->prepare($sql);
+            $resStmt->execute($params);
+            $results = $resStmt->fetchAll();
+
+            if (empty($results)) {
+                echo json_encode(['status' => 'error', 'message' => "No exam results found for Roll No '$rollNo'."]);
+                exit;
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'student' => $student,
+                'results' => $results
+            ]);
             break;
 
         // ----------------------------------------------------
