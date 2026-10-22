@@ -46,7 +46,7 @@ function saveBase64Image($base64Data, $rollNo) {
 }
 
 // Check API Key security if configured in db_config.php (allow public read actions for Student Result Portal)
-$publicActions = ['get_result', 'check_result', 'get_exams', 'ping', 'test_connection'];
+$publicActions = ['get_result', 'check_result', 'get_exams', 'save_subjective', 'update_subjective', 'ping', 'test_connection'];
 $reqAction = $_GET['action'] ?? '';
 if (empty($reqAction)) {
     $rawInput = @file_get_contents('php://input');
@@ -468,11 +468,82 @@ try {
                 exit;
             }
 
+            // Also fetch subjective marks for this student
+            $subjList = [];
+            try {
+                $subSql = "SELECT * FROM subjective_marks WHERE student_roll = :roll";
+                $subParams = [':roll' => $student['roll_no']];
+                if ($examId > 0) {
+                    $subSql .= " AND exam_id = :exam_id";
+                    $subParams[':exam_id'] = $examId;
+                }
+                $subStmt = $pdo->prepare($subSql);
+                $subStmt->execute($subParams);
+                $subjList = $subStmt->fetchAll();
+            } catch (\Exception $e) {
+                // Table might not exist yet if user hasn't imported updated sql
+            }
+
             echo json_encode([
                 'status' => 'success',
                 'student' => $student,
-                'results' => $results
+                'results' => $results,
+                'subjective_marks' => $subjList
             ]);
+            break;
+
+        // ----------------------------------------------------
+        // 6d. SAVE / UPDATE SUBJECTIVE MARKS (From Web Portal or App)
+        // ----------------------------------------------------
+        case 'save_subjective':
+        case 'update_subjective':
+            $subjExamId = intval($d['exam_id'] ?? ($_REQUEST['exam_id'] ?? 0));
+            $subjRoll = trim($d['student_roll'] ?? ($_REQUEST['student_roll'] ?? ''));
+            $marksObtained = floatval($d['marks_obtained'] ?? ($_REQUEST['marks_obtained'] ?? 0));
+            $maxMarks = floatval($d['max_marks'] ?? ($_REQUEST['max_marks'] ?? 50));
+            $checkedBy = trim($d['checked_by'] ?? ($_REQUEST['checked_by'] ?? 'Teacher'));
+            $id = trim($d['id'] ?? ($_REQUEST['id'] ?? ('subj_' . $subjExamId . '_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $subjRoll))));
+
+            if ($subjExamId <= 0 || empty($subjRoll)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'exam_id and student_roll are required']);
+                exit;
+            }
+
+            try {
+                $stmt = $pdo->prepare("
+                    INSERT INTO subjective_marks (id, exam_id, student_roll, marks_obtained, max_marks, checked_by, final_marks, timestamp)
+                    VALUES (:id, :exam_id, :student_roll, :marks_obtained, :max_marks, :checked_by, :final_marks, :timestamp)
+                    ON DUPLICATE KEY UPDATE
+                        marks_obtained = VALUES(marks_obtained),
+                        max_marks = VALUES(max_marks),
+                        checked_by = VALUES(checked_by),
+                        final_marks = VALUES(final_marks),
+                        timestamp = VALUES(timestamp)
+                ");
+                $stmt->execute([
+                    ':id' => $id,
+                    ':exam_id' => $subjExamId,
+                    ':student_roll' => $subjRoll,
+                    ':marks_obtained' => $marksObtained,
+                    ':max_marks' => $maxMarks,
+                    ':checked_by' => $checkedBy,
+                    ':final_marks' => $marksObtained,
+                    ':timestamp' => round(microtime(true) * 1000)
+                ]);
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Subjective marks saved successfully',
+                    'exam_id' => $subjExamId,
+                    'student_roll' => $subjRoll,
+                    'marks_obtained' => $marksObtained,
+                    'max_marks' => $maxMarks
+                ]);
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+            }
             break;
 
         // ----------------------------------------------------

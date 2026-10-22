@@ -139,8 +139,7 @@ fun ResultVerificationTab(
                         if (!isPublished) {
                             Button(
                                 onClick = {
-                                    val updated = exam.copy(isResultPublished = true)
-                                    viewModel.updateExam(updated) {
+                                    viewModel.publishExamResults(exam, examSubjectiveMarks) {
                                         isPublished = true
                                         Toast.makeText(context, "Results Published Successfully! Students can now view results.", Toast.LENGTH_LONG).show()
                                     }

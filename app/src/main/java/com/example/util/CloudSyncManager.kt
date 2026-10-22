@@ -141,6 +141,42 @@ object CloudSyncManager {
         }
     }
 
+    suspend fun uploadSubjectiveMarks(record: com.example.data.SubjectiveMarksRecord) {
+        withContext(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("id", record.id)
+                    put("examId", record.examId)
+                    put("studentRoll", record.studentRoll)
+                    put("studentName", record.studentName)
+                    put("subjectName", record.subjectName)
+                    put("marksObtained", record.marksObtained.toDouble())
+                    put("maxMarks", record.maxMarks.toDouble())
+                    put("checkedBy", record.checkedBy)
+                    put("finalMarks", record.finalMarks.toDouble())
+                    put("timestamp", record.timestamp)
+                }
+
+                val sanitizedRoll = record.studentRoll.trim().replace("/", "_").replace(".", "_")
+                val url = URL("$FIREBASE_DB_URL/subjective_marks/${record.examId}/$sanitizedRoll.json")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
+                conn.requestMethod = "PUT"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.doOutput = true
+
+                OutputStreamWriter(conn.outputStream).use { it.write(json.toString()) }
+                val code = conn.responseCode
+                Log.d("CloudSync", "Subjective mark upload response: $code")
+                conn.disconnect()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     suspend fun uploadExam(exam: com.example.data.Exam): Int {
         return withContext(Dispatchers.IO) {
             try {
@@ -170,6 +206,9 @@ object CloudSyncManager {
                     put("negativeMarks", exam.negativeMarks.toDouble())
                     put("passMarks", exam.passMarks.toDouble())
                     put("bonusMarks", exam.bonusMarks.toDouble())
+                    put("hasSubjective", exam.hasSubjective)
+                    put("subjectiveMaxMarks", exam.subjectiveMaxMarks.toDouble())
+                    put("isResultPublished", exam.isResultPublished)
                     put("timestamp", exam.timestamp)
                 }
 

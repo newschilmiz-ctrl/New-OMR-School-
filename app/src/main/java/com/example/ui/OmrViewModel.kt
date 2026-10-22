@@ -117,6 +117,7 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     fun saveSubjectiveMarks(record: com.example.data.SubjectiveMarksRecord, onDone: () -> Unit = {}) {
         viewModelScope.launch {
             com.example.util.CoachingFeaturesManager.saveSubjectiveMarks(record)
+            com.example.util.CloudSyncManager.uploadSubjectiveMarks(record)
             loadSubjectiveMarks()
             onDone()
         }
@@ -576,6 +577,18 @@ class OmrViewModel(application: Application) : AndroidViewModel(application) {
     fun updateExam(exam: Exam, onDone: () -> Unit) {
         viewModelScope.launch {
             com.example.util.CloudSyncManager.uploadExam(exam)
+            fetchExams()
+            onDone()
+        }
+    }
+
+    fun publishExamResults(exam: Exam, subjectiveRecords: List<com.example.data.SubjectiveMarksRecord> = emptyList(), onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            val updated = exam.copy(isResultPublished = true)
+            com.example.util.CloudSyncManager.uploadExam(updated)
+            subjectiveRecords.forEach { record ->
+                com.example.util.CloudSyncManager.uploadSubjectiveMarks(record)
+            }
             fetchExams()
             onDone()
         }

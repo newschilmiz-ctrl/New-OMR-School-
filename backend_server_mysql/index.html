@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Online Result Portal | OMR Evaluation System</title>
+    <title>Student Online Result Portal | OMR & Subjective Evaluation</title>
     <!-- Google Fonts & Font Awesome Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +16,7 @@
             --primary-dark: #BE123C;
             --primary-light: #FFE4E6;
             --secondary: #2563EB;
+            --secondary-dark: #1D4ED8;
             --success: #16A34A;
             --danger: #DC2626;
             --dark: #0F172A;
@@ -41,23 +42,23 @@
             flex-direction: column;
         }
 
-        /* Top Header */
+        /* Header Navbar */
         header {
             background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
             color: white;
-            padding: 18px 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            padding: 16px 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 50;
         }
 
         .header-container {
             max-width: 1100px;
             margin: 0 auto;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
         }
 
         .brand-title {
@@ -67,21 +68,22 @@
         }
 
         .brand-icon {
+            background: var(--primary);
             width: 44px;
             height: 44px;
-            background: var(--primary);
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            color: white;
             box-shadow: 0 4px 10px rgba(225, 29, 72, 0.4);
         }
 
         .brand-text h1 {
             font-size: 19px;
             font-weight: 800;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.5px;
         }
 
         .brand-text p {
@@ -94,9 +96,8 @@
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 11px;
-            font-weight: 600;
+            border-radius: 20px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -107,23 +108,23 @@
             height: 8px;
             background: #22C55E;
             border-radius: 50%;
-            box-shadow: 0 0 8px #22C55E;
-            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            animation: pulse 1.8s infinite;
         }
 
         @keyframes pulse {
-            0% { transform: scale(0.9); opacity: 0.8; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(0.9); opacity: 0.8; }
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
 
         /* Main Container */
         main {
-            max-width: 1000px;
-            margin: 28px auto;
-            padding: 0 16px;
-            flex: 1;
+            max-width: 1050px;
             width: 100%;
+            margin: 30px auto;
+            padding: 0 20px;
+            flex: 1;
         }
 
         /* Search Card */
@@ -131,18 +132,17 @@
             background: var(--card-bg);
             border-radius: 16px;
             padding: 28px;
-            border: 1px solid var(--border);
             box-shadow: var(--shadow);
+            border: 1px solid var(--border);
             margin-bottom: 30px;
         }
 
         .card-heading {
-            text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .card-heading h2 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             color: var(--dark);
         }
@@ -182,116 +182,152 @@
         }
 
         .form-control {
-            width: 100%;
-            padding: 12px 14px;
+            height: 48px;
             border-radius: 10px;
-            border: 1.5px solid var(--border);
-            font-size: 13.5px;
+            border: 1.5px solid #CBD5E1;
+            padding: 0 14px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--dark);
-            background: #F8FAFC;
-            transition: all 0.2s;
+            outline: none;
+            transition: all 0.2s ease;
+            background: #FFFFFF;
         }
 
         .form-control:focus {
-            outline: none;
             border-color: var(--primary);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.12);
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
 
         .btn-search {
+            height: 48px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            border: none;
-            padding: 13px 28px;
-            border-radius: 10px;
-            font-size: 14px;
             font-weight: 700;
+            font-size: 14.5px;
+            border: none;
+            border-radius: 10px;
+            padding: 0 24px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+            gap: 10px;
             transition: all 0.2s;
-            height: 48px;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
         }
 
         .btn-search:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(225, 29, 72, 0.4);
         }
 
-        .btn-search:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
+        .btn-search:active {
+            transform: translateY(0);
         }
 
-        /* Database Switcher */
-        .db-toggle-row {
+        /* Subjective & Database Controls Bar */
+        .controls-toolbar {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             margin-top: 18px;
-            padding-top: 14px;
+            padding-top: 16px;
             border-top: 1px dashed var(--border);
-            font-size: 12px;
-            color: var(--gray);
+            gap: 12px;
+        }
+
+        .toggle-switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #F1F5F9;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .toggle-switch-wrapper:hover {
+            background: #E2E8F0;
+        }
+
+        .toggle-switch-wrapper input {
+            cursor: pointer;
+            width: 17px;
+            height: 17px;
+            accent-color: var(--primary);
+        }
+
+        .toggle-switch-wrapper span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1E293B;
+        }
+
+        .db-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12.5px;
         }
 
         .db-options {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .db-radio {
             display: flex;
             align-items: center;
             gap: 5px;
+            font-size: 12px;
             cursor: pointer;
             font-weight: 600;
+            color: #475569;
         }
 
         /* Alert Box */
         .alert {
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-radius: 10px;
-            margin-bottom: 20px;
             font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
             display: none;
             align-items: center;
             gap: 10px;
         }
 
         .alert-error {
-            background: #FEF2F2;
-            border: 1px solid #FECACA;
-            color: #991B1B;
+            background: #FEE2E2;
+            color: #B91C1C;
+            border: 1px solid #FCA5A5;
         }
 
-        .alert-info {
-            background: #EFF6FF;
-            border: 1px solid #BFDBFE;
-            color: #1E40AF;
+        .alert-success {
+            background: #DCFCE7;
+            color: #15803D;
+            border: 1px solid #86EFAC;
         }
 
         /* Loading Spinner */
         .loader-box {
-            display: none;
             text-align: center;
-            padding: 30px;
+            padding: 40px;
+            display: none;
         }
 
         .spinner {
-            border: 4px solid #F1F5F9;
+            width: 44px;
+            height: 44px;
+            border: 4px solid #E2E8F0;
             border-top: 4px solid var(--primary);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
             animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
+            margin: 0 auto 14px;
         }
 
         @keyframes spin {
@@ -299,93 +335,124 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ========================================================
-           OFFICIAL MARKSHEET / RESULT CARD (PRINT OPTIMIZED)
-           ======================================================== */
+        /* Result & Marksheet Container */
         .result-container {
             display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .actions-bar {
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 16px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .btn-print {
             background: #0F172A;
             color: white;
-            border: none;
             padding: 10px 20px;
             border-radius: 8px;
+            border: none;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-print:hover {
+            background: #1E293B;
+            transform: translateY(-1px);
+        }
+
+        .btn-subj-modal {
+            background: #4F46E5;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s;
         }
 
+        .btn-subj-modal:hover {
+            background: #4338CA;
+        }
+
+        /* Marksheet Paper Card (A4 Styling) */
         .marksheet-card {
-            background: white;
-            border-radius: 12px;
-            border: 2px solid #CBD5E1;
-            padding: 32px;
-            box-shadow: var(--shadow);
+            background: #FFFFFF;
+            border-radius: 14px;
+            border: 2px solid #0F172A;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.1);
+            padding: 36px 40px;
             position: relative;
-            background-image: radial-gradient(#F1F5F9 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-image: radial-gradient(#CBD5E1 0.75px, transparent 0.75px);
+            background-size: 24px 24px;
         }
 
         .marksheet-header {
             text-align: center;
             border-bottom: 2.5px solid #0F172A;
             padding-bottom: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             position: relative;
         }
 
         .marksheet-header h3 {
-            font-size: 22px;
-            font-weight: 800;
+            font-size: 20px;
+            font-weight: 900;
             color: #0F172A;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .marksheet-header h4 {
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--primary);
-            margin: 4px 0;
+            margin-top: 3px;
         }
 
         .marksheet-header p {
-            font-size: 11.5px;
+            font-size: 12px;
             color: var(--gray);
-            font-weight: 500;
+            font-weight: 600;
+            margin-top: 2px;
         }
 
         .marksheet-badge {
             display: inline-block;
             background: #0F172A;
             color: white;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 8px;
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 4px;
+            margin-top: 6px;
             letter-spacing: 1px;
         }
 
-        /* Student Info Layout */
+        /* Student Details Table */
         .student-profile-row {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             margin-bottom: 24px;
-            align-items: flex-start;
+            align-items: stretch;
         }
 
         .student-photo-box {
@@ -394,11 +461,11 @@
             border: 2px solid #CBD5E1;
             border-radius: 8px;
             overflow: hidden;
-            background: #F8FAFC;
+            background: #F1F5F9;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
         }
 
         .student-photo-box img {
@@ -408,25 +475,25 @@
         }
 
         .student-info-table {
-            width: 100%;
+            flex: 1;
             border-collapse: collapse;
+            font-size: 12.5px;
         }
 
         .student-info-table td {
             padding: 6px 10px;
-            font-size: 12.5px;
             border: 1px solid #E2E8F0;
         }
 
         .student-info-table td.label-cell {
+            background: #F8FAFC;
             font-weight: 700;
             color: #475569;
-            background: #F8FAFC;
-            width: 25%;
+            width: 23%;
         }
 
         .student-info-table td.val-cell {
-            font-weight: 600;
+            font-weight: 700;
             color: #0F172A;
         }
 
@@ -435,21 +502,30 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 24px;
+            font-size: 12.5px;
+            text-align: center;
         }
 
         .score-table th, .score-table td {
             border: 1px solid #CBD5E1;
-            padding: 10px 12px;
-            text-align: center;
-            font-size: 13px;
+            padding: 9px 8px;
         }
 
         .score-table th {
             background: #0F172A;
             color: white;
-            font-weight: 700;
-            font-size: 12.5px;
+            font-weight: 800;
+            font-size: 11.5px;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .score-table th.th-subj {
+            background: #4338CA;
+        }
+
+        .score-table th.th-obj {
+            background: #BE123C;
         }
 
         .score-table td.subject-name {
@@ -458,45 +534,78 @@
             color: #0F172A;
         }
 
-        .score-table tr.total-row {
-            background: #F8FAFC;
-            font-weight: 800;
+        .btn-row-edit {
+            background: #EEF2FF;
+            color: #4338CA;
+            border: 1px solid #C7D2FE;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-left: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.2s;
         }
 
-        /* Result Summary Banner */
-        .result-summary-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #F8FAFC;
-            border: 1.5px solid #CBD5E1;
-            border-radius: 10px;
-            padding: 14px 20px;
+        .btn-row-edit:hover {
+            background: #4338CA;
+            color: white;
+        }
+
+        /* KPI Summary Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+            gap: 12px;
             margin-bottom: 24px;
         }
 
-        .summary-item {
+        .kpi-card {
+            background: #F8FAFC;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 10px;
+            padding: 12px;
             text-align: center;
         }
 
-        .summary-item p {
-            font-size: 11px;
-            color: var(--gray);
-            font-weight: 600;
-            text-transform: uppercase;
+        .kpi-card.kpi-highlight {
+            background: #FFF1F2;
+            border-color: #FECDD3;
         }
 
-        .summary-item h5 {
-            font-size: 18px;
+        .kpi-card.kpi-subj {
+            background: #EEF2FF;
+            border-color: #C7D2FE;
+        }
+
+        .kpi-card p {
+            font-size: 10px;
             font-weight: 800;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-card h4 {
+            font-size: 17px;
+            font-weight: 900;
             color: var(--dark);
-            margin-top: 2px;
+            margin: 4px 0 2px;
+        }
+
+        .kpi-card small {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: #64748B;
         }
 
         .status-pill {
-            padding: 6px 18px;
+            padding: 6px 16px;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 800;
             display: inline-block;
             letter-spacing: 0.5px;
@@ -519,8 +628,8 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            margin-top: 36px;
-            padding-top: 20px;
+            margin-top: 30px;
+            padding-top: 18px;
             border-top: 1px solid #E2E8F0;
         }
 
@@ -554,7 +663,7 @@
         }
 
         .signature-line {
-            width: 160px;
+            width: 150px;
             border-top: 1.5px solid #0F172A;
             margin-bottom: 6px;
         }
@@ -563,6 +672,134 @@
             font-size: 11px;
             font-weight: 700;
             color: #334155;
+        }
+
+        /* Subjective Edit Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            animation: modalPop 0.25s ease-out;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--gray);
+            cursor: pointer;
+        }
+
+        .modal-calc-preview {
+            background: #F8FAFC;
+            border: 1px dashed #CBD5E1;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 12.5px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modal-calc-preview .calc-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: #F1F5F9;
+            color: #475569;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-save-subj {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-save-subj:hover {
+            background: #4338CA;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0F172A;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 110;
         }
 
         /* Footer */
@@ -575,18 +812,13 @@
             margin-top: 30px;
         }
 
-        footer a {
-            color: #38BDF8;
-            text-decoration: none;
-        }
-
         /* Print CSS for Clean A4 */
         @media print {
             body {
                 background: white;
                 color: black;
             }
-            header, .search-card, .actions-bar, footer, .alert {
+            header, .search-card, .actions-bar, footer, .alert, .modal-overlay, .btn-row-edit, .toast {
                 display: none !important;
             }
             main {
@@ -597,7 +829,7 @@
             .marksheet-card {
                 border: 2px solid black;
                 box-shadow: none;
-                padding: 24px;
+                padding: 20px;
                 background-image: none;
                 page-break-inside: avoid;
             }
@@ -619,7 +851,7 @@
                 </div>
                 <div class="brand-text">
                     <h1>STUDENT RESULT PORTAL</h1>
-                    <p>Official Examination & OMR Evaluation System</p>
+                    <p>Objective (OMR) & Subjective Examination Evaluation System</p>
                 </div>
             </div>
             <div class="data-source-badge">
@@ -636,7 +868,7 @@
         <div class="search-card">
             <div class="card-heading">
                 <h2>Check Examination Result</h2>
-                <p>Enter your Roll Number or Registration Number to view and print your official marksheet.</p>
+                <p>Enter your Roll Number or Registration Number to view your combined Objective + Subjective marksheet.</p>
             </div>
 
             <!-- Error / Info Alert -->
@@ -667,20 +899,25 @@
                     </button>
                 </div>
 
-                <!-- Database Source Toggle -->
-                <div class="db-toggle-row">
-                    <div>
-                        <span><strong>Database Source:</strong></span>
-                    </div>
-                    <div class="db-options">
-                        <label class="db-radio">
-                            <input type="radio" name="dbSource" value="firebase" checked onchange="onDbSourceChange('firebase')">
-                            Firebase Cloud DB
-                        </label>
-                        <label class="db-radio">
-                            <input type="radio" name="dbSource" value="mysql" onchange="onDbSourceChange('mysql')">
-                            MySQL Server (api.php)
-                        </label>
+                <!-- Subjective Filter & Database Toolbar -->
+                <div class="controls-toolbar">
+                    <label class="toggle-switch-wrapper" title="Toggle between combined Objective+Subjective marks or Objective-only">
+                        <input type="checkbox" id="includeSubjectiveCheck" checked onchange="toggleSubjectiveMode(this.checked)">
+                        <span><i class="fa-solid fa-pen-nib" style="color: #4F46E5;"></i> Include Subjective Marks (लिखित अंक शामिल करें)</span>
+                    </label>
+
+                    <div class="db-toggle-row">
+                        <span><strong>Database:</strong></span>
+                        <div class="db-options">
+                            <label class="db-radio">
+                                <input type="radio" name="dbSource" value="firebase" checked onchange="onDbSourceChange('firebase')">
+                                Firebase Cloud
+                            </label>
+                            <label class="db-radio">
+                                <input type="radio" name="dbSource" value="mysql" onchange="onDbSourceChange('mysql')">
+                                MySQL (api.php)
+                            </label>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -689,7 +926,7 @@
         <!-- Loading Indicator -->
         <div class="loader-box" id="loaderBox">
             <div class="spinner"></div>
-            <p style="font-size: 13px; font-weight: 600; color: var(--gray);">Fetching result from database, please wait...</p>
+            <p style="font-size: 13px; font-weight: 600; color: var(--gray);">Fetching OMR & Subjective records from database, please wait...</p>
         </div>
 
         <!-- Marksheet Display Container -->
@@ -698,6 +935,9 @@
             <div class="actions-bar">
                 <button class="btn-print" onclick="window.print()">
                     <i class="fa-solid fa-print"></i> Download / Print Marksheet (PDF)
+                </button>
+                <button class="btn-subj-modal" id="btnEditSubjectiveMarks" onclick="openSubjectiveUpdateModal()">
+                    <i class="fa-solid fa-pen-to-square"></i> Update Subjective Marks
                 </button>
             </div>
 
@@ -708,8 +948,8 @@
                 <div class="marksheet-header">
                     <h3 id="instHeaderTitle">COACHING & EVALUATION CENTER</h3>
                     <h4 id="examTitleHeading">ANNUAL EXAMINATION RESULT</h4>
-                    <p id="examSubText">Official Statement of Marks & Performance Evaluation</p>
-                    <div class="marksheet-badge">OFFICIAL MARKSHEET</div>
+                    <p id="examSubText">Official Statement of Marks: Objective (OMR) & Subjective (Written)</p>
+                    <div class="marksheet-badge">OFFICIAL STATEMENT OF MARKS</div>
                 </div>
 
                 <!-- Student Personal Details -->
@@ -746,43 +986,54 @@
                     </table>
                 </div>
 
-                <!-- Marks Statement Table -->
+                <!-- Combined Marks Statement Table -->
                 <table class="score-table">
                     <thead>
                         <tr>
                             <th>Subject</th>
                             <th>Paper Set</th>
-                            <th>Total Questions</th>
-                            <th>Attempted</th>
+                            <th class="th-obj">Objective (OMR)</th>
+                            <th class="th-subj" id="thSubjective">Subjective (Theory)</th>
+                            <th>Total Marks</th>
+                            <th>Max Marks</th>
                             <th>Pass Marks</th>
-                            <th>Marks Obtained</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="scoresTableBody">
-                        <!-- Populated by JavaScript -->
+                        <!-- Populated dynamically by JavaScript -->
                     </tbody>
                 </table>
 
-                <!-- Summary & Status Card -->
-                <div class="result-summary-card">
-                    <div class="summary-item">
-                        <p>Total Marks</p>
-                        <h5 id="sumTotalMarks">50</h5>
+                <!-- KPI Summary Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <p>Total Max Marks</p>
+                        <h4 id="kpiTotalMax">100</h4>
+                        <small id="kpiMaxBreakdown">Obj: 50 + Subj: 50</small>
                     </div>
-                    <div class="summary-item">
-                        <p>Marks Obtained</p>
-                        <h5 id="sumScore" style="color: var(--primary);">45</h5>
+                    <div class="kpi-card kpi-highlight">
+                        <p>Total Obtained</p>
+                        <h4 id="kpiTotalObtained" style="color: var(--primary);">85.0</h4>
+                        <small id="kpiObtainedBreakdown">Obj: 45.0 + Subj: 40.0</small>
                     </div>
-                    <div class="summary-item">
+                    <div class="kpi-card">
+                        <p>Objective (OMR)</p>
+                        <h4 id="kpiObjScore">45.0 / 50</h4>
+                        <small>Auto Scanned</small>
+                    </div>
+                    <div class="kpi-card kpi-subj">
+                        <p>Subjective (Theory)</p>
+                        <h4 id="kpiSubjScore">40.0 / 50</h4>
+                        <small id="kpiSubjStatus">Teacher Evaluated</small>
+                    </div>
+                    <div class="kpi-card">
                         <p>Percentage</p>
-                        <h5 id="sumPercentage">90.0%</h5>
+                        <h4 id="kpiPercentage">85.0%</h4>
+                        <small id="kpiDivision">1st Division (A)</small>
                     </div>
-                    <div class="summary-item">
-                        <p>Grade / Division</p>
-                        <h5 id="sumGrade">1st (A+)</h5>
-                    </div>
-                    <div class="summary-item">
-                        <p>Final Result</p>
+                    <div class="kpi-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        <p style="margin-bottom: 4px;">Result Status</p>
                         <div id="statusBadge" class="status-pill status-pass">PASSED</div>
                     </div>
                 </div>
@@ -793,16 +1044,14 @@
                         <img id="qrVerificationImg" class="qr-code-img" src="" alt="QR Code">
                         <div class="qr-text">
                             <p><strong>Scan QR to Verify Marksheet</strong></p>
-                            <p>Authenticity Verified Online</p>
+                            <p>Objective & Subjective Verified</p>
                             <p id="qrVerificationRef">Ref: SEC-2024-OMR</p>
                         </div>
                     </div>
-
                     <div class="signature-box">
                         <div class="signature-line"></div>
-                        <p>Class Teacher</p>
+                        <p>Subject Evaluator</p>
                     </div>
-
                     <div class="signature-box">
                         <div class="signature-line"></div>
                         <p>Controller of Examinations</p>
@@ -810,10 +1059,60 @@
                 </div>
 
             </div>
-
         </div>
 
     </main>
+
+    <!-- Subjective Update Modal ("if select subjective updated") -->
+    <div class="modal-overlay" id="subjModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-nib" style="color: #4F46E5;"></i> Update Subjective Marks</h3>
+                <button class="modal-close" onclick="closeSubjectiveModal()">&times;</button>
+            </div>
+            
+            <div style="font-size: 13px; color: #475569; margin-bottom: 12px;">
+                Enter or revise candidate's subjective / written examination marks. Grand total and percentage will update instantly.
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Student: <strong id="modalStudentLabel" style="color: #0F172A;">---</strong></label>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label for="modalSubjMarksInput">Subjective Marks Obtained (Max: <span id="modalMaxSubjLabel">50</span>)</label>
+                <input type="number" id="modalSubjMarksInput" class="form-control" step="0.5" min="0" max="100" oninput="updateModalPreview()">
+            </div>
+
+            <div class="modal-calc-preview">
+                <div class="calc-row">
+                    <span>Objective (OMR) Score:</span>
+                    <strong id="modalObjPreview">45.0 / 50</strong>
+                </div>
+                <div class="calc-row">
+                    <span>Subjective (Written) Score:</span>
+                    <strong id="modalSubjPreview" style="color: #4F46E5;">40.0 / 50</strong>
+                </div>
+                <div class="calc-row" style="border-top: 1px solid #CBD5E1; padding-top: 4px; font-weight: 800;">
+                    <span>Updated Grand Total:</span>
+                    <span id="modalGrandPreview" style="color: var(--primary);">85.0 / 100 (85.0%)</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeSubjectiveModal()">Cancel</button>
+                <button class="btn-save-subj" id="btnSaveSubjAction" onclick="saveSubjectiveMarksUpdate()">
+                    <i class="fa-solid fa-check"></i> Save & Recalculate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toastBox">
+        <i class="fa-solid fa-circle-check" style="color: #22C55E; font-size: 18px;"></i>
+        <span id="toastMessage">Updated successfully!</span>
+    </div>
 
     <!-- Footer -->
     <footer>
@@ -828,6 +1127,12 @@
 
         let currentDatabaseSource = "firebase"; // 'firebase' or 'mysql'
         let cachedExams = [];
+        let includeSubjective = true; // State for subjective toggle
+
+        // Active Student & Results State
+        let currentStudent = null;
+        let currentResults = [];
+        let currentSubjectiveRecords = {}; // Key: `${examId}_${rollNo.toLowerCase()}`
 
         // Initialize Portal
         window.addEventListener('DOMContentLoaded', () => {
@@ -839,6 +1144,19 @@
             document.getElementById('activeDatabaseLabel').textContent = 
                 source === 'firebase' ? 'Firebase Realtime DB' : 'MySQL Server (api.php)';
             loadExamsList();
+        }
+
+        function toggleSubjectiveMode(checked) {
+            includeSubjective = checked;
+            // Toggle table header visibility/label
+            const thSubj = document.getElementById('thSubjective');
+            if (thSubj) {
+                thSubj.style.display = includeSubjective ? '' : 'none';
+            }
+            if (currentStudent && currentResults.length > 0) {
+                renderResult(currentStudent, currentResults);
+                showToast(includeSubjective ? "Included Subjective Marks in Total" : "Showing Objective-Only Marks");
+            }
         }
 
         // Fetch All Exams for Dropdown
@@ -873,7 +1191,8 @@
                 cachedExams.forEach(ex => {
                     const opt = document.createElement('option');
                     opt.value = ex.id;
-                    opt.textContent = `${ex.name || 'Exam'} - ${ex.subject || 'Subject'} (${ex.date || ''})`;
+                    const hasSubjText = ex.hasSubjective ? ' [Obj + Subj]' : '';
+                    opt.textContent = `${ex.name || 'Exam'} - ${ex.subject || 'Subject'} (${ex.date || ''})${hasSubjText}`;
                     select.appendChild(opt);
                 });
             } catch (err) {
@@ -932,7 +1251,6 @@
             let matchedResults = [];
 
             if (allScanResults) {
-                // allScanResults structure: { examId: { studentId: { ...result } } }
                 Object.keys(allScanResults).forEach(exId => {
                     if (selectedExamId === 'ALL' || selectedExamId.toString() === exId.toString()) {
                         const examScans = allScanResults[exId];
@@ -951,6 +1269,31 @@
                 });
             }
 
+            // C. Fetch Subjective Marks
+            try {
+                const subjRes = await fetch(`${FIREBASE_DB_URL}/subjective_marks.json`);
+                if (subjRes.ok) {
+                    const subjData = await subjRes.json();
+                    if (subjData) {
+                        // subjData structure: { examId: { sanitizedRoll: { ...record } } }
+                        Object.keys(subjData).forEach(exId => {
+                            const exSubjs = subjData[exId];
+                            if (exSubjs) {
+                                Object.keys(exSubjs).forEach(rk => {
+                                    const rec = exSubjs[rk];
+                                    if (rec && rec.studentRoll) {
+                                        const key = `${exId}_${rec.studentRoll.toString().trim().toLowerCase()}`;
+                                        currentSubjectiveRecords[key] = rec;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not fetch subjective marks from Firebase:', err);
+            }
+
             if (matchedResults.length === 0) {
                 throw new Error(`No examination result found for Roll No / Registration No "${rollNo}".`);
             }
@@ -958,7 +1301,7 @@
             // Create fallback student if student record was missing
             if (!student) {
                 student = {
-                    name: 'Student ' + rollNo,
+                    name: 'Candidate ' + rollNo,
                     rollNo: rollNo,
                     registrationNo: 'REG-' + rollNo,
                     fatherName: '---',
@@ -979,10 +1322,15 @@
                     exam_subject: ex.subject || 'All Subjects',
                     exam_date: ex.date || new Date().toISOString().split('T')[0],
                     pass_marks: ex.passMarks || 30.0,
+                    marks_per_question: ex.marksPerQuestion || 1.0,
+                    subjective_max_marks: ex.subjectiveMaxMarks || 50.0,
+                    has_subjective: ex.hasSubjective || false,
                     exam_title: ex.title || 'बिहार विद्यालय परीक्षा , समिति'
                 };
             });
 
+            currentStudent = student;
+            currentResults = resultsWithExams;
             renderResult(student, resultsWithExams);
         }
 
@@ -1000,12 +1348,30 @@
                 throw new Error(data.message || `No result found for Roll No "${rollNo}".`);
             }
 
+            // Populate subjective records from MySQL response
+            if (Array.isArray(data.subjective_marks)) {
+                data.subjective_marks.forEach(sm => {
+                    const key = `${sm.exam_id}_${sm.student_roll.toString().trim().toLowerCase()}`;
+                    currentSubjectiveRecords[key] = {
+                        examId: sm.exam_id,
+                        studentRoll: sm.student_roll,
+                        marksObtained: parseFloat(sm.marks_obtained || 0),
+                        finalMarks: parseFloat(sm.final_marks || sm.marks_obtained || 0),
+                        maxMarks: parseFloat(sm.max_marks || 50),
+                        checkedBy: sm.checked_by || 'Teacher'
+                    };
+                });
+            }
+
+            currentStudent = data.student;
+            currentResults = data.results;
             renderResult(data.student, data.results);
         }
 
         // Render Marksheet to UI
         function renderResult(student, results) {
             const firstRes = results[0] || {};
+            const cleanRoll = (student.rollNo || student.roll_no || '').toString().trim().toLowerCase();
 
             // 1. Header Information
             document.getElementById('instHeaderTitle').textContent = firstRes.exam_title || 'COACHING & EVALUATION CENTER';
@@ -1037,57 +1403,115 @@
                 photoImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name || 'Student')}&background=0F172A&color=fff&size=200`;
             }
 
-            // 3. Score Table Rows
+            // 3. Combined Score Table Rows
             const tbody = document.getElementById('scoresTableBody');
             tbody.innerHTML = '';
 
-            let totalMaxMarks = 0;
-            let totalScored = 0;
+            let grandTotalMax = 0;
+            let grandTotalObtained = 0;
+            let grandObjScore = 0;
+            let grandObjMax = 0;
+            let grandSubjScore = 0;
+            let grandSubjMax = 0;
             let isPassed = true;
+            let hasAnySubjective = false;
 
-            results.forEach(res => {
+            results.forEach((res, idx) => {
                 const subName = res.exam_subject || res.subject || 'General Subject';
                 const paperSet = res.paper_set || res.paperSet || 'Set A';
                 const totalQ = parseInt(res.total_questions || res.totalQuestions || 50);
-                const score = parseFloat(res.score || 0);
-                const passMarks = parseFloat(res.pass_marks || res.passMarks || 30.0);
+                const marksPerQ = parseFloat(res.marks_per_question || 1.0);
+                const objMax = totalQ * marksPerQ;
+                const objScore = parseFloat(res.score || 0);
 
-                totalMaxMarks += totalQ;
-                totalScored += score;
+                // Check for subjective record
+                const subjKey = `${res.exam_id || res.examId}_${cleanRoll}`;
+                const subjRecord = currentSubjectiveRecords[subjKey];
+                const subjMax = parseFloat(subjRecord?.maxMarks || res.subjective_max_marks || res.subjectiveMaxMarks || 50.0);
+                const subjScore = parseFloat(subjRecord?.finalMarks ?? subjRecord?.marksObtained ?? 0);
+                const isSubjAvailable = (subjRecord !== undefined || res.has_subjective || res.hasSubjective);
 
-                if (score < passMarks) {
-                    isPassed = false;
+                if (isSubjAvailable) {
+                    hasAnySubjective = true;
                 }
+
+                // Calculate row totals based on toggle
+                let rowMax = objMax;
+                let rowObtained = objScore;
+
+                if (includeSubjective && isSubjAvailable) {
+                    rowMax += subjMax;
+                    rowObtained += subjScore;
+                    grandSubjScore += subjScore;
+                    grandSubjMax += subjMax;
+                }
+
+                grandObjScore += objScore;
+                grandObjMax += objMax;
+                grandTotalMax += rowMax;
+                grandTotalObtained += rowObtained;
+
+                const passMarks = parseFloat(res.pass_marks || res.passMarks || 30.0);
+                const rowPassed = rowObtained >= passMarks;
+                if (!rowPassed) isPassed = false;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="subject-name">${subName}</td>
                     <td><strong>${paperSet}</strong></td>
-                    <td>${totalQ}</td>
-                    <td>${totalQ}</td>
+                    <td><strong>${objScore.toFixed(1)}</strong> <small style="color: #64748B;">/ ${objMax}</small></td>
+                    ${includeSubjective ? `
+                        <td style="color: #4338CA;">
+                            <strong>${subjScore.toFixed(1)}</strong> <small style="color: #64748B;">/ ${subjMax}</small>
+                            <button class="btn-row-edit" title="Edit Subjective Marks" onclick="openSubjectiveUpdateModal(${res.exam_id || res.examId}, '${student.rollNo || student.roll_no}', ${subjScore}, ${subjMax})">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </td>
+                    ` : ''}
+                    <td><strong style="color: var(--primary); font-size: 13.5px;">${rowObtained.toFixed(1)}</strong></td>
+                    <td><strong>${rowMax}</strong></td>
                     <td>${passMarks}</td>
-                    <td><strong style="color: ${score >= passMarks ? 'var(--success)' : 'var(--danger)'}">${score.toFixed(1)}</strong></td>
+                    <td>
+                        <span style="font-weight: 800; font-size: 11.5px; color: ${rowPassed ? 'var(--success)' : 'var(--danger)'};">
+                            ${rowPassed ? 'PASS' : 'FAIL'}
+                        </span>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // 4. Summary & Percentage
-            const percentage = totalMaxMarks > 0 ? ((totalScored / totalMaxMarks) * 100).toFixed(1) : 0;
-            document.getElementById('sumTotalMarks').textContent = totalMaxMarks;
-            document.getElementById('sumScore').textContent = totalScored.toFixed(1);
-            document.getElementById('sumPercentage').textContent = `${percentage}%`;
+            // 4. Update KPI Summary Cards
+            document.getElementById('kpiTotalMax').textContent = grandTotalMax;
+            document.getElementById('kpiMaxBreakdown').textContent = includeSubjective 
+                ? `Obj: ${grandObjMax} + Subj: ${grandSubjMax}` 
+                : `Objective Only: ${grandObjMax}`;
 
-            // Grade / Division
-            let grade = "1st Division (A+)";
-            if (percentage >= 80) grade = "Distinction (A+)";
-            else if (percentage >= 60) grade = "1st Division (A)";
-            else if (percentage >= 45) grade = "2nd Division (B)";
-            else if (percentage >= 33) grade = "3rd Division (C)";
-            else grade = "Needs Improvement (F)";
+            document.getElementById('kpiTotalObtained').textContent = grandTotalObtained.toFixed(1);
+            document.getElementById('kpiObtainedBreakdown').textContent = includeSubjective 
+                ? `Obj: ${grandObjScore.toFixed(1)} + Subj: ${grandSubjScore.toFixed(1)}`
+                : `OMR Scored: ${grandObjScore.toFixed(1)}`;
 
-            document.getElementById('sumGrade').textContent = grade;
+            document.getElementById('kpiObjScore').textContent = `${grandObjScore.toFixed(1)} / ${grandObjMax}`;
+            document.getElementById('kpiSubjScore').textContent = includeSubjective 
+                ? `${grandSubjScore.toFixed(1)} / ${grandSubjMax}` 
+                : 'Excluded';
+            document.getElementById('kpiSubjStatus').textContent = hasAnySubjective 
+                ? (grandSubjScore > 0 ? 'Teacher Evaluated' : 'Pending / Zero')
+                : 'Not Applicable';
 
-            // Final Pass/Fail Badge
+            // Percentage & Division
+            const percentage = grandTotalMax > 0 ? ((grandTotalObtained / grandTotalMax) * 100).toFixed(1) : 0;
+            document.getElementById('kpiPercentage').textContent = `${percentage}%`;
+
+            let division = "1st Division (A+)";
+            if (percentage >= 80) division = "Distinction (A+)";
+            else if (percentage >= 60) division = "1st Division (A)";
+            else if (percentage >= 45) division = "2nd Division (B)";
+            else if (percentage >= 33) division = "3rd Division (C)";
+            else division = "Needs Improvement (F)";
+            document.getElementById('kpiDivision').textContent = division;
+
+            // Final Status Badge
             const badge = document.getElementById('statusBadge');
             if (isPassed && percentage >= 33) {
                 badge.className = 'status-pill status-pass';
@@ -1097,9 +1521,9 @@
                 badge.textContent = 'NEEDS IMPROVEMENT';
             }
 
-            // 5. Verification QR Code
+            // 5. Verification QR Code (Includes both Objective, Subjective and Total)
             const studentRoll = student.rollNo || student.roll_no;
-            const qrData = `VERIFIED|ROLL:${studentRoll}|NAME:${student.name}|SCORE:${totalScored}/${totalMaxMarks}|STATUS:${isPassed ? 'PASS' : 'FAIL'}`;
+            const qrData = `VERIFIED|ROLL:${studentRoll}|NAME:${student.name}|TOTAL:${grandTotalObtained.toFixed(1)}/${grandTotalMax}|OBJ:${grandObjScore.toFixed(1)}|SUBJ:${grandSubjScore.toFixed(1)}|STATUS:${isPassed ? 'PASS' : 'FAIL'}`;
             const qrImg = document.getElementById('qrVerificationImg');
             qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrData)}`;
             document.getElementById('qrVerificationRef').textContent = `Ref: OMR-${studentRoll}-${Date.now().toString().slice(-6)}`;
@@ -1109,6 +1533,120 @@
             document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
         }
 
+        // ----------------------------------------------------
+        // Subjective Marks Edit Modal Logic ("if select subjective updated")
+        // ----------------------------------------------------
+        let activeEditExamId = null;
+        let activeEditRoll = null;
+        let activeEditMaxSubj = 50;
+        let activeEditObjScore = 0;
+        let activeEditObjMax = 50;
+
+        function openSubjectiveUpdateModal(examId, rollNo, currentSubjScore, maxSubj) {
+            if (!currentStudent || currentResults.length === 0) return;
+            const res = currentResults[0];
+
+            activeEditExamId = examId || res.exam_id || res.examId;
+            activeEditRoll = (rollNo || currentStudent.rollNo || currentStudent.roll_no || '').toString().trim();
+            activeEditObjScore = parseFloat(res.score || 0);
+            activeEditObjMax = parseInt(res.total_questions || res.totalQuestions || 50) * parseFloat(res.marks_per_question || 1.0);
+            activeEditMaxSubj = maxSubj || parseFloat(res.subjective_max_marks || res.subjectiveMaxMarks || 50.0);
+
+            const subjKey = `${activeEditExamId}_${activeEditRoll.toLowerCase()}`;
+            const existingSubj = currentSubjectiveRecords[subjKey];
+            const existingScore = (currentSubjScore !== undefined) ? currentSubjScore : (existingSubj?.finalMarks ?? existingSubj?.marksObtained ?? 0);
+
+            document.getElementById('modalStudentLabel').textContent = `${currentStudent.name} (Roll: ${activeEditRoll})`;
+            document.getElementById('modalMaxSubjLabel').textContent = activeEditMaxSubj;
+            document.getElementById('modalSubjMarksInput').value = existingScore;
+            document.getElementById('modalSubjMarksInput').max = activeEditMaxSubj;
+
+            updateModalPreview();
+            document.getElementById('subjModal').style.display = 'flex';
+        }
+
+        function closeSubjectiveModal() {
+            document.getElementById('subjModal').style.display = 'none';
+        }
+
+        function updateModalPreview() {
+            const inputVal = parseFloat(document.getElementById('modalSubjMarksInput').value) || 0;
+            const grandScore = activeEditObjScore + inputVal;
+            const grandMax = activeEditObjMax + activeEditMaxSubj;
+            const pct = grandMax > 0 ? ((grandScore / grandMax) * 100).toFixed(1) : 0;
+
+            document.getElementById('modalObjPreview').textContent = `${activeEditObjScore.toFixed(1)} / ${activeEditObjMax}`;
+            document.getElementById('modalSubjPreview').textContent = `${inputVal.toFixed(1)} / ${activeEditMaxSubj}`;
+            document.getElementById('modalGrandPreview').textContent = `${grandScore.toFixed(1)} / ${grandMax} (${pct}%)`;
+        }
+
+        async function saveSubjectiveMarksUpdate() {
+            const newMarks = parseFloat(document.getElementById('modalSubjMarksInput').value);
+            if (isNaN(newMarks) || newMarks < 0 || newMarks > activeEditMaxSubj) {
+                alert(`Please enter valid marks between 0 and ${activeEditMaxSubj}`);
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveSubjAction');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+            const subjKey = `${activeEditExamId}_${activeEditRoll.toLowerCase()}`;
+            const updatedRecord = {
+                id: `subj_${activeEditExamId}_${activeEditRoll.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+                examId: activeEditExamId,
+                studentRoll: activeEditRoll,
+                studentName: currentStudent.name || '',
+                marksObtained: newMarks,
+                finalMarks: newMarks,
+                maxMarks: activeEditMaxSubj,
+                checkedBy: 'Teacher / Evaluator',
+                timestamp: Date.now()
+            };
+
+            // 1. Update In-Memory State
+            currentSubjectiveRecords[subjKey] = updatedRecord;
+
+            // 2. Direct Sync to Firebase
+            try {
+                const sanitizedRoll = activeEditRoll.replace(/[\/.]/g, '_');
+                await fetch(`${FIREBASE_DB_URL}/subjective_marks/${activeEditExamId}/${sanitizedRoll}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedRecord)
+                });
+            } catch (err) {
+                console.warn('Firebase subjective sync error:', err);
+            }
+
+            // 3. Direct Sync to MySQL if available
+            try {
+                await fetch(MYSQL_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'save_subjective',
+                        exam_id: activeEditExamId,
+                        student_roll: activeEditRoll,
+                        marks_obtained: newMarks,
+                        max_marks: activeEditMaxSubj,
+                        checked_by: 'Teacher / Evaluator'
+                    })
+                });
+            } catch (err) {
+                console.warn('MySQL subjective sync error:', err);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Save & Recalculate';
+            closeSubjectiveModal();
+
+            // 4. Live Recalculate and Re-render Marksheet
+            renderResult(currentStudent, currentResults);
+            showToast(`Subjective marks updated to ${newMarks}! Total recalculated.`);
+        }
+
+        // Helper UI Functions
         function showError(show, msg = '') {
             const el = document.getElementById('errorAlert');
             const text = document.getElementById('errorMessage');
@@ -1123,6 +1661,15 @@
         function showLoader(show) {
             document.getElementById('loaderBox').style.display = show ? 'block' : 'none';
             document.getElementById('btnSubmit').disabled = show;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastBox');
+            document.getElementById('toastMessage').textContent = msg;
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
         }
     </script>
 </body>

@@ -126,4 +126,27 @@ CREATE TABLE IF NOT EXISTS `scan_results` (
     INDEX `idx_res_score` (`score`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+-- Table 6: `subjective_marks`
+-- Stores theory/written subjective exam marks evaluated by teachers
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `subjective_marks` (
+    `id` VARCHAR(64) NOT NULL,
+    `exam_id` INT NOT NULL COMMENT 'Exam ID',
+    `student_roll` VARCHAR(100) NOT NULL COMMENT 'Student Roll No',
+    `student_name` VARCHAR(100) DEFAULT '',
+    `subject_name` VARCHAR(100) DEFAULT '',
+    `marks_obtained` FLOAT NOT NULL DEFAULT 0,
+    `max_marks` FLOAT NOT NULL DEFAULT 50,
+    `checked_by` VARCHAR(100) DEFAULT 'Teacher',
+    `final_marks` FLOAT NOT NULL DEFAULT 0,
+    `timestamp` BIGINT DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_subj_exam_roll` (`exam_id`, `student_roll`),
+    INDEX `idx_subj_exam` (`exam_id`),
+    INDEX `idx_subj_roll` (`student_roll`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
