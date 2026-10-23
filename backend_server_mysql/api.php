@@ -45,8 +45,12 @@ function saveBase64Image($base64Data, $rollNo) {
     return '';
 }
 
-// Check API Key security if configured in db_config.php (allow public read actions for Student Result Portal)
-$publicActions = ['get_result', 'check_result', 'get_exams', 'save_subjective', 'update_subjective', 'ping', 'test_connection'];
+// Check API Key security if configured in db_config.php (allow public read and admin actions if configured)
+$publicActions = [
+    'get_result', 'check_result', 'get_exams', 'save_subjective', 'update_subjective',
+    'ping', 'test_connection', 'get_students', 'get_all_results', 'get_subjective_marks',
+    'delete_scan_result', 'get_dashboard_stats', 'save_exam', 'delete_exam', 'save_student', 'delete_student'
+];
 $reqAction = $_GET['action'] ?? '';
 if (empty($reqAction)) {
     $rawInput = @file_get_contents('php://input');
@@ -717,6 +721,100 @@ try {
             echo json_encode([
                 'status' => 'success',
                 'message' => "Bulk sync complete: $examsCount exams, $keysCount answer keys, $questionsCount questions, $studentsCount students, $resultsCount results synced."
+            ]);
+            break;
+
+        // ----------------------------------------------------
+        // 8. ADMIN: GET ALL STUDENTS
+        // ----------------------------------------------------
+        case 'get_students':
+            $stmt = $pdo->query("SELECT * FROM students ORDER BY roll_no ASC");
+            $students = $stmt->fetchAll();
+            echo json_encode(['status' => 'success', 'students' => $students]);
+            break;
+
+        // ----------------------------------------------------
+        // 9. ADMIN: GET ALL SCAN RESULTS
+        // ----------------------------------------------------
+        case 'get_all_results':
+            $examId = intval($d['exam_id'] ?? ($_GET['exam_id'] ?? 0));
+            if ($examId > 0) {
+                $stmt = $pdo->prepare("
+                    SELECT r.*, e.name as exam_name, e.subject as exam_subject, s.name as student_name, s.father_name, s.registration_no, s.image_url
+                    FROM scan_results r
+                    LEFT JOIN exams e ON r.exam_id = e.id
+                    LEFT JOIN students s ON r.student_id = s.roll_no
+                    WHERE r.exam_id = :exam_id
+                    ORDER BY r.score DESC, r.timestamp DESC
+                ");
+                $stmt->execute([':exam_id' => $examId]);
+            } else {
+                $stmt = $pdo->query("
+                    SELECT r.*, e.name as exam_name, e.subject as exam_subject, s.name as student_name, s.father_name, s.registration_no, s.image_url
+                    FROM scan_results r
+                    LEFT JOIN exams e ON r.exam_id = e.id
+                    LEFT JOIN students s ON r.student_id = s.roll_no
+                    ORDER BY r.timestamp DESC
+                    LIMIT 200
+                ");
+            }
+            $results = $stmt->fetchAll();
+            echo json_encode(['status' => 'success', 'results' => $results]);
+            break;
+
+        // ----------------------------------------------------
+        // 10. ADMIN: GET SUBJECTIVE MARKS
+        // ----------------------------------------------------
+        case 'get_subjective_marks':
+            $examId = intval($d['exam_id'] ?? ($_GET['exam_id'] ?? 0));
+            if ($examId > 0) {
+                $stmt = $pdo->prepare("SELECT * FROM subjective_marks WHERE exam_id = :exam_id");
+                $stmt->execute([':exam_id' => $examId]);
+            } else {
+                $stmt = $pdo->query("SELECT * FROM subjective_marks ORDER BY timestamp DESC");
+            }
+            $subjList = $stmt->fetchAll();
+            echo json_encode(['status' => 'success', 'subjective_marks' => $subjList]);
+            break;
+
+        // ----------------------------------------------------
+        // 11. ADMIN: DELETE SCAN RESULT
+        // ----------------------------------------------------
+        case 'delete_scan_result':
+            $id = $d['id'] ?? ($_GET['id'] ?? 0);
+            if (!$id) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'id is required']);
+                exit;
+            }
+            $stmt = $pdo->prepare("DELETE FROM scan_results WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            echo json_encode(['status' => 'success', 'message' => 'Result record deleted']);
+            break;
+
+        // ----------------------------------------------------
+        // 12. ADMIN: GET DASHBOARD STATS
+        // ----------------------------------------------------
+        case 'get_dashboard_stats':
+            $examsCount = $pdo->query("SELECT COUNT(*) FROM exams")->fetchColumn();
+            $studentsCount = $pdo->query("SELECT COUNT(*) FROM students")->fetchColumn();
+            $resultsCount = $pdo->query("SELECT COUNT(*) FROM scan_results")->fetchColumn();
+            $subjCount = 0;
+            try {
+                $subjCount = $pdo->query("SELECT COUNT(*) FROM subjective_marks")->fetchColumn();
+            } catch (\Exception $e) {}
+
+            $avgScore = $pdo->query("SELECT COALESCE(AVG(score), 0) FROM scan_results")->fetchColumn();
+
+            echo json_encode([
+                'status' => 'success',
+                'stats' => [
+                    'exams_count' => intval($examsCount),
+                    'students_count' => intval($studentsCount),
+                    'results_count' => intval($resultsCount),
+                    'subjective_count' => intval($subjCount),
+                    'avg_score' => round(floatval($avgScore), 2)
+                ]
             ]);
             break;
 

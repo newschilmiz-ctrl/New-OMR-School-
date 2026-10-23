@@ -1,0 +1,2952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OMR & Subjective Evaluation Admin Panel</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #E11D48;
+            --primary-dark: #BE123C;
+            --primary-light: #FFE4E6;
+            --secondary: #2563EB;
+            --secondary-dark: #1D4ED8;
+            --accent: #4F46E5;
+            --success: #16A34A;
+            --warning: #F59E0B;
+            --danger: #DC2626;
+            --dark: #0F172A;
+            --dark-surface: #1E293B;
+            --dark-card: #334155;
+            --gray: #64748B;
+            --light-gray: #F1F5F9;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --sidebar-width: 260px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* ------------------------------------------------------------------
+           APP LAYOUT (Responsive Desktop Sidebar + Mobile Drawer)
+        ------------------------------------------------------------------- */
+        #app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Desktop */
+        aside.sidebar {
+            width: var(--sidebar-width);
+            background: #0F172A;
+            color: #F8FAFC;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-brand {
+            padding: 20px 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, #BE123C 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
+            flex-shrink: 0;
+        }
+
+        .brand-info h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: -0.3px;
+        }
+
+        .brand-info span {
+            font-size: 11px;
+            color: #94A3B8;
+            font-weight: 600;
+            display: block;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-header {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748B;
+            font-weight: 800;
+            padding: 12px 14px 6px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            color: #CBD5E1;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #FFFFFF;
+        }
+
+        .menu-item.active {
+            background: linear-gradient(135deg, rgba(225, 29, 72, 0.9) 0%, rgba(190, 18, 60, 0.9) 100%);
+            color: #FFFFFF;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+        }
+
+        .menu-item i {
+            width: 20px;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .menu-badge {
+            margin-left: auto;
+            font-size: 10.5px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .db-badge-sidebar {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11.5px;
+            color: #94A3B8;
+        }
+
+        .db-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            margin-right: 6px;
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .btn-logout {
+            width: 100%;
+            padding: 10px;
+            background: rgba(220, 38, 38, 0.12);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #F87171;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #DC2626;
+            color: white;
+        }
+
+        /* Main Content Container */
+        main.main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--bg);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Top Navbar */
+        header.topbar {
+            background: #FFFFFF;
+            height: 64px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-toggle-menu {
+            display: none;
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            color: var(--dark);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-toggle-menu:hover {
+            background: var(--light-gray);
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .db-selector-pill {
+            display: flex;
+            align-items: center;
+            background: var(--light-gray);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 3px;
+        }
+
+        .db-pill-btn {
+            border: none;
+            background: transparent;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gray);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .db-pill-btn.active {
+            background: #FFFFFF;
+            color: var(--dark);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+        }
+
+        .btn-portal-link {
+            background: #EFF6FF;
+            color: var(--secondary);
+            border: 1px solid #BFDBFE;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-portal-link:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* Page Content Area */
+        .content-body {
+            padding: 24px;
+            flex: 1;
+            max-width: 1350px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Tab Screens */
+        .admin-tab {
+            display: none;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        .admin-tab.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ------------------------------------------------------------------
+           DASHBOARD STATS CARDS
+        ------------------------------------------------------------------- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-icon-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-rose { background: #FFE4E6; color: var(--primary); }
+        .stat-icon-blue { background: #DBEAFE; color: var(--secondary); }
+        .stat-icon-indigo { background: #E0E7FF; color: var(--accent); }
+        .stat-icon-green { background: #DCFCE7; color: var(--success); }
+        .stat-icon-amber { background: #FEF3C7; color: var(--warning); }
+
+        .stat-details h4 {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-details .stat-number {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .stat-details .stat-sub {
+            font-size: 11px;
+            color: var(--gray);
+            margin-top: 2px;
+        }
+
+        /* ------------------------------------------------------------------
+           SECTIONS & CARDS
+        ------------------------------------------------------------------- */
+        .panel-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .panel-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #FAFAFC;
+        }
+
+        .panel-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-card-title h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .panel-card-title span {
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .panel-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-decoration: none;
+            min-height: 40px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 6px rgba(225, 29, 72, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-dark);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background: #4338CA;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803D;
+        }
+
+        .btn-outline {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            color: var(--dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--light-gray);
+        }
+
+        .btn-danger-outline {
+            background: #FFFFFF;
+            border: 1px solid #FECACA;
+            color: var(--danger);
+        }
+
+        .btn-danger-outline:hover {
+            background: #FEF2F2;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-height: 32px;
+            border-radius: 6px;
+        }
+
+        /* Search & Filter Bar */
+        .search-bar-row {
+            padding: 14px 20px;
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input-box {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-input-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+        }
+
+        .select-filter {
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            background: white;
+            outline: none;
+            min-width: 180px;
+        }
+
+        /* ------------------------------------------------------------------
+           TABLES (Desktop & Mobile Scrollable)
+        ------------------------------------------------------------------- */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table.admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        table.admin-table th {
+            background: #F8FAFC;
+            padding: 12px 16px;
+            color: #475569;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        table.admin-table td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--dark);
+            vertical-align: middle;
+        }
+
+        table.admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        table.admin-table tr:hover {
+            background-color: #F8FAFC;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-success { background: #DCFCE7; color: #166534; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .badge-blue { background: #DBEAFE; color: #1E40AF; }
+        .badge-purple { background: #EDE9FE; color: #5B21B6; }
+        .badge-gray { background: #F1F5F9; color: #475569; }
+
+        .student-thumb {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            background: #F1F5F9;
+        }
+
+        /* Subjective Quick Input */
+        .subj-input-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .subj-mark-field {
+            width: 70px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #CBD5E1;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            outline: none;
+        }
+
+        .subj-mark-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 42px;
+            color: #CBD5E1;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+        }
+
+        /* ------------------------------------------------------------------
+           MODALS
+        ------------------------------------------------------------------- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-box {
+            background: #FFFFFF;
+            width: 100%;
+            max-width: 540px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            background: #F8FAFC;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 22px;
+            color: var(--gray);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            background: #F8FAFC;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .form-control {
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+        }
+
+        /* Checkbox Switch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #F8FAFC;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .switch-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* ------------------------------------------------------------------
+           LOGIN PIN OVERLAY
+        ------------------------------------------------------------------- */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top, #1E293B 0%, #0F172A 100%);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .login-card {
+            background: #FFFFFF;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 16px;
+            padding: 32px 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, #BE123C 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.35);
+        }
+
+        .login-card h2 {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 6px;
+        }
+
+        .login-card p {
+            font-size: 13px;
+            color: var(--gray);
+            margin-bottom: 24px;
+        }
+
+        .pin-input-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 18px;
+            letter-spacing: 4px;
+            text-align: center;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-weight: 800;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .pin-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.12);
+        }
+
+        .login-hint {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-top: 12px;
+        }
+
+        /* ------------------------------------------------------------------
+           TOAST NOTIFICATION
+        ------------------------------------------------------------------- */
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0F172A;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 300;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ------------------------------------------------------------------
+           BOTTOM NAV FOR MOBILE SCREENS (<768px)
+        ------------------------------------------------------------------- */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #FFFFFF;
+            border-top: 1px solid var(--border);
+            z-index: 50;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            display: none;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #64748B;
+            font-size: 10px;
+            font-weight: 700;
+            text-decoration: none;
+            flex: 1;
+            height: 100%;
+            cursor: pointer;
+            gap: 3px;
+        }
+
+        .bottom-nav-item i {
+            font-size: 17px;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--primary);
+        }
+
+        /* Mobile Drawer Backdrop */
+        .drawer-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            z-index: 90;
+        }
+
+        /* ------------------------------------------------------------------
+           RESPONSIVE BREAKPOINTS (Mobile & Tablet)
+        ------------------------------------------------------------------- */
+        @media (max-width: 900px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            aside.sidebar {
+                transform: translateX(-100%);
+            }
+
+            aside.sidebar.open {
+                transform: translateX(0);
+            }
+
+            .drawer-backdrop.open {
+                display: block;
+            }
+
+            main.main-content {
+                margin-left: 0;
+                padding-bottom: 70px; /* Space for bottom nav */
+            }
+
+            .btn-toggle-menu {
+                display: flex;
+            }
+
+            .mobile-bottom-nav {
+                display: flex;
+            }
+
+            .topbar-title {
+                font-size: 15px;
+            }
+
+            .content-body {
+                padding: 16px;
+            }
+
+            .panel-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .panel-card-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .stat-icon-box {
+                width: 42px;
+                height: 42px;
+                font-size: 18px;
+            }
+
+            .stat-details .stat-number {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Print Mode */
+        @media print {
+            aside.sidebar, header.topbar, .mobile-bottom-nav, .panel-card-actions, .search-bar-row, .btn {
+                display: none !important;
+            }
+            main.main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            .panel-card {
+                box-shadow: none !important;
+                border: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================================================================
+         SECURITY / LOGIN PIN OVERLAY (Default PIN: 1234)
+    ================================================================= -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2>Admin Control Panel</h2>
+            <p>Enter Master PIN to access exam, student, and evaluation controls.</p>
+            
+            <div class="pin-input-box">
+                <input type="password" id="adminPinInput" class="pin-input" placeholder="••••" maxlength="8" autofocus onkeypress="if(event.key === 'Enter') handleAdminLogin()">
+            </div>
+            <button class="btn btn-primary" style="width: 100%; min-height: 44px;" onclick="handleAdminLogin()">
+                <i class="fa-solid fa-lock-open"></i> Unlock Admin Panel
+            </button>
+            <div class="login-hint">Default PIN: <strong>1234</strong> (Change anytime in Settings)</div>
+        </div>
+    </div>
+
+    <!-- Mobile Drawer Backdrop -->
+    <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleSidebar(false)"></div>
+
+    <!-- ================================================================
+         APPLICATION WRAPPER
+    ================================================================= -->
+    <div id="app-wrapper">
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div class="brand-info">
+                    <h2>OMR Suite</h2>
+                    <span>Admin Dashboard</span>
+                </div>
+            </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-header">Overview</div>
+                <a class="menu-item active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="menu-header">Examination</div>
+                <a class="menu-item" data-tab="tab-exams" onclick="switchTab('tab-exams')">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>Exams Management</span>
+                    <span class="menu-badge" id="sidebarExamCount">0</span>
+                </a>
+                <a class="menu-item" data-tab="tab-students" onclick="switchTab('tab-students')">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <span>Student Registry</span>
+                    <span class="menu-badge" id="sidebarStudentCount">0</span>
+                </a>
+                <a class="menu-item" data-tab="tab-subjective" onclick="switchTab('tab-subjective')">
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <span>Subjective Entry</span>
+                    <span class="badge badge-danger" style="margin-left: auto; font-size: 10px;">PRO</span>
+                </a>
+                <a class="menu-item" data-tab="tab-results" onclick="switchTab('tab-results')">
+                    <i class="fa-solid fa-award"></i>
+                    <span>Results & Scans</span>
+                    <span class="menu-badge" id="sidebarScanCount">0</span>
+                </a>
+
+                <div class="menu-header">System</div>
+                <a class="menu-item" data-tab="tab-settings" onclick="switchTab('tab-settings')">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings & Sync</span>
+                </a>
+                <a class="menu-item" href="index.html" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>Student Portal</span>
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="db-badge-sidebar">
+                    <span><span class="db-status-dot"></span><strong id="activeDbNameSidebar">Firebase RTDB</strong></span>
+                    <i class="fa-solid fa-arrows-rotate" style="cursor: pointer;" title="Refresh Data" onclick="refreshCurrentData()"></i>
+                </div>
+                <button class="btn-logout" onclick="handleAdminLogout()">
+                    <i class="fa-solid fa-power-off"></i> Lock & Exit
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Topbar Header -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-toggle-menu" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h2 class="topbar-title" id="pageTitleHeading">Dashboard Overview</h2>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- Database Switcher Quick Pill -->
+                    <div class="db-selector-pill">
+                        <button class="db-pill-btn active" id="btnPillFirebase" onclick="switchDatabaseSource('firebase')">
+                            <i class="fa-solid fa-fire" style="color: #F97316;"></i> Firebase
+                        </button>
+                        <button class="db-pill-btn" id="btnPillMysql" onclick="switchDatabaseSource('mysql')">
+                            <i class="fa-solid fa-database" style="color: #2563EB;"></i> MySQL
+                        </button>
+                    </div>
+
+                    <a href="index.html" class="btn-portal-link" target="_blank" title="Open Public Student Portal">
+                        <i class="fa-solid fa-globe"></i> <span style="display: none; @media(min-width:600px){display:inline;}">Student View</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Body Tabs -->
+            <div class="content-body">
+
+                <!-- ====================================================
+                     TAB 1: DASHBOARD
+                ==================================================== -->
+                <div class="admin-tab active" id="tab-dashboard">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon-box stat-icon-rose">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h4>Total Exams</h4>
+                                <div class="stat-number" id="dashTotalExams">--</div>
+                                <div class="stat-sub">Active tests configured</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon-box stat-icon-blue">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h4>Students</h4>
+                                <div class="stat-number" id="dashTotalStudents">--</div>
+                                <div class="stat-sub">Registered candidates</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon-box stat-icon-indigo">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h4>OMR Scans</h4>
+                                <div class="stat-number" id="dashTotalScans">--</div>
+                                <div class="stat-sub">Objective sheets processed</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon-box stat-icon-green">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h4>Subjective</h4>
+                                <div class="stat-number" id="dashTotalSubj">--</div>
+                                <div class="stat-sub">Theory marks entered</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Action Shortcuts -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title">
+                                <i class="fa-solid fa-bolt" style="color: var(--primary);"></i>
+                                <h3>Quick Action Shortcuts</h3>
+                            </div>
+                        </div>
+                        <div style="padding: 18px 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="openNewExamModal()">
+                                <i class="fa-solid fa-plus"></i> Create New Exam
+                            </button>
+                            <button class="btn btn-secondary" onclick="openNewStudentModal()">
+                                <i class="fa-solid fa-user-plus"></i> Add Student
+                            </button>
+                            <button class="btn btn-accent" onclick="switchTab('tab-subjective')">
+                                <i class="fa-solid fa-pen-nib"></i> Enter Subjective Marks
+                            </button>
+                            <button class="btn btn-outline" onclick="exportResultsCSV()">
+                                <i class="fa-solid fa-file-arrow-down"></i> Export All Results
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Results Table -->
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <h3>Recent Evaluation Activity</h3>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="switchTab('tab-results')">
+                                View All <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Candidate</th>
+                                        <th>Exam</th>
+                                        <th>Objective</th>
+                                        <th>Subjective</th>
+                                        <th>Total Score</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardRecentTableBody">
+                                    <tr><td colspan="7" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading records...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================
+                     TAB 2: EXAMS MANAGEMENT
+                ==================================================== -->
+                <div class="admin-tab" id="tab-exams">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title">
+                                <i class="fa-solid fa-file-lines" style="color: var(--primary);"></i>
+                                <h3>Exams & Papers Master</h3>
+                                <span id="examsCountBadge">(0 Exams)</span>
+                            </div>
+                            <div class="panel-card-actions">
+                                <button class="btn btn-primary" onclick="openNewExamModal()">
+                                    <i class="fa-solid fa-plus"></i> Add New Exam
+                                </button>
+                                <button class="btn btn-outline" onclick="loadExams()">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="search-bar-row">
+                            <div class="search-input-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" class="search-input" id="searchExamInput" placeholder="Search by Exam Name, Subject or ID..." oninput="filterExamsTable()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Exam Name</th>
+                                        <th>Subject</th>
+                                        <th>Date</th>
+                                        <th>Marks Scheme</th>
+                                        <th>Subjective Paper</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="examsTableBody">
+                                    <tr><td colspan="7" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading exams...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================
+                     TAB 3: STUDENT REGISTRY
+                ==================================================== -->
+                <div class="admin-tab" id="tab-students">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title">
+                                <i class="fa-solid fa-user-graduate" style="color: var(--secondary);"></i>
+                                <h3>Student Database</h3>
+                                <span id="studentsCountBadge">(0 Candidates)</span>
+                            </div>
+                            <div class="panel-card-actions">
+                                <button class="btn btn-secondary" onclick="openNewStudentModal()">
+                                    <i class="fa-solid fa-user-plus"></i> Register Student
+                                </button>
+                                <button class="btn btn-outline" onclick="loadStudents()">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="search-bar-row">
+                            <div class="search-input-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" class="search-input" id="searchStudentInput" placeholder="Search by Roll No, Registration No, or Name..." oninput="filterStudentsTable()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Photo</th>
+                                        <th>Roll No</th>
+                                        <th>Student Name</th>
+                                        <th>Father's Name</th>
+                                        <th>Reg No</th>
+                                        <th>Stream / Class</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody">
+                                    <tr><td colspan="7" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading students...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================
+                     TAB 4: SUBJECTIVE MARKS ENTRY
+                ==================================================== -->
+                <div class="admin-tab" id="tab-subjective">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title">
+                                <i class="fa-solid fa-pen-nib" style="color: var(--accent);"></i>
+                                <div>
+                                    <h3>Subjective / Written Marks Grading</h3>
+                                    <span>Enter theory paper marks. Grand total and percentage update instantly.</span>
+                                </div>
+                            </div>
+                            <div class="panel-card-actions">
+                                <button class="btn btn-success" onclick="saveAllSubjectiveMarks()">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Save All Entered
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="search-bar-row">
+                            <label style="font-size: 13px; font-weight: 700; color: #334155;">Select Exam:</label>
+                            <select class="select-filter" id="subjExamSelect" onchange="loadSubjectiveGradingList()">
+                                <option value="">-- Choose Exam --</option>
+                            </select>
+
+                            <div class="search-input-box" style="margin-left: auto;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" class="search-input" id="searchSubjCandidate" placeholder="Filter candidate..." oninput="filterSubjectiveRows()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Candidate Name</th>
+                                        <th>Objective (OMR)</th>
+                                        <th>Subjective Marks</th>
+                                        <th>Checked By</th>
+                                        <th>Grand Total</th>
+                                        <th>Percentage</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjectiveTableBody">
+                                    <tr><td colspan="9" class="empty-state"><i class="fa-solid fa-arrow-pointer"></i> Please select an exam from the dropdown above.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================
+                     TAB 5: RESULTS & SCANS
+                ==================================================== -->
+                <div class="admin-tab" id="tab-results">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title">
+                                <i class="fa-solid fa-award" style="color: #EAB308;"></i>
+                                <h3>Merit List & OMR Scan Results</h3>
+                            </div>
+                            <div class="panel-card-actions">
+                                <button class="btn btn-outline" onclick="window.print()">
+                                    <i class="fa-solid fa-print"></i> Print Merit List
+                                </button>
+                                <button class="btn btn-secondary" onclick="exportResultsCSV()">
+                                    <i class="fa-solid fa-file-csv"></i> Download CSV
+                                </button>
+                                <button class="btn btn-outline" onclick="loadAllResults()">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="search-bar-row">
+                            <select class="select-filter" id="resultsExamFilter" onchange="loadAllResults()">
+                                <option value="ALL">All Exams</option>
+                            </select>
+                            <div class="search-input-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" class="search-input" id="searchResultsInput" placeholder="Filter by Roll No or Student Name..." oninput="filterResultsTable()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="admin-table" id="resultsMainTable">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Roll No</th>
+                                        <th>Student Name</th>
+                                        <th>Exam</th>
+                                        <th>Set</th>
+                                        <th>OMR Score</th>
+                                        <th>Subjective</th>
+                                        <th>Grand Total</th>
+                                        <th>%</th>
+                                        <th>Result</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultsTableBody">
+                                    <tr><td colspan="11" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading results...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================
+                     TAB 6: SETTINGS & BACKEND CONFIG
+                ==================================================== -->
+                <div class="admin-tab" id="tab-settings">
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title">
+                                <i class="fa-solid fa-sliders" style="color: var(--primary);"></i>
+                                <h3>Database & System Configuration</h3>
+                            </div>
+                        </div>
+
+                        <div style="padding: 24px;">
+                            <h4 style="font-size: 14px; font-weight: 800; margin-bottom: 14px; color: var(--dark);">Cloud Database Providers</h4>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Active Provider Mode</label>
+                                    <select class="form-control" id="settingsProviderSelect" onchange="switchDatabaseSource(this.value)">
+                                        <option value="firebase">Firebase Realtime Database (Google Cloud)</option>
+                                        <option value="mysql">Self-Hosted MySQL Server (api.php)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Firebase Realtime DB URL</label>
+                                    <input type="text" class="form-control" id="settingsFirebaseUrl" value="https://new-ba-f9d96-default-rtdb.firebaseio.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">MySQL REST API URL</label>
+                                    <input type="text" class="form-control" id="settingsMysqlUrl" value="./api.php">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">MySQL API Key (Optional)</label>
+                                    <input type="password" class="form-control" id="settingsApiKey" placeholder="Leave blank if not set">
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; margin-top: 10px; margin-bottom: 30px;">
+                                <button class="btn btn-primary" onclick="saveDatabaseSettings()">
+                                    <i class="fa-solid fa-floppy-disk"></i> Save Settings
+                                </button>
+                                <button class="btn btn-outline" onclick="testDatabaseConnection()">
+                                    <i class="fa-solid fa-signal"></i> Test Connection
+                                </button>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+                            <h4 style="font-size: 14px; font-weight: 800; margin-bottom: 14px; color: var(--dark);">Admin Security & PIN</h4>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Current Master PIN</label>
+                                    <input type="password" class="form-control" id="currentPinVerify" placeholder="Enter current PIN">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">New Master PIN</label>
+                                    <input type="password" class="form-control" id="newPinInput" placeholder="Enter 4-8 digit new PIN">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-secondary" onclick="updateAdminPin()">
+                                <i class="fa-solid fa-key"></i> Update Security PIN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ================================================================
+         BOTTOM NAVIGATION FOR MOBILE SCREENS
+    ================================================================= -->
+    <nav class="mobile-bottom-nav">
+        <a class="bottom-nav-item active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Dashboard</span>
+        </a>
+        <a class="bottom-nav-item" data-tab="tab-exams" onclick="switchTab('tab-exams')">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>Exams</span>
+        </a>
+        <a class="bottom-nav-item" data-tab="tab-students" onclick="switchTab('tab-students')">
+            <i class="fa-solid fa-user-graduate"></i>
+            <span>Students</span>
+        </a>
+        <a class="bottom-nav-item" data-tab="tab-subjective" onclick="switchTab('tab-subjective')">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span>Subjective</span>
+        </a>
+        <a class="bottom-nav-item" data-tab="tab-results" onclick="switchTab('tab-results')">
+            <i class="fa-solid fa-award"></i>
+            <span>Results</span>
+        </a>
+    </nav>
+
+    <!-- ================================================================
+         MODAL 1: ADD / EDIT EXAM
+    ================================================================= -->
+    <div class="modal-overlay" id="examModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="examModalTitle"><i class="fa-solid fa-file-lines"></i> Create New Exam</h3>
+                <button class="modal-close" onclick="closeModal('examModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="examEditMode" value="create">
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Exam ID (Numeric)</label>
+                        <input type="number" class="form-control" id="modalExamId" placeholder="e.g. 101">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Exam Date</label>
+                        <input type="date" class="form-control" id="modalExamDate">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">Exam Name / Title</label>
+                        <input type="text" class="form-control" id="modalExamName" placeholder="e.g. Annual Assessment 2026">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="modalExamSubject" placeholder="e.g. Science / Physics">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Marks Per Question</label>
+                        <input type="number" class="form-control" id="modalExamMarksPerQ" step="0.5" value="1.0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Negative Marks Per Wrong</label>
+                        <input type="number" class="form-control" id="modalExamNegMarks" step="0.25" value="0.0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Passing Marks</label>
+                        <input type="number" class="form-control" id="modalExamPassMarks" step="1" value="30">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bonus Marks</label>
+                        <input type="number" class="form-control" id="modalExamBonusMarks" step="0.5" value="0.0">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="switch-container">
+                            <input type="checkbox" id="modalExamHasSubj" onchange="toggleModalSubjMax(this.checked)">
+                            <span style="font-size: 13px; font-weight: 700;">Include Subjective / Theory Paper Evaluation</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group full-width" id="modalSubjMaxContainer" style="display: none;">
+                        <label class="form-label">Max Subjective Marks (Theory)</label>
+                        <input type="number" class="form-control" id="modalExamMaxSubj" value="50" min="1" max="500">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('examModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveExamSubmit()">
+                    <i class="fa-solid fa-check"></i> Save Exam
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         MODAL 2: ADD / EDIT STUDENT
+    ================================================================= -->
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="studentModalTitle"><i class="fa-solid fa-user-graduate"></i> Register New Student</h3>
+                <button class="modal-close" onclick="closeModal('studentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="studentEditMode" value="create">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Roll Number *</label>
+                        <input type="text" class="form-control" id="modalStudentRoll" placeholder="e.g. 101 or 24001">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Registration No</label>
+                        <input type="text" class="form-control" id="modalStudentReg" placeholder="e.g. REG-2026-99">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">Student Full Name *</label>
+                        <input type="text" class="form-control" id="modalStudentName" placeholder="Candidate's Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Father's Name</label>
+                        <input type="text" class="form-control" id="modalStudentFather" placeholder="Father's Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mother's Name</label>
+                        <input type="text" class="form-control" id="modalStudentMother" placeholder="Mother's Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Gender</label>
+                        <select class="form-control" id="modalStudentGender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Stream / Class</label>
+                        <input type="text" class="form-control" id="modalStudentStream" placeholder="e.g. 12th Science / Arts">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">Photo URL / Image URL</label>
+                        <input type="text" class="form-control" id="modalStudentPhoto" placeholder="https://example.com/photo.jpg or local path">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('studentModal')">Cancel</button>
+                <button class="btn btn-secondary" onclick="saveStudentSubmit()">
+                    <i class="fa-solid fa-check"></i> Save Student
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-notification" id="adminToast">
+        <i class="fa-solid fa-circle-check" style="color: #22C55E; font-size: 16px;"></i>
+        <span id="adminToastText">Operation successful</span>
+    </div>
+
+    <!-- ================================================================
+         ADMIN APPLICATION JAVASCRIPT
+    ================================================================= -->
+    <script>
+        // Backend Endpoints
+        let FIREBASE_URL = localStorage.getItem('omr_admin_fb_url') || "https://new-ba-f9d96-default-rtdb.firebaseio.com";
+        let MYSQL_URL = localStorage.getItem('omr_admin_mysql_url') || "./api.php";
+        let API_KEY = localStorage.getItem('omr_admin_api_key') || "";
+        let ACTIVE_DB = localStorage.getItem('omr_admin_db_source') || "firebase";
+
+        // Memory Store
+        let examsList = [];
+        let studentsList = [];
+        let scanResultsList = [];
+        let subjectiveMarksMap = {}; // Key: `${examId}_${rollNo.toLowerCase()}`
+
+        // Admin Auth
+        const DEFAULT_PIN = "1234";
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initAuth();
+            applySavedSettings();
+        });
+
+        // ------------------------------------------------------------------
+        // AUTHENTICATION
+        // ------------------------------------------------------------------
+        function initAuth() {
+            const isUnlocked = sessionStorage.getItem('omr_admin_unlocked');
+            if (isUnlocked === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                initApp();
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('adminPinInput').focus();
+            }
+        }
+
+        function handleAdminLogin() {
+            const pin = document.getElementById('adminPinInput').value.trim();
+            const storedPin = localStorage.getItem('omr_admin_pin') || DEFAULT_PIN;
+
+            if (pin === storedPin) {
+                sessionStorage.setItem('omr_admin_unlocked', 'true');
+                document.getElementById('login-overlay').style.display = 'none';
+                showToast("Admin session unlocked!");
+                initApp();
+            } else {
+                showToast("Invalid PIN! Try default '1234'", true);
+                document.getElementById('adminPinInput').value = '';
+                document.getElementById('adminPinInput').focus();
+            }
+        }
+
+        function handleAdminLogout() {
+            sessionStorage.removeItem('omr_admin_unlocked');
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('adminPinInput').value = '';
+            showToast("Logged out successfully");
+        }
+
+        function updateAdminPin() {
+            const currentPin = document.getElementById('currentPinVerify').value.trim();
+            const newPin = document.getElementById('newPinInput').value.trim();
+            const storedPin = localStorage.getItem('omr_admin_pin') || DEFAULT_PIN;
+
+            if (currentPin !== storedPin) {
+                alert("Current PIN does not match!");
+                return;
+            }
+            if (newPin.length < 4) {
+                alert("New PIN must be at least 4 characters.");
+                return;
+            }
+
+            localStorage.setItem('omr_admin_pin', newPin);
+            document.getElementById('currentPinVerify').value = '';
+            document.getElementById('newPinInput').value = '';
+            showToast("Master PIN updated successfully!");
+        }
+
+        // ------------------------------------------------------------------
+        // APP INITIALIZATION
+        // ------------------------------------------------------------------
+        function initApp() {
+            updateDbBadges();
+            loadAllData();
+        }
+
+        async function loadAllData() {
+            await Promise.all([
+                loadExams(),
+                loadStudents(),
+                loadAllResults(),
+                loadSubjectiveMarks()
+            ]);
+            updateDashboardStats();
+            renderRecentActivity();
+        }
+
+        function refreshCurrentData() {
+            loadAllData();
+            showToast("Refreshed all data from " + (ACTIVE_DB === 'firebase' ? 'Firebase' : 'MySQL'));
+        }
+
+        // ------------------------------------------------------------------
+        // DATABASE SOURCE MANAGEMENT
+        // ------------------------------------------------------------------
+        function switchDatabaseSource(source) {
+            ACTIVE_DB = source;
+            localStorage.setItem('omr_admin_db_source', source);
+            updateDbBadges();
+            showToast("Switched to " + (source === 'firebase' ? 'Firebase Realtime DB' : 'MySQL Server'));
+            loadAllData();
+        }
+
+        function updateDbBadges() {
+            const isFb = ACTIVE_DB === 'firebase';
+            document.getElementById('btnPillFirebase').classList.toggle('active', isFb);
+            document.getElementById('btnPillMysql').classList.toggle('active', !isFb);
+            document.getElementById('activeDbNameSidebar').textContent = isFb ? 'Firebase RTDB' : 'MySQL Server';
+            if (document.getElementById('settingsProviderSelect')) {
+                document.getElementById('settingsProviderSelect').value = ACTIVE_DB;
+            }
+        }
+
+        function applySavedSettings() {
+            if (document.getElementById('settingsFirebaseUrl')) {
+                document.getElementById('settingsFirebaseUrl').value = FIREBASE_URL;
+                document.getElementById('settingsMysqlUrl').value = MYSQL_URL;
+                document.getElementById('settingsApiKey').value = API_KEY;
+                document.getElementById('settingsProviderSelect').value = ACTIVE_DB;
+            }
+        }
+
+        function saveDatabaseSettings() {
+            FIREBASE_URL = document.getElementById('settingsFirebaseUrl').value.trim();
+            MYSQL_URL = document.getElementById('settingsMysqlUrl').value.trim();
+            API_KEY = document.getElementById('settingsApiKey').value.trim();
+            ACTIVE_DB = document.getElementById('settingsProviderSelect').value;
+
+            localStorage.setItem('omr_admin_fb_url', FIREBASE_URL);
+            localStorage.setItem('omr_admin_mysql_url', MYSQL_URL);
+            localStorage.setItem('omr_admin_api_key', API_KEY);
+            localStorage.setItem('omr_admin_db_source', ACTIVE_DB);
+
+            updateDbBadges();
+            showToast("Configuration saved!");
+            loadAllData();
+        }
+
+        async function testDatabaseConnection() {
+            showToast("Testing connection...");
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    const res = await fetch(`${FIREBASE_URL}/.json?shallow=true`);
+                    if (res.ok) {
+                        alert("✅ Firebase Realtime DB Connected Successfully!");
+                    } else {
+                        alert("❌ Firebase Error: HTTP Status " + res.status);
+                    }
+                } else {
+                    const res = await fetch(`${MYSQL_URL}?action=ping`, {
+                        headers: API_KEY ? { 'X-API-KEY': API_KEY } : {}
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        alert("✅ MySQL API Connected Successfully!\n" + data.message + "\nTime: " + data.server_time);
+                    } else {
+                        alert("❌ MySQL Error: " + (data.message || 'Unknown response'));
+                    }
+                }
+            } catch (err) {
+                alert("❌ Connection Error: " + err.message);
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // TAB SWITCHING & SIDEBAR
+        // ------------------------------------------------------------------
+        function switchTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active');
+
+            const menuItem = document.querySelector(`.menu-item[data-tab="${tabId}"]`);
+            if (menuItem) menuItem.classList.add('active');
+
+            const btmItem = document.querySelector(`.bottom-nav-item[data-tab="${tabId}"]`);
+            if (btmItem) btmItem.classList.add('active');
+
+            // Set Topbar title
+            const titles = {
+                'tab-dashboard': 'Dashboard Overview',
+                'tab-exams': 'Exams & Assessment Papers',
+                'tab-students': 'Student Registry & Profiles',
+                'tab-subjective': 'Subjective Theory Marks Grading',
+                'tab-results': 'OMR Evaluation & Merit List',
+                'tab-settings': 'System Settings & Connectivity'
+            };
+            document.getElementById('pageTitleHeading').textContent = titles[tabId] || 'Admin Panel';
+
+            if (window.innerWidth <= 768) {
+                toggleSidebar(false);
+            }
+
+            if (tabId === 'tab-subjective') {
+                populateSubjectiveExamDropdown();
+            }
+        }
+
+        function toggleSidebar(force) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('drawerBackdrop');
+            const isOpen = force !== undefined ? force : !sidebar.classList.contains('open');
+
+            sidebar.classList.toggle('open', isOpen);
+            backdrop.classList.toggle('open', isOpen);
+        }
+
+        // ------------------------------------------------------------------
+        // EXAMS CRUD
+        // ------------------------------------------------------------------
+        async function loadExams() {
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    const res = await fetch(`${FIREBASE_URL}/exams.json`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        examsList = [];
+                        if (data) {
+                            if (Array.isArray(data)) {
+                                examsList = data.filter(e => e !== null);
+                            } else if (typeof data === 'object') {
+                                examsList = Object.values(data);
+                            }
+                        }
+                    }
+                } else {
+                    const res = await fetch(`${MYSQL_URL}?action=get_exams`, {
+                        headers: API_KEY ? { 'X-API-KEY': API_KEY } : {}
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success' && Array.isArray(data.exams)) {
+                        examsList = data.exams;
+                    }
+                }
+
+                renderExamsTable(examsList);
+                populateResultsExamFilter();
+                populateSubjectiveExamDropdown();
+                document.getElementById('sidebarExamCount').textContent = examsList.length;
+                document.getElementById('examsCountBadge').textContent = `(${examsList.length} Exams)`;
+            } catch (err) {
+                console.error("Failed to load exams:", err);
+            }
+        }
+
+        function renderExamsTable(list) {
+            const tbody = document.getElementById('examsTableBody');
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-folder-open"></i><h4>No exams found</h4><p>Click "Add New Exam" to create your first assessment.</p></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(ex => {
+                const hasSubj = ex.hasSubjective || ex.has_subjective;
+                const maxSubj = ex.maxSubjectiveMarks || ex.max_subjective_marks || 50;
+                const subjBadge = hasSubj
+                    ? `<span class="badge badge-purple"><i class="fa-solid fa-check"></i> Enabled (Max: ${maxSubj})</span>`
+                    : `<span class="badge badge-gray">Objective Only</span>`;
+
+                return `
+                    <tr>
+                        <td><strong>#${ex.id}</strong></td>
+                        <td><strong>${escapeHtml(ex.name || 'Untitled')}</strong></td>
+                        <td>${escapeHtml(ex.subject || 'General')}</td>
+                        <td><i class="fa-regular fa-calendar"></i> ${ex.date || 'N/A'}</td>
+                        <td>
+                            <span class="badge badge-blue">+${ex.marks_per_question || ex.marksPerQuestion || 1} / -${ex.negative_marks || ex.negativeMarks || 0}</span>
+                            <span class="badge badge-success">Pass: ${ex.pass_marks || ex.passMarks || 30}</span>
+                        </td>
+                        <td>${subjBadge}</td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn btn-sm btn-outline" onclick="editExam(${ex.id})" title="Edit Exam">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger-outline" onclick="deleteExam(${ex.id})" title="Delete Exam">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterExamsTable() {
+            const q = document.getElementById('searchExamInput').value.toLowerCase();
+            const filtered = examsList.filter(e => 
+                (e.name && e.name.toLowerCase().includes(q)) ||
+                (e.subject && e.subject.toLowerCase().includes(q)) ||
+                String(e.id).includes(q)
+            );
+            renderExamsTable(filtered);
+        }
+
+        function openNewExamModal() {
+            document.getElementById('examModalTitle').innerHTML = '<i class="fa-solid fa-plus"></i> Create New Exam';
+            document.getElementById('examEditMode').value = 'create';
+            // Auto calculate next ID
+            const maxId = examsList.reduce((acc, cur) => Math.max(acc, parseInt(cur.id) || 0), 100);
+            document.getElementById('modalExamId').value = maxId + 1;
+            document.getElementById('modalExamId').readOnly = false;
+            document.getElementById('modalExamDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('modalExamName').value = '';
+            document.getElementById('modalExamSubject').value = '';
+            document.getElementById('modalExamMarksPerQ').value = '1.0';
+            document.getElementById('modalExamNegMarks').value = '0.0';
+            document.getElementById('modalExamPassMarks').value = '30';
+            document.getElementById('modalExamBonusMarks').value = '0.0';
+            document.getElementById('modalExamHasSubj').checked = true;
+            toggleModalSubjMax(true);
+            document.getElementById('modalExamMaxSubj').value = '50';
+            openModal('examModal');
+        }
+
+        function editExam(id) {
+            const ex = examsList.find(e => parseInt(e.id) === parseInt(id));
+            if (!ex) return;
+
+            document.getElementById('examModalTitle').innerHTML = '<i class="fa-solid fa-pen"></i> Edit Exam #' + id;
+            document.getElementById('examEditMode').value = 'edit';
+            document.getElementById('modalExamId').value = ex.id;
+            document.getElementById('modalExamId').readOnly = true;
+            document.getElementById('modalExamDate').value = ex.date || '';
+            document.getElementById('modalExamName').value = ex.name || '';
+            document.getElementById('modalExamSubject').value = ex.subject || '';
+            document.getElementById('modalExamMarksPerQ').value = ex.marks_per_question || ex.marksPerQuestion || '1.0';
+            document.getElementById('modalExamNegMarks').value = ex.negative_marks || ex.negativeMarks || '0.0';
+            document.getElementById('modalExamPassMarks').value = ex.pass_marks || ex.passMarks || '30';
+            document.getElementById('modalExamBonusMarks').value = ex.bonus_marks || ex.bonusMarks || '0.0';
+            
+            const hasSubj = !!(ex.hasSubjective || ex.has_subjective);
+            document.getElementById('modalExamHasSubj').checked = hasSubj;
+            toggleModalSubjMax(hasSubj);
+            document.getElementById('modalExamMaxSubj').value = ex.maxSubjectiveMarks || ex.max_subjective_marks || '50';
+
+            openModal('examModal');
+        }
+
+        function toggleModalSubjMax(checked) {
+            document.getElementById('modalSubjMaxContainer').style.display = checked ? 'block' : 'none';
+        }
+
+        async function saveExamSubmit() {
+            const id = parseInt(document.getElementById('modalExamId').value);
+            const name = document.getElementById('modalExamName').value.trim();
+            const subject = document.getElementById('modalExamSubject').value.trim();
+            const date = document.getElementById('modalExamDate').value;
+            const marksPerQ = parseFloat(document.getElementById('modalExamMarksPerQ').value) || 1.0;
+            const negMarks = parseFloat(document.getElementById('modalExamNegMarks').value) || 0.0;
+            const passMarks = parseFloat(document.getElementById('modalExamPassMarks').value) || 30.0;
+            const bonusMarks = parseFloat(document.getElementById('modalExamBonusMarks').value) || 0.0;
+            const hasSubj = document.getElementById('modalExamHasSubj').checked;
+            const maxSubj = hasSubj ? (parseFloat(document.getElementById('modalExamMaxSubj').value) || 50) : 0;
+
+            if (!id || !name) {
+                alert("Please provide Exam ID and Name.");
+                return;
+            }
+
+            const examObj = {
+                id: id,
+                name: name,
+                subject: subject,
+                date: date,
+                marks_per_question: marksPerQ,
+                marksPerQuestion: marksPerQ,
+                negative_marks: negMarks,
+                negativeMarks: negMarks,
+                pass_marks: passMarks,
+                passMarks: passMarks,
+                bonus_marks: bonusMarks,
+                bonusMarks: bonusMarks,
+                hasSubjective: hasSubj,
+                has_subjective: hasSubj,
+                maxSubjectiveMarks: maxSubj,
+                max_subjective_marks: maxSubj,
+                timestamp: Date.now()
+            };
+
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    await fetch(`${FIREBASE_URL}/exams/${id}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(examObj)
+                    });
+                } else {
+                    await fetch(`${MYSQL_URL}?action=save_exam`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(API_KEY ? { 'X-API-KEY': API_KEY } : {})
+                        },
+                        body: JSON.stringify(examObj)
+                    });
+                }
+
+                closeModal('examModal');
+                showToast("Exam saved successfully!");
+                loadExams();
+            } catch (err) {
+                alert("Failed to save exam: " + err.message);
+            }
+        }
+
+        async function deleteExam(id) {
+            if (!confirm(`Are you sure you want to delete Exam #${id}? This will also delete related answer keys and scan entries.`)) return;
+
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    await fetch(`${FIREBASE_URL}/exams/${id}.json`, { method: 'DELETE' });
+                } else {
+                    await fetch(`${MYSQL_URL}?action=delete_exam`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(API_KEY ? { 'X-API-KEY': API_KEY } : {})
+                        },
+                        body: JSON.stringify({ id: id })
+                    });
+                }
+
+                showToast(`Exam #${id} deleted`);
+                loadExams();
+            } catch (err) {
+                alert("Delete failed: " + err.message);
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // STUDENTS CRUD
+        // ------------------------------------------------------------------
+        async function loadStudents() {
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    const res = await fetch(`${FIREBASE_URL}/students.json`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        studentsList = [];
+                        if (data) {
+                            if (Array.isArray(data)) {
+                                studentsList = data.filter(s => s !== null);
+                            } else if (typeof data === 'object') {
+                                studentsList = Object.values(data);
+                            }
+                        }
+                    }
+                } else {
+                    const res = await fetch(`${MYSQL_URL}?action=get_students`, {
+                        headers: API_KEY ? { 'X-API-KEY': API_KEY } : {}
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success' && Array.isArray(data.students)) {
+                        studentsList = data.students;
+                    }
+                }
+
+                renderStudentsTable(studentsList);
+                document.getElementById('sidebarStudentCount').textContent = studentsList.length;
+                document.getElementById('studentsCountBadge').textContent = `(${studentsList.length} Candidates)`;
+            } catch (err) {
+                console.error("Failed to load students:", err);
+            }
+        }
+
+        function renderStudentsTable(list) {
+            const tbody = document.getElementById('studentsTableBody');
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-user-xmark"></i><h4>No registered students</h4><p>Click "Register Student" to enroll candidate profiles.</p></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(st => {
+                const roll = st.roll_no || st.rollNo || '';
+                const photo = st.image_url || st.imageUrl || 'https://via.placeholder.com/80?text=Student';
+                return `
+                    <tr>
+                        <td><img src="${escapeHtml(photo)}" class="student-thumb" onerror="this.src='https://via.placeholder.com/80?text=No+Pic'"></td>
+                        <td><strong>${escapeHtml(roll)}</strong></td>
+                        <td><strong>${escapeHtml(st.name || 'Candidate')}</strong></td>
+                        <td>${escapeHtml(st.father_name || st.fatherName || '-')}</td>
+                        <td>${escapeHtml(st.registration_no || st.registrationNo || '-')}</td>
+                        <td><span class="badge badge-blue">${escapeHtml(st.stream || st.subjects || 'General')}</span></td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn btn-sm btn-outline" onclick="editStudent('${escapeHtml(roll)}')" title="Edit Student">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger-outline" onclick="deleteStudent('${escapeHtml(roll)}')" title="Delete Student">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterStudentsTable() {
+            const q = document.getElementById('searchStudentInput').value.toLowerCase();
+            const filtered = studentsList.filter(s => {
+                const roll = String(s.roll_no || s.rollNo || '').toLowerCase();
+                const name = String(s.name || '').toLowerCase();
+                const reg = String(s.registration_no || s.registrationNo || '').toLowerCase();
+                return roll.includes(q) || name.includes(q) || reg.includes(q);
+            });
+            renderStudentsTable(filtered);
+        }
+
+        function openNewStudentModal() {
+            document.getElementById('studentModalTitle').innerHTML = '<i class="fa-solid fa-user-plus"></i> Register New Student';
+            document.getElementById('studentEditMode').value = 'create';
+            document.getElementById('modalStudentRoll').value = '';
+            document.getElementById('modalStudentRoll').readOnly = false;
+            document.getElementById('modalStudentReg').value = '';
+            document.getElementById('modalStudentName').value = '';
+            document.getElementById('modalStudentFather').value = '';
+            document.getElementById('modalStudentMother').value = '';
+            document.getElementById('modalStudentGender').value = 'Male';
+            document.getElementById('modalStudentStream').value = '';
+            document.getElementById('modalStudentPhoto').value = '';
+            openModal('studentModal');
+        }
+
+        function editStudent(roll) {
+            const st = studentsList.find(s => (s.roll_no || s.rollNo) == roll);
+            if (!st) return;
+
+            document.getElementById('studentModalTitle').innerHTML = '<i class="fa-solid fa-pen"></i> Edit Student ' + roll;
+            document.getElementById('studentEditMode').value = 'edit';
+            document.getElementById('modalStudentRoll').value = roll;
+            document.getElementById('modalStudentRoll').readOnly = true;
+            document.getElementById('modalStudentReg').value = st.registration_no || st.registrationNo || '';
+            document.getElementById('modalStudentName').value = st.name || '';
+            document.getElementById('modalStudentFather').value = st.father_name || st.fatherName || '';
+            document.getElementById('modalStudentMother').value = st.mother_name || st.motherName || '';
+            document.getElementById('modalStudentGender').value = st.gender || 'Male';
+            document.getElementById('modalStudentStream').value = st.stream || st.subjects || '';
+            document.getElementById('modalStudentPhoto').value = st.image_url || st.imageUrl || '';
+
+            openModal('studentModal');
+        }
+
+        async function saveStudentSubmit() {
+            const roll = document.getElementById('modalStudentRoll').value.trim();
+            const name = document.getElementById('modalStudentName').value.trim();
+            const reg = document.getElementById('modalStudentReg').value.trim();
+            const father = document.getElementById('modalStudentFather').value.trim();
+            const mother = document.getElementById('modalStudentMother').value.trim();
+            const gender = document.getElementById('modalStudentGender').value;
+            const stream = document.getElementById('modalStudentStream').value.trim();
+            const photo = document.getElementById('modalStudentPhoto').value.trim();
+
+            if (!roll || !name) {
+                alert("Roll Number and Student Name are required.");
+                return;
+            }
+
+            const studentObj = {
+                roll_no: roll,
+                rollNo: roll,
+                name: name,
+                registration_no: reg,
+                registrationNo: reg,
+                father_name: father,
+                fatherName: father,
+                mother_name: mother,
+                motherName: mother,
+                gender: gender,
+                stream: stream,
+                subjects: stream,
+                image_url: photo,
+                imageUrl: photo,
+                timestamp: Date.now()
+            };
+
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    await fetch(`${FIREBASE_URL}/students/${roll}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(studentObj)
+                    });
+                } else {
+                    await fetch(`${MYSQL_URL}?action=save_student`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(API_KEY ? { 'X-API-KEY': API_KEY } : {})
+                        },
+                        body: JSON.stringify(studentObj)
+                    });
+                }
+
+                closeModal('studentModal');
+                showToast("Student profile saved!");
+                loadStudents();
+            } catch (err) {
+                alert("Failed to save student: " + err.message);
+            }
+        }
+
+        async function deleteStudent(roll) {
+            if (!confirm(`Delete student record for Roll #${roll}?`)) return;
+
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    await fetch(`${FIREBASE_URL}/students/${roll}.json`, { method: 'DELETE' });
+                } else {
+                    await fetch(`${MYSQL_URL}?action=delete_student`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(API_KEY ? { 'X-API-KEY': API_KEY } : {})
+                        },
+                        body: JSON.stringify({ roll_no: roll })
+                    });
+                }
+
+                showToast(`Student ${roll} deleted`);
+                loadStudents();
+            } catch (err) {
+                alert("Delete failed: " + err.message);
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // SUBJECTIVE MARKS ENTRY
+        // ------------------------------------------------------------------
+        async function loadSubjectiveMarks() {
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    const res = await fetch(`${FIREBASE_URL}/subjective_marks.json`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        subjectiveMarksMap = {};
+                        if (data && typeof data === 'object') {
+                            Object.values(data).forEach(item => {
+                                if (item && item.exam_id && item.student_roll) {
+                                    const key = `${item.exam_id}_${String(item.student_roll).trim().toLowerCase()}`;
+                                    subjectiveMarksMap[key] = item;
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    const res = await fetch(`${MYSQL_URL}?action=get_subjective_marks`, {
+                        headers: API_KEY ? { 'X-API-KEY': API_KEY } : {}
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success' && Array.isArray(data.subjective_marks)) {
+                        subjectiveMarksMap = {};
+                        data.subjective_marks.forEach(item => {
+                            const key = `${item.exam_id}_${String(item.student_roll).trim().toLowerCase()}`;
+                            subjectiveMarksMap[key] = item;
+                        });
+                    }
+                }
+                document.getElementById('dashTotalSubj').textContent = Object.keys(subjectiveMarksMap).length;
+            } catch (err) {
+                console.warn("Could not load subjective marks:", err);
+            }
+        }
+
+        function populateSubjectiveExamDropdown() {
+            const select = document.getElementById('subjExamSelect');
+            select.innerHTML = '<option value="">-- Choose Exam --</option>';
+            examsList.forEach(ex => {
+                const opt = document.createElement('option');
+                opt.value = ex.id;
+                opt.textContent = `#${ex.id} - ${ex.name} (${ex.subject || ''})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function loadSubjectiveGradingList() {
+            const examId = document.getElementById('subjExamSelect').value;
+            const tbody = document.getElementById('subjectiveTableBody');
+
+            if (!examId) {
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fa-solid fa-arrow-pointer"></i> Please select an exam from the dropdown above.</td></tr>`;
+                return;
+            }
+
+            const exam = examsList.find(e => parseInt(e.id) === parseInt(examId));
+            const maxSubjMarks = exam ? (exam.maxSubjectiveMarks || exam.max_subjective_marks || 50) : 50;
+
+            // Gather candidates: scanned students for this exam + registered students
+            const scansForExam = scanResultsList.filter(r => parseInt(r.exam_id || r.examId) === parseInt(examId));
+            const rollSet = new Set(scansForExam.map(r => String(r.student_id || r.studentId).trim()));
+            studentsList.forEach(s => rollSet.add(String(s.roll_no || s.rollNo).trim()));
+
+            if (rollSet.size === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fa-solid fa-users-slash"></i> No students found for this exam. Process OMR sheets or add students first.</td></tr>`;
+                return;
+            }
+
+            const rows = Array.from(rollSet).map(roll => {
+                const student = studentsList.find(s => String(s.roll_no || s.rollNo).trim() === roll);
+                const scan = scansForExam.find(r => String(r.student_id || r.studentId).trim() === roll);
+                const subjKey = `${examId}_${roll.toLowerCase()}`;
+                const existingSubj = subjectiveMarksMap[subjKey];
+
+                const objScore = scan ? (parseFloat(scan.score) || 0) : 0;
+                const subjMarks = existingSubj ? (parseFloat(existingSubj.marks_obtained) || 0) : 0;
+                const checkedBy = existingSubj ? (existingSubj.checked_by || 'Teacher') : 'Teacher';
+
+                const totalMarks = objScore + subjMarks;
+                const maxTotal = 50 + maxSubjMarks; // Default 50 objective + subjective
+                const percentage = ((totalMarks / maxTotal) * 100).toFixed(1);
+                const isPass = totalMarks >= (exam ? (exam.pass_marks || 30) : 30);
+
+                return `
+                    <tr id="subjRow_${roll}">
+                        <td><strong>${escapeHtml(roll)}</strong></td>
+                        <td>${escapeHtml(student ? student.name : ('Candidate ' + roll))}</td>
+                        <td><span class="badge badge-blue">${objScore.toFixed(1)} / 50</span></td>
+                        <td>
+                            <div class="subj-input-group">
+                                <input type="number" class="subj-mark-field" id="subjInput_${roll}" value="${subjMarks}" step="0.5" min="0" max="${maxSubjMarks}" oninput="recalculateRowScore('${roll}', ${objScore}, ${maxTotal}, ${exam ? (exam.pass_marks || 30) : 30})">
+                                <span style="font-size: 11px; color: var(--gray);">/ ${maxSubjMarks}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control" id="evaluator_${roll}" value="${escapeHtml(checkedBy)}" style="padding: 4px 8px; font-size: 12px; width: 110px;">
+                        </td>
+                        <td><strong id="rowTotal_${roll}" style="color: var(--primary);">${totalMarks.toFixed(1)}</strong></td>
+                        <td><strong id="rowPct_${roll}">${percentage}%</strong></td>
+                        <td><span class="badge ${isPass ? 'badge-success' : 'badge-danger'}" id="rowBadge_${roll}">${isPass ? 'PASS' : 'FAIL'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="saveSingleSubjectiveMark(${examId}, '${roll}', ${maxSubjMarks})" title="Save row">
+                                <i class="fa-solid fa-floppy-disk"></i> Save
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rows.join('');
+        }
+
+        function recalculateRowScore(roll, objScore, maxTotal, passMarks) {
+            const input = document.getElementById(`subjInput_${roll}`);
+            const subjMarks = parseFloat(input.value) || 0;
+            const total = objScore + subjMarks;
+            const pct = ((total / maxTotal) * 100).toFixed(1);
+            const isPass = total >= passMarks;
+
+            document.getElementById(`rowTotal_${roll}`).textContent = total.toFixed(1);
+            document.getElementById(`rowPct_${roll}`).textContent = pct + '%';
+            
+            const badge = document.getElementById(`rowBadge_${roll}`);
+            badge.textContent = isPass ? 'PASS' : 'FAIL';
+            badge.className = `badge ${isPass ? 'badge-success' : 'badge-danger'}`;
+        }
+
+        function filterSubjectiveRows() {
+            const q = document.getElementById('searchSubjCandidate').value.toLowerCase();
+            document.querySelectorAll('#subjectiveTableBody tr').forEach(tr => {
+                const text = tr.textContent.toLowerCase();
+                tr.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        async function saveSingleSubjectiveMark(examId, roll, maxSubjMarks) {
+            const input = document.getElementById(`subjInput_${roll}`);
+            const evaluator = document.getElementById(`evaluator_${roll}`).value.trim() || 'Teacher';
+            const marks = parseFloat(input.value) || 0;
+
+            const record = {
+                id: `subj_${examId}_${roll}`,
+                exam_id: examId,
+                student_roll: roll,
+                marks_obtained: marks,
+                max_marks: maxSubjMarks,
+                checked_by: evaluator,
+                final_marks: marks,
+                timestamp: Date.now()
+            };
+
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    await fetch(`${FIREBASE_URL}/subjective_marks/${record.id}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(record)
+                    });
+                } else {
+                    await fetch(`${MYSQL_URL}?action=save_subjective`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(API_KEY ? { 'X-API-KEY': API_KEY } : {})
+                        },
+                        body: JSON.stringify(record)
+                    });
+                }
+
+                subjectiveMarksMap[`${examId}_${roll.toLowerCase()}`] = record;
+                showToast(`Saved marks for ${roll}: ${marks}/${maxSubjMarks}`);
+            } catch (err) {
+                alert("Failed to save: " + err.message);
+            }
+        }
+
+        async function saveAllSubjectiveMarks() {
+            const examId = document.getElementById('subjExamSelect').value;
+            if (!examId) {
+                alert("Please select an exam first.");
+                return;
+            }
+            const exam = examsList.find(e => parseInt(e.id) === parseInt(examId));
+            const maxSubjMarks = exam ? (exam.maxSubjectiveMarks || exam.max_subjective_marks || 50) : 50;
+
+            const rows = document.querySelectorAll('#subjectiveTableBody tr[id^="subjRow_"]');
+            if (rows.length === 0) {
+                showToast("No student rows to save");
+                return;
+            }
+
+            let savedCount = 0;
+            for (const row of rows) {
+                const roll = row.id.replace('subjRow_', '');
+                const input = document.getElementById(`subjInput_${roll}`);
+                const evaluator = document.getElementById(`evaluator_${roll}`).value.trim() || 'Teacher';
+                const marks = parseFloat(input.value) || 0;
+
+                const record = {
+                    id: `subj_${examId}_${roll}`,
+                    exam_id: parseInt(examId),
+                    student_roll: roll,
+                    marks_obtained: marks,
+                    max_marks: maxSubjMarks,
+                    checked_by: evaluator,
+                    final_marks: marks,
+                    timestamp: Date.now()
+                };
+
+                try {
+                    if (ACTIVE_DB === 'firebase') {
+                        await fetch(`${FIREBASE_URL}/subjective_marks/${record.id}.json`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(record)
+                        });
+                    } else {
+                        await fetch(`${MYSQL_URL}?action=save_subjective`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(API_KEY ? { 'X-API-KEY': API_KEY } : {})
+                            },
+                            body: JSON.stringify(record)
+                        });
+                    }
+                    subjectiveMarksMap[`${examId}_${roll.toLowerCase()}`] = record;
+                    savedCount++;
+                } catch (e) {
+                    console.error("Batch save error for " + roll, e);
+                }
+            }
+
+            showToast(`Batch saved ${savedCount} subjective records!`);
+        }
+
+        // ------------------------------------------------------------------
+        // RESULTS & MERIT LIST
+        // ------------------------------------------------------------------
+        async function loadAllResults() {
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    const res = await fetch(`${FIREBASE_URL}/scan_results.json`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        scanResultsList = [];
+                        if (data && typeof data === 'object') {
+                            scanResultsList = Object.values(data);
+                        }
+                    }
+                } else {
+                    const examFilter = document.getElementById('resultsExamFilter').value;
+                    const url = examFilter && examFilter !== 'ALL'
+                        ? `${MYSQL_URL}?action=get_all_results&exam_id=${examFilter}`
+                        : `${MYSQL_URL}?action=get_all_results`;
+
+                    const res = await fetch(url, {
+                        headers: API_KEY ? { 'X-API-KEY': API_KEY } : {}
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success' && Array.isArray(data.results)) {
+                        scanResultsList = data.results;
+                    }
+                }
+
+                renderResultsTable(scanResultsList);
+                document.getElementById('sidebarScanCount').textContent = scanResultsList.length;
+                document.getElementById('dashTotalScans').textContent = scanResultsList.length;
+            } catch (err) {
+                console.error("Failed to load results:", err);
+            }
+        }
+
+        function populateResultsExamFilter() {
+            const select = document.getElementById('resultsExamFilter');
+            select.innerHTML = '<option value="ALL">All Exams</option>';
+            examsList.forEach(ex => {
+                const opt = document.createElement('option');
+                opt.value = ex.id;
+                opt.textContent = `#${ex.id} - ${ex.name}`;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderResultsTable(list) {
+            const tbody = document.getElementById('resultsTableBody');
+            const examFilter = document.getElementById('resultsExamFilter').value;
+
+            let filtered = list;
+            if (examFilter !== 'ALL') {
+                filtered = list.filter(r => String(r.exam_id || r.examId) === String(examFilter));
+            }
+
+            // Sort by Grand Total (Objective + Subjective)
+            filtered.sort((a, b) => {
+                const rollA = String(a.student_id || a.studentId || '').toLowerCase();
+                const rollB = String(b.student_id || b.studentId || '').toLowerCase();
+                const exA = a.exam_id || a.examId;
+                const exB = b.exam_id || b.examId;
+
+                const subjA = subjectiveMarksMap[`${exA}_${rollA}`]?.marks_obtained || 0;
+                const subjB = subjectiveMarksMap[`${exB}_${rollB}`]?.marks_obtained || 0;
+
+                const totalA = (parseFloat(a.score) || 0) + parseFloat(subjA);
+                const totalB = (parseFloat(b.score) || 0) + parseFloat(subjB);
+                return totalB - totalA;
+            });
+
+            if (!filtered || filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="empty-state"><i class="fa-solid fa-inbox"></i><h4>No scan results</h4><p>Scanned OMR results will appear here automatically.</p></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((r, idx) => {
+                const roll = String(r.student_id || r.studentId || '');
+                const examId = r.exam_id || r.examId;
+                const student = studentsList.find(s => String(s.roll_no || s.rollNo).trim() === roll);
+                const exam = examsList.find(e => parseInt(e.id) === parseInt(examId));
+
+                const objScore = parseFloat(r.score) || 0;
+                const subjRecord = subjectiveMarksMap[`${examId}_${roll.toLowerCase()}`];
+                const subjMarks = subjRecord ? (parseFloat(subjRecord.marks_obtained) || 0) : 0;
+                const maxSubj = exam ? (exam.maxSubjectiveMarks || exam.max_subjective_marks || 50) : 50;
+                
+                const grandTotal = objScore + subjMarks;
+                const totalMax = 50 + (exam?.hasSubjective ? maxSubj : 0);
+                const pct = ((grandTotal / totalMax) * 100).toFixed(1);
+                const isPass = grandTotal >= (exam ? (exam.pass_marks || 30) : 30);
+
+                let rankBadge = `<span style="font-weight: 700; color: #64748B;">#${idx + 1}</span>`;
+                if (idx === 0) rankBadge = `<span class="badge" style="background:#FEF3C7; color:#B45309;"><i class="fa-solid fa-crown"></i> 1st</span>`;
+                else if (idx === 1) rankBadge = `<span class="badge" style="background:#E2E8F0; color:#475569;"><i class="fa-solid fa-medal"></i> 2nd</span>`;
+                else if (idx === 2) rankBadge = `<span class="badge" style="background:#FED7AA; color:#9A3412;"><i class="fa-solid fa-award"></i> 3rd</span>`;
+
+                return `
+                    <tr>
+                        <td>${rankBadge}</td>
+                        <td><strong>${escapeHtml(roll)}</strong></td>
+                        <td><strong>${escapeHtml(student ? student.name : (r.student_name || 'Candidate ' + roll))}</strong></td>
+                        <td>${escapeHtml(exam ? exam.name : ('Exam ' + examId))}</td>
+                        <td><span class="badge badge-gray">${escapeHtml(r.paper_set || r.paperSet || 'A')}</span></td>
+                        <td><strong>${objScore.toFixed(1)}</strong></td>
+                        <td>${subjMarks > 0 ? `<span class="badge badge-purple">+${subjMarks.toFixed(1)}</span>` : '<span style="color:#94A3B8;">--</span>'}</td>
+                        <td><strong style="color: var(--primary); font-size: 14px;">${grandTotal.toFixed(1)}</strong></td>
+                        <td>${pct}%</td>
+                        <td><span class="badge ${isPass ? 'badge-success' : 'badge-danger'}">${isPass ? 'PASS' : 'FAIL'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-danger-outline" onclick="deleteScanResult(${r.id || `'${r.student_id}'`})" title="Delete result">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterResultsTable() {
+            const q = document.getElementById('searchResultsInput').value.toLowerCase();
+            document.querySelectorAll('#resultsTableBody tr').forEach(tr => {
+                const text = tr.textContent.toLowerCase();
+                tr.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        async function deleteScanResult(id) {
+            if (!confirm("Are you sure you want to remove this scan result?")) return;
+
+            try {
+                if (ACTIVE_DB === 'firebase') {
+                    // Search in firebase scan_results
+                    await fetch(`${FIREBASE_URL}/scan_results/${id}.json`, { method: 'DELETE' });
+                } else {
+                    await fetch(`${MYSQL_URL}?action=delete_scan_result&id=${id}`, {
+                        method: 'POST',
+                        headers: API_KEY ? { 'X-API-KEY': API_KEY } : {}
+                    });
+                }
+                showToast("Scan result deleted");
+                loadAllResults();
+            } catch (err) {
+                alert("Delete failed: " + err.message);
+            }
+        }
+
+        function exportResultsCSV() {
+            if (scanResultsList.length === 0) {
+                alert("No results to export.");
+                return;
+            }
+
+            let csv = "Rank,Roll No,Student Name,Exam ID,Paper Set,Objective Score,Subjective Marks,Grand Total,Percentage,Status\n";
+            scanResultsList.forEach((r, idx) => {
+                const roll = r.student_id || r.studentId || '';
+                const examId = r.exam_id || r.examId;
+                const student = studentsList.find(s => String(s.roll_no || s.rollNo) == roll);
+                const subjRecord = subjectiveMarksMap[`${examId}_${String(roll).toLowerCase()}`];
+                const subj = subjRecord ? parseFloat(subjRecord.marks_obtained) || 0 : 0;
+                const obj = parseFloat(r.score) || 0;
+                const total = obj + subj;
+                const pct = ((total / 100) * 100).toFixed(1);
+                const isPass = total >= 30 ? "PASS" : "FAIL";
+
+                csv += `"${idx + 1}","${roll}","${student ? student.name : ''}","${examId}","${r.paper_set || 'A'}","${obj}","${subj}","${total}","${pct}%","${isPass}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `OMR_Merit_List_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // ------------------------------------------------------------------
+        // DASHBOARD RECENT ACTIVITY & STATS
+        // ------------------------------------------------------------------
+        function updateDashboardStats() {
+            document.getElementById('dashTotalExams').textContent = examsList.length;
+            document.getElementById('dashTotalStudents').textContent = studentsList.length;
+            document.getElementById('dashTotalScans').textContent = scanResultsList.length;
+            document.getElementById('dashTotalSubj').textContent = Object.keys(subjectiveMarksMap).length;
+        }
+
+        function renderRecentActivity() {
+            const tbody = document.getElementById('dashboardRecentTableBody');
+            const recent = scanResultsList.slice(0, 5);
+
+            if (recent.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-inbox"></i> No recent evaluations yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = recent.map(r => {
+                const roll = String(r.student_id || r.studentId || '');
+                const examId = r.exam_id || r.examId;
+                const student = studentsList.find(s => String(s.roll_no || s.rollNo).trim() === roll);
+                const exam = examsList.find(e => parseInt(e.id) === parseInt(examId));
+                const subj = subjectiveMarksMap[`${examId}_${roll.toLowerCase()}`]?.marks_obtained || 0;
+                const total = (parseFloat(r.score) || 0) + parseFloat(subj);
+                const isPass = total >= 30;
+
+                return `
+                    <tr>
+                        <td><strong>${escapeHtml(roll)}</strong></td>
+                        <td>${escapeHtml(student ? student.name : ('Candidate ' + roll))}</td>
+                        <td>${escapeHtml(exam ? exam.name : ('Exam ' + examId))}</td>
+                        <td><span class="badge badge-blue">${(parseFloat(r.score) || 0).toFixed(1)}</span></td>
+                        <td>${subj > 0 ? `<span class="badge badge-purple">+${subj}</span>` : '--'}</td>
+                        <td><strong style="color: var(--primary);">${total.toFixed(1)}</strong></td>
+                        <td><span class="badge ${isPass ? 'badge-success' : 'badge-danger'}">${isPass ? 'PASS' : 'FAIL'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ------------------------------------------------------------------
+        // MODALS & UTILITIES
+        // ------------------------------------------------------------------
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function showToast(message, isError) {
+            const toast = document.getElementById('adminToast');
+            const text = document.getElementById('adminToastText');
+            text.textContent = message;
+            toast.style.background = isError ? '#DC2626' : '#0F172A';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
